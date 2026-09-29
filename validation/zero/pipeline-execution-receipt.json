@@ -1,0 +1,26 @@
+{
+  "executed": true,
+  "source_sha": "2c815be15c4e094447c38d67f666e590492f4c28",
+  "command": [
+    "C:\\Users\\20202\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+    "-X",
+    "utf8",
+    "C:\\Users\\20202\\Documents\\main2main复盘\\deliverables\\vllm-daily-quality-handover-20260929\\vendor\\main-lys\\scripts\\deep_analyze.py",
+    "--repo",
+    "vllm-project/vllm",
+    "--date",
+    "2026-09-22",
+    "--data-dir",
+    "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\handover-v3-test-20260929\\zero\\pipeline-data"
+  ],
+  "exit_code": 1,
+  "empty_input": true,
+  "program_sha256": "f2e67d8bac972ce5c7a5dc5b14c95851db5441d850091f76186a2d916168dbbe",
+  "input_sha256": "fa7ef606e33f8e13b2c19b8465a01ab685c418ab9ab4cdc6c2b77e7a4ee206d6",
+  "program_output_sha256": "ab20659e0b4f964866a9400f59153107b126693533d3773a6e4a765956905fa2",
+  "ai_semantic_sha256": "e3566b3a06430868d71e9287dfd6c6c520a3da027aabea01951d407ee131dc2f",
+  "manual_analysis_sha256": "9bf6d3c0483dceabf16d12150ad00b8ab8ddeee17e135a1bd4ddf17457a98e65",
+  "commit_count": 0,
+  "external_llm_executed": false,
+  "daily_refresh_executed": false
+}

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-09-23T03:53:04.725743+00:00",
+  "period": {
+    "start": "2026-09-22T01:00:58.960000+08:00",
+    "end_exclusive": "2026-09-23T01:01:54.707000+08:00",
+    "timezone": "Asia/Hong_Kong",
+    "start_local": "2026-09-22T01:00:58.960000+08:00",
+    "end_exclusive_local": "2026-09-23T01:01:54.707000+08:00"
+  },
+  "vllm": {
+    "root": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\snapshots\\vllm",
+    "old_sha": "986e217158a9ed54eca8307c6bb9abac7c5b2278",
+    "new_sha": "74370a0e3044c16b6ba58f9c144b02ab733cd73a",
+    "range": "986e217158a9ed54eca8307c6bb9abac7c5b2278..74370a0e3044c16b6ba58f9c144b02ab733cd73a"
+  },
+  "vllm_ascend": {
+    "root": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\snapshots\\ascend",
+    "baseline_sha": "a71b766ce6fc0a9669a412e15a5cf53f7f827093",
+    "version_lane": "main",
+    "version_anchor": "84030bbe3d74d99bad477a3d2e37a973ccd8865c"
+  },
+  "requirements": {
+    "pr_delta": "parent_to_merge_or_head",
+    "main2main_validate_before_predict": true,
+    "unknown_values_must_remain_pending": true
+  }
+}

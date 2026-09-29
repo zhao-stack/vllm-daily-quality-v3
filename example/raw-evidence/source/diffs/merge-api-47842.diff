@@ -1,0 +1,366 @@
+diff --git a/tests/compile/passes/test_fusion.py b/tests/compile/passes/test_fusion.py
+index 843052f4afdc..bb15022459ed 100644
+--- a/tests/compile/passes/test_fusion.py
++++ b/tests/compile/passes/test_fusion.py
+@@ -550,7 +550,9 @@ class TestGatedModel(torch.nn.Module):
+     """Model that uses RMSNormGated + reshape + group FP8 quant + linear.
+ 
+     Mimics GatedDeltaNetAttention's output projection path where:
+-    - RMSNormGated operates on per-head tensors (N*H, D)
++    - RMSNormGated operates on per-head tensors, either (N, H, D) as
++      QwenGatedDeltaNetAttention passes them or flattened to (N*H, D) as
++      OlmoHybridGatedDeltaNetAttention does
+     - Output is reshaped to (N, H*D) before group quantization + linear
+     """
+ 
+@@ -563,10 +565,12 @@ def __init__(
+         group_shape: GroupShape,
+         dtype: torch.dtype,
+         use_aiter_quant: bool = True,
++        flatten_heads: bool = True,
+     ):
+         super().__init__()
+         self.num_heads = num_heads
+         self.head_dim = head_dim
++        self.flatten_heads = flatten_heads
+         hidden_dim = num_heads * head_dim
+ 
+         self.norm = RMSNormGated(
+@@ -599,8 +603,11 @@ def forward(self, x, z):
+         hidden_dim = num_heads * head_dim
+         x = torch.relu(x)
+         z = torch.relu(z)
+-        x_heads = x.reshape(-1, num_heads, head_dim).reshape(-1, head_dim)
+-        z_heads = z.reshape(-1, num_heads, head_dim).reshape(-1, head_dim)
++        x_heads = x.reshape(-1, num_heads, head_dim)
++        z_heads = z.reshape(-1, num_heads, head_dim)
++        if self.flatten_heads:
++            x_heads = x_heads.reshape(-1, head_dim)
++            z_heads = z_heads.reshape(-1, head_dim)
+         normed = self.norm(x_heads, z_heads)
+         merged = normed.reshape(-1, hidden_dim)
+         out = self.fp8_linear(merged)
+@@ -638,6 +645,8 @@ def __init__(self, num_v_heads: int, head_v_dim: int, tp_size: int = 1):
+ @pytest.mark.parametrize("head_dim", [128])
+ @pytest.mark.parametrize("num_tokens", [8])
+ @pytest.mark.parametrize("eps", [1e-5, 1e-6])
++@pytest.mark.parametrize("flatten_heads", [True, False])
++@pytest.mark.parametrize("quant_fp8_op", ["-quant_fp8", "+quant_fp8"])
+ @pytest.mark.skipif(
+     (not current_platform.is_rocm() or not IS_AITER_FOUND),
+     reason="Only test on ROCm with aiter package installed",
+@@ -648,6 +657,8 @@ def test_aiter_fusion_rmsnorm_gated_quant(
+     head_dim: int,
+     num_tokens: int,
+     eps: float,
++    flatten_heads: bool,
++    quant_fp8_op: str,
+     monkeypatch: pytest.MonkeyPatch,
+ ):
+     group_shape = GroupShape(1, 128)
+@@ -655,7 +666,7 @@ def test_aiter_fusion_rmsnorm_gated_quant(
+         model_config=ModelConfig(dtype=dtype),
+         compilation_config=CompilationConfig(
+             mode=CompilationMode.VLLM_COMPILE,
+-            custom_ops=["-rms_norm", "-silu_and_mul", "-quant_fp8"],
++            custom_ops=["-rms_norm", "-silu_and_mul", quant_fp8_op],
+             pass_config=PassConfig(fuse_norm_quant=True, eliminate_noops=True),
+         ),
+     )
+@@ -688,6 +699,7 @@ def test_aiter_fusion_rmsnorm_gated_quant(
+             group_shape=group_shape,
+             dtype=dtype,
+             use_aiter_quant=True,
++            flatten_heads=flatten_heads,
+         )
+ 
+         noop_pass = NoOpEliminationPass(vllm_config)
+@@ -708,7 +720,11 @@ def test_aiter_fusion_rmsnorm_gated_quant(
+         model_unfused = torch.compile(model, backend=backend2)
+         result_unfused = model_unfused(x, z)
+ 
+-        torch.testing.assert_close(result_fused, result_unfused, atol=1e-2, rtol=1e-2)
++        # The opaque AITER quant op preserves a BF16 intermediate in the
++        # unfused path, while the fused kernel normalizes and quantizes
++        # directly. Allow for that extra rounding before the FP8 GEMM.
++        tol = 2e-2 if quant_fp8_op == "+quant_fp8" else 1e-2
++        torch.testing.assert_close(result_fused, result_unfused, atol=tol, rtol=tol)
+ 
+         assert fusion_pass.matched_count == 1
+         backend.check_after_ops(model.ops_in_model_after())
+diff --git a/tests/kernels/mamba/test_gdn_output_projection.py b/tests/kernels/mamba/test_gdn_output_projection.py
+new file mode 100644
+index 000000000000..f9abfb4ac666
+--- /dev/null
++++ b/tests/kernels/mamba/test_gdn_output_projection.py
+@@ -0,0 +1,53 @@
++# SPDX-License-Identifier: Apache-2.0
++# SPDX-FileCopyrightText: Copyright contributors to the vLLM project
++"""Shape contract for ``QwenGatedDeltaNetAttention._output_projection``.
++
++Every ``forward_*`` already allocates ``core_attn_out`` and ``z`` as
++``(N, H, D)``. The helper now norms those tensors as-is and flattens once
++for ``out_proj``; it used to be rank-agnostic via ``reshape(z_shape_og)``.
++"""
++
++from __future__ import annotations
++
++import types
++
++import pytest
++import torch
++
++from vllm.model_executor.layers.layernorm import RMSNormGated
++from vllm.model_executor.layers.mamba.gdn.qwen_gdn_linear_attn import (
++    QwenGatedDeltaNetAttention,
++)
++
++
++@pytest.mark.parametrize("dtype", [torch.float32])
++@torch.inference_mode()
++def test_output_projection_norms_per_head_and_flattens(
++    default_vllm_config,
++    dtype: torch.dtype,
++) -> None:
++    num_tokens, num_heads, head_dim = 3, 4, 8
++    hidden = num_heads * head_dim
++
++    layer = types.SimpleNamespace()
++    layer.norm = RMSNormGated(
++        head_dim,
++        eps=1e-5,
++        group_size=None,
++        norm_before_gate=True,
++        device="cpu",
++        dtype=dtype,
++    )
++    layer.out_proj = lambda x: (x, None)
++    layer._output_projection = types.MethodType(
++        QwenGatedDeltaNetAttention._output_projection, layer
++    )
++
++    core_attn_out = torch.randn(num_tokens, num_heads, head_dim, dtype=dtype)
++    z = torch.randn(num_tokens, num_heads, head_dim, dtype=dtype)
++    out = layer._output_projection(core_attn_out, z)
++
++    assert core_attn_out.shape == (num_tokens, num_heads, head_dim)
++    assert z.shape == (num_tokens, num_heads, head_dim)
++    assert out.shape == (num_tokens, hidden)
++    assert out.dtype == dtype
+diff --git a/tests/kernels/test_fla_layernorm_guard.py b/tests/kernels/test_fla_layernorm_guard.py
+index 492c099bf1c5..9223fb7110ff 100644
+--- a/tests/kernels/test_fla_layernorm_guard.py
++++ b/tests/kernels/test_fla_layernorm_guard.py
+@@ -501,6 +501,50 @@ def test_rmsnorm_gated_forward_native_dtype(
+     torch.testing.assert_close(out, ref_out, atol=1e-2, rtol=1e-2)
+ 
+ 
++@pytest.mark.parametrize("dtype", [torch.bfloat16])
++@torch.inference_mode()
++def test_rmsnorm_gated_3d_matches_flattened_2d(
++    default_vllm_config,
++    dtype: torch.dtype,
++) -> None:
++    """Qwen GDN now norms (N, H, D) in place of a flatten to (N*H, D).
++
++    Last-dim RMS + gate must match the flattened layout on both the native
++    and CUDA/HIP kernels, including a 3D z view that is not contiguous.
++    """
++    from vllm.model_executor.layers.layernorm import RMSNormGated
++
++    set_random_seed(42)
++    device = torch.device(DEVICE)
++    num_tokens, num_heads, head_dim = 5, 4, 64
++    layer = RMSNormGated(
++        head_dim,
++        eps=1e-5,
++        group_size=None,
++        norm_before_gate=True,
++        device=device,
++        dtype=dtype,
++    )
++
++    packed = torch.randn(num_tokens, num_heads, 2, head_dim, dtype=dtype, device=device)
++    x3 = packed[:, :, 0, :]
++    z3 = packed[:, :, 1, :]
++    assert not x3.is_contiguous()
++    assert not z3.is_contiguous()
++    x2 = x3.reshape(-1, head_dim).contiguous()
++    z2 = z3.reshape(-1, head_dim).contiguous()
++
++    native_3d = layer.forward_native(x3, z3)
++    native_2d = layer.forward_native(x2, z2).reshape(num_tokens, num_heads, head_dim)
++    torch.testing.assert_close(native_3d, native_2d, atol=0, rtol=0)
++
++    cuda_3d = layer.forward_cuda(x3, z3)
++    cuda_2d = layer.forward_cuda(x2, z2).reshape(num_tokens, num_heads, head_dim)
++    torch.testing.assert_close(cuda_3d, cuda_2d, atol=1e-3, rtol=1e-2)
++    torch.testing.assert_close(cuda_3d, native_3d, atol=1e-2, rtol=1e-2)
++    assert cuda_3d.shape == (num_tokens, num_heads, head_dim)
++
++
+ if __name__ == "__main__":
+     # Run a quick smoke test
+     test_layer_norm_fwd_basic(128, 1024, torch.float16, 42, False)
+diff --git a/vllm/compilation/passes/fusion/rocm_aiter_fusion.py b/vllm/compilation/passes/fusion/rocm_aiter_fusion.py
+index 3a097b0bf491..19bbfc2d8754 100644
+--- a/vllm/compilation/passes/fusion/rocm_aiter_fusion.py
++++ b/vllm/compilation/passes/fusion/rocm_aiter_fusion.py
+@@ -30,6 +30,7 @@
+     VllmPatternReplacement,
+     _fx_view_to_reshape,
+     fold_consecutive_reshapes,
++    remove_noop_reshapes,
+ )
+ from .matcher_utils import (
+     MatcherQuantFP8,
+@@ -452,9 +453,9 @@ class AiterRMSNormGatedFp8GroupQuantPattern(AiterRMSNormQuantPattern):
+     """Matches decomposed RMSNormGated + reshape + group FP8 quant and replaces
+     with rocm_aiter_fused_rms_gated_fp8_group_quant.
+ 
+-    The norm operates per-head on (N*H, D) tensors. The compiler folds the
+-    reshape chain so after norm the result goes through reshape->merge->quant.
+-    The pattern reshapes from (N*H, D) to (N, H*D) before calling
++    The norm operates per-head, on either (N*H, D) or (N, H, D). The compiler
++    folds the reshape chain so after norm the result goes through
++    reshape->merge->quant. The pattern reshapes to (N, H*D) before calling
+     MatcherQuantFP8 so that _quantize_group_native sees the full hidden dim
+     and computes the correct num_groups.
+     """
+@@ -482,6 +483,16 @@ def __init__(
+         self.head_dim = head_dim
+ 
+     def register(self, pm_pass: PatternMatcherPass) -> None:
++        self._register_layout(pm_pass, flatten_heads=True)
++        # Both layouts reach the norm. With an opaque quant op they trace to
++        # the same pattern; with a native quant they differ, because its group
++        # reshape back to (N, H, D) is a no-op the compiler already dropped.
++        if not self.quant_matcher.enabled:
++            self._register_layout(pm_pass, flatten_heads=False)
++
++    def _register_layout(
++        self, pm_pass: PatternMatcherPass, *, flatten_heads: bool
++    ) -> None:
+         num_heads = self.num_heads
+         head_dim = self.head_dim
+         hidden_dim = num_heads * head_dim
+@@ -502,6 +513,11 @@ def replacement(
+             z: torch.Tensor,
+             weight: torch.Tensor,
+         ) -> tuple[torch.Tensor, torch.Tensor]:
++            # The pattern matches on op structure rather than rank, so either
++            # per-head layout can land here. The fused op takes (M, D), and
++            # both operands are contiguous, so collapsing the heads is a view.
++            x = x.reshape(-1, head_dim)
++            z = z.reshape(-1, head_dim)
+             fused = self.FUSED_OP(
+                 x=x,
+                 weight=weight,
+@@ -519,14 +535,21 @@ def replacement(
+             return fp8_reshaped, scales_reshaped
+ 
+         n_tokens = 2
+-        x = self.empty(n_tokens * num_heads, head_dim)
+-        z = self.empty(n_tokens * num_heads, head_dim)
++        shape = (
++            (n_tokens * num_heads, head_dim)
++            if flatten_heads
++            else (n_tokens, num_heads, head_dim)
++        )
++        x = self.empty(*shape)
++        z = self.empty(*shape)
+         w = self.empty(head_dim)
+ 
+         def trace_fn(*args, **kwargs):
+             gm = pm.fwd_only(*args, **kwargs)
+             _fx_view_to_reshape(gm)
+             fold_consecutive_reshapes(gm)
++            if not flatten_heads:
++                remove_noop_reshapes(gm)
+             return gm
+ 
+         pm.register_replacement(
+diff --git a/vllm/compilation/passes/vllm_inductor_pass.py b/vllm/compilation/passes/vllm_inductor_pass.py
+index f05c732af381..3d6e7ef4f304 100644
+--- a/vllm/compilation/passes/vllm_inductor_pass.py
++++ b/vllm/compilation/passes/vllm_inductor_pass.py
+@@ -277,6 +277,27 @@ def fold_consecutive_reshapes(gm: fx.GraphModule) -> None:
+         gm.graph.erase_node(inp)
+ 
+ 
++def remove_noop_reshapes(gm: fx.GraphModule) -> None:
++    """Drop reshape ops whose output shape equals their input shape.
++
++    Companion to :func:`fold_consecutive_reshapes`. ``make_fx`` records a
++    reshape to the shape the input already has; the compiled graph has already
++    dropped it, so the pattern only matches once we drop it too.
++    """
++    aten_reshape = torch.ops.aten.reshape.default
++    for node in list(gm.graph.nodes):
++        if not is_func(node, aten_reshape):
++            continue
++        inp = node.args[0]
++        if not isinstance(inp, fx.Node):
++            continue
++        val, inp_val = node.meta.get("val"), inp.meta.get("val")
++        if val is None or inp_val is None or val.shape != inp_val.shape:
++            continue
++        node.replace_all_uses_with(inp)
++        gm.graph.erase_node(node)
++
++
+ def _remove_noop_permutes(gm: fx.GraphModule) -> None:
+     for node in gm.graph.nodes:
+         if not is_func(node, torch.ops.aten.permute.default):
+diff --git a/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py b/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py
+index 1ca07ad0cf3a..681ff98ae6d4 100644
+--- a/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py
++++ b/vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py
+@@ -852,13 +852,8 @@ def _output_projection(
+         The RMSNormGated + quant sequence is eligible for fusion
+         by the compilation pass when fuse_norm_quant is enabled.
+         """
+-        z_shape_og = z.shape
+-        core_attn_out = core_attn_out.reshape(-1, core_attn_out.shape[-1])
+-        z = z.reshape(-1, z.shape[-1])
+         core_attn_out = self.norm(core_attn_out, z)
+-        core_attn_out = core_attn_out.reshape(z_shape_og)
+-        core_attn_out = core_attn_out.flatten(-2)  # ... h d -> ... (h d)
+-        output, _ = self.out_proj(core_attn_out)
++        output, _ = self.out_proj(core_attn_out.flatten(-2))
+         return output
+ 
+     def forward_hip(
+@@ -1012,15 +1007,7 @@ def forward_xpu(
+         # ============================================================
+         # Part 3: Output Projection
+         # ============================================================
+-        z_shape_og = z.shape
+-        # Reshape input data into 2D tensor
+-        core_attn_out = core_attn_out.reshape(-1, core_attn_out.shape[-1])
+-        z = z.reshape(-1, z.shape[-1])
+-        core_attn_out = self.norm(core_attn_out, z)
+-        core_attn_out = core_attn_out.reshape(z_shape_og)
+-        core_attn_out = core_attn_out.flatten(-2)  # ... h d -> ... (h d)
+-        out, _ = self.out_proj(core_attn_out)
+-        return out
++        return self._output_projection(core_attn_out, z)
+ 
+     def forward_cpu(
+         self,
+@@ -1063,14 +1050,7 @@ def forward_cpu(
+             _encode_layer_name(self.prefix),
+         )
+ 
+-        z_shape_og = z.shape
+-        core_attn_out = core_attn_out.reshape(-1, core_attn_out.shape[-1])
+-        z = z.reshape(-1, z.shape[-1])
+-        core_attn_out = self.norm(core_attn_out, z)
+-        core_attn_out = core_attn_out.reshape(z_shape_og)
+-        core_attn_out = core_attn_out.flatten(-2)  # ... h d -> ... (h d)
+-        out, _ = self.out_proj(core_attn_out)
+-        return out
++        return self._output_projection(core_attn_out, z)
+ 
+     def _warmup_prefill_kernels(self, qkv_or_qkvz: torch.Tensor, v_dim: int) -> None:
+         """Warm up GDN prefill kernels during V1 profiling.

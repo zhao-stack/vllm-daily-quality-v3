@@ -1,0 +1,15 @@
+{
+  "structural_valid": true,
+  "visual_review_required": true,
+  "source_semantic_review_required_for_live_run": true,
+  "report_sha256": "1a95f9aff0464c35c72498b53e1739a25ee1a2a336a5866182d064ed1bcbfde9",
+  "counts": {
+    "all_prs": 0,
+    "bugfix": 0,
+    "optimization": 0,
+    "feature_interface": 0
+  },
+  "five_category": {},
+  "sample_comparison": false,
+  "production_state_modified": false
+}

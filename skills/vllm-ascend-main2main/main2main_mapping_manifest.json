@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "description": "Explicit inventory and staged analysis profiles for main2main mapping tables.",
+  "default_profile": "exact-contracts",
+  "profiles": {
+    "exact-contracts": {
+      "description": "Only exact callable interface deltas, verified direct-import relocation/removal, and exact callable renames.",
+      "tables": [
+        "method"
+      ],
+      "dynamic_detectors": [
+        "verified_override_and_patch_contract",
+        "direct_import_relocation_or_removal",
+        "exact_callable_rename",
+        "bound_adapted_free_function"
+      ]
+    },
+    "expanded": {
+      "description": "Opt-in review profile for fields, call protocols, registration, and inheritance; broad remains disabled.",
+      "tables": [
+        "method",
+        "field",
+        "call_protocol",
+        "registration",
+        "inheritance"
+      ],
+      "dynamic_detectors": [
+        "verified_override_and_patch_contract",
+        "direct_import_and_changed_owner_review",
+        "generic_copied_source_review",
+        "release_guard_review"
+      ]
+    }
+  },
+  "default_pipeline": [
+    "method"
+  ],
+  "tables": [
+    {
+      "name": "method",
+      "file": "main2main_method_mapping.json",
+      "source_file": "raw/main2main_method_mapping.json",
+      "additional_source_files": [
+        "curated/main2main_method_additions.json",
+        "curated/main2main_method_additions_fe784ff2_69d1d6fe.json",
+        "curated/main2main_patch_bindings_fe784ff2_69d1d6fe.json"
+      ],
+      "optimized_output": "main2main_method_mapping.optimized.json",
+      "role": "primary",
+      "default_stage": 1,
+      "enabled_by_default": true,
+      "optimizer": "method",
+      "minimum_evidence": "verified_override_or_patch"
+    },
+    {
+      "name": "field",
+      "file": "main2main_field_mapping.json",
+      "source_file": "raw/main2main_field_mapping.json",
+      "optimized_output": "main2main_field_mapping.optimized.json",
+      "role": "primary",
+      "default_stage": 2,
+      "enabled_by_default": false,
+      "optimizer": "field",
+      "minimum_evidence": "verified_owner_and_contract_delta"
+    },
+    {
+      "name": "call_protocol",
+      "file": "main2main_call_protocol_mapping.json",
+      "source_file": "raw/main2main_call_protocol_mapping.json",
+      "optimized_output": "main2main_call_protocol_mapping.optimized.json",
+      "role": "primary",
+      "default_stage": 3,
+      "enabled_by_default": false,
+      "optimizer": "call_protocol",
+      "minimum_evidence": "verified_callee_and_callsite_delta"
+    },
+    {
+      "name": "registration",
+      "file": "main2main_registration_mapping.json",
+      "source_file": "raw/main2main_registration_mapping.json",
+      "optimized_output": "main2main_registration_mapping.optimized.json",
+      "role": "closure",
+      "default_stage": 4,
+      "enabled_by_default": false,
+      "optimizer": "registration",
+      "minimum_evidence": "verified_lifecycle_edge"
+    },
+    {
+      "name": "inheritance",
+      "file": "main2main_inheritance_mapping.json",
+      "optimized_output": null,
+      "role": "secondary",
+      "default_stage": 5,
+      "enabled_by_default": false,
+      "optimizer": null,
+      "minimum_evidence": "verified_mro_edge"
+    },
+    {
+      "name": "broad",
+      "file": "main2main_mapping.json",
+      "optimized_output": null,
+      "role": "appendix",
+      "default_stage": 6,
+      "enabled_by_default": false,
+      "optimizer": null,
+      "minimum_evidence": "file_or_symbol_reference"
+    }
+  ],
+  "excluded_globs": [
+    "main2main_pr*_mapping.json"
+  ],
+  "record_review_contract": {
+    "relationship_verified": "boolean",
+    "action": [
+      "review",
+      "dismiss"
+    ],
+    "confidence": [
+      "low",
+      "medium",
+      "high"
+    ],
+    "verification_status": [
+      "candidate",
+      "dismissed",
+      "verified"
+    ]
+  }
+}

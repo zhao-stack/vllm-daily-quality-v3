@@ -1,0 +1,2759 @@
+{
+  "schema_version": 2,
+  "generated_from": {
+    "generator": "main2main_risk_analyzer.py validate / discover_missing_method_candidates",
+    "generated_at": "2026-07-14T10:46:18.535358Z",
+    "validation_report": "optimized_validate_v3.json",
+    "validation_report_sha256": "2839e449c006e72b9431434f916c810a065b970714ec1cb46ad596135b2c2b42",
+    "source_sha": {
+      "vllm": "382bbd51448b2f58c73b3e51d051bc352166ba91",
+      "vllm_ascend": "9aa0e382b257b364a4c4a1530838ab36a08ec6c2"
+    }
+  },
+  "summary": {
+    "total": 83,
+    "relation": "override",
+    "verification_status": "verified"
+  },
+  "mappings": [
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/v1/kv_cache_interface.py",
+        "module": "vllm.v1.kv_cache_interface",
+        "class": "MLAAttentionSpec",
+        "method": "merge",
+        "line": 423,
+        "signature": "def merge(cls, specs: list[Self]) -> Self:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/core/kv_cache_interface.py",
+        "class": "AscendMLAAttentionSpec",
+        "method": "merge",
+        "line": 164,
+        "signature": "def merge(cls, specs: list[Self]) -> Self:"
+      },
+      "base_expression": "MLAAttentionSpec",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 0
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/v1/kv_cache_interface.py",
+        "module": "vllm.v1.kv_cache_interface",
+        "class": "SlidingWindowMLASpec",
+        "method": "storage_block_size",
+        "line": 628,
+        "signature": "def storage_block_size(self) -> int:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/core/kv_cache_interface.py",
+        "class": "AscendSlidingWindowMLASpec",
+        "method": "storage_block_size",
+        "line": 233,
+        "signature": "def storage_block_size(self) -> int:"
+      },
+      "base_expression": "SlidingWindowMLASpec",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 1
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/v1/kv_cache_interface.py",
+        "module": "vllm.v1.kv_cache_interface",
+        "class": "SlidingWindowMLASpec",
+        "method": "real_page_size_bytes",
+        "line": 632,
+        "signature": "def real_page_size_bytes(self) -> int:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/core/kv_cache_interface.py",
+        "class": "AscendSlidingWindowMLASpec",
+        "method": "real_page_size_bytes",
+        "line": 237,
+        "signature": "def real_page_size_bytes(self) -> int:"
+      },
+      "base_expression": "SlidingWindowMLASpec",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 2
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/v1/kv_cache_interface.py",
+        "module": "vllm.v1.kv_cache_interface",
+        "class": "SlidingWindowMLASpec",
+        "method": "merge",
+        "line": 649,
+        "signature": "def merge(cls, specs: list[Self]) -> Self:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/core/kv_cache_interface.py",
+        "class": "AscendSlidingWindowMLASpec",
+        "method": "merge",
+        "line": 241,
+        "signature": "def merge(cls, specs: list[Self]) -> Self:"
+      },
+      "base_expression": "SlidingWindowMLASpec",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 3
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/v1/core/sched/request_queue.py",
+        "module": "vllm.v1.core.sched.request_queue",
+        "class": "RequestQueue",
+        "method": "add_request",
+        "line": 24,
+        "signature": "def add_request(self, request: Request) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/core/short_request_first_scheduler.py",
+        "class": "ShortRequestFirstRequestQueue",
+        "method": "add_request",
+        "line": 235,
+        "signature": "def add_request(self, request: Request) -> None:"
+      },
+      "base_expression": "RequestQueue",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 4
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/v1/core/sched/request_queue.py",
+        "module": "vllm.v1.core.sched.request_queue",
+        "class": "RequestQueue",
+        "method": "pop_request",
+        "line": 29,
+        "signature": "def pop_request(self) -> Request:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/core/short_request_first_scheduler.py",
+        "class": "ShortRequestFirstRequestQueue",
+        "method": "pop_request",
+        "line": 246,
+        "signature": "def pop_request(self) -> Request:"
+      },
+      "base_expression": "RequestQueue",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 5
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/v1/core/sched/request_queue.py",
+        "module": "vllm.v1.core.sched.request_queue",
+        "class": "RequestQueue",
+        "method": "peek_request",
+        "line": 34,
+        "signature": "def peek_request(self) -> Request:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/core/short_request_first_scheduler.py",
+        "class": "ShortRequestFirstRequestQueue",
+        "method": "peek_request",
+        "line": 298,
+        "signature": "def peek_request(self) -> Request:"
+      },
+      "base_expression": "RequestQueue",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 6
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/v1/core/sched/request_queue.py",
+        "module": "vllm.v1.core.sched.request_queue",
+        "class": "RequestQueue",
+        "method": "prepend_request",
+        "line": 39,
+        "signature": "def prepend_request(self, request: Request) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/core/short_request_first_scheduler.py",
+        "class": "ShortRequestFirstRequestQueue",
+        "method": "prepend_request",
+        "line": 304,
+        "signature": "def prepend_request(self, request: Request, force_immediate: bool = False) -> None:"
+      },
+      "base_expression": "RequestQueue",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 7
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/v1/core/sched/request_queue.py",
+        "module": "vllm.v1.core.sched.request_queue",
+        "class": "RequestQueue",
+        "method": "prepend_requests",
+        "line": 44,
+        "signature": "def prepend_requests(self, requests: \"RequestQueue\") -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/core/short_request_first_scheduler.py",
+        "class": "ShortRequestFirstRequestQueue",
+        "method": "prepend_requests",
+        "line": 316,
+        "signature": "def prepend_requests(self, requests: RequestQueue) -> None:"
+      },
+      "base_expression": "RequestQueue",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 8
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/v1/core/sched/request_queue.py",
+        "module": "vllm.v1.core.sched.request_queue",
+        "class": "RequestQueue",
+        "method": "remove_request",
+        "line": 50,
+        "signature": "def remove_request(self, request: Request) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/core/short_request_first_scheduler.py",
+        "class": "ShortRequestFirstRequestQueue",
+        "method": "remove_request",
+        "line": 320,
+        "signature": "def remove_request(self, request: Request) -> None:"
+      },
+      "base_expression": "RequestQueue",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 9
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/v1/core/sched/request_queue.py",
+        "module": "vllm.v1.core.sched.request_queue",
+        "class": "RequestQueue",
+        "method": "remove_requests",
+        "line": 55,
+        "signature": "def remove_requests(self, requests: Iterable[Request]) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/core/short_request_first_scheduler.py",
+        "class": "ShortRequestFirstRequestQueue",
+        "method": "remove_requests",
+        "line": 332,
+        "signature": "def remove_requests(self, requests: Iterable[Request]) -> None:"
+      },
+      "base_expression": "RequestQueue",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 10
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/v1/core/single_type_kv_cache_manager.py",
+        "module": "vllm.v1.core.single_type_kv_cache_manager",
+        "class": "FullAttentionManager",
+        "method": "cache_blocks",
+        "line": 748,
+        "signature": "def cache_blocks( self, request: Request, num_tokens: int, retention_interval: int | None = None, ) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/core/single_type_kv_cache_manager.py",
+        "class": "CompressAttentionManager",
+        "method": "cache_blocks",
+        "line": 160,
+        "signature": "def cache_blocks( self, request: Request, num_tokens: int, retention_interval: int | None = None, *, alignment_tokens: int | None = None, ) -> None:"
+      },
+      "base_expression": "FullAttentionManager",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 11
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/multi_connector.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.multi_connector",
+        "class": "MultiConnector",
+        "method": "get_num_new_matched_tokens",
+        "line": 381,
+        "signature": "def get_num_new_matched_tokens( self, request: \"Request\", num_computed_tokens: int, ) -> tuple[int | None, bool]:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/ascend_multi_connector.py",
+        "class": "AscendMultiConnector",
+        "method": "get_num_new_matched_tokens",
+        "line": 43,
+        "signature": "def get_num_new_matched_tokens( self, request: \"Request\", num_computed_tokens: int, ) -> tuple[int | None, bool]:"
+      },
+      "base_expression": "MultiConnector",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 12
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+        "class": "KVConnectorBase_V1",
+        "method": "set_xfer_handshake_metadata_pp_aware",
+        "line": 664,
+        "signature": "def set_xfer_handshake_metadata_pp_aware( self, metadata: dict[tuple[int, int], KVConnectorHandshakeMetadata] ) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/kv_p2p/mooncake_connector.py",
+        "class": "MooncakeConnector",
+        "method": "set_xfer_handshake_metadata_pp_aware",
+        "line": 1516,
+        "signature": "def set_xfer_handshake_metadata_pp_aware( self, metadata: Mapping[int | tuple[int, ...], KVConnectorHandshakeMetadata] ) -> None:"
+      },
+      "base_expression": "KVConnectorBase_V1",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 13
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+        "class": "KVConnectorWorkerMetadata",
+        "method": "aggregate",
+        "line": 162,
+        "signature": "def aggregate( self, other: \"KVConnectorWorkerMetadata\" ) -> \"KVConnectorWorkerMetadata\":"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/kv_pool/recompute_cpu_offload/metadata.py",
+        "class": "RecomputeCPUOffloadWorkerMetadata",
+        "method": "aggregate",
+        "line": 47,
+        "signature": "def aggregate(self, other: \"KVConnectorWorkerMetadata\") -> \"KVConnectorWorkerMetadata\":"
+      },
+      "base_expression": "KVConnectorWorkerMetadata",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 14
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+        "class": "KVConnectorBase_V1",
+        "method": "__init__",
+        "line": 184,
+        "signature": "def __init__( self, vllm_config: \"VllmConfig\", role: KVConnectorRole, kv_cache_config: \"KVCacheConfig\", ):"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/kv_pool/recompute_cpu_offload/recompute_cpu_offload_connector.py",
+        "class": "RecomputeCPUOffloadConnectorV1",
+        "method": "__init__",
+        "line": 46,
+        "signature": "def __init__( self, vllm_config: VllmConfig, role: KVConnectorRole, kv_cache_config: \"KVCacheConfig | None\" = None, ):"
+      },
+      "base_expression": "KVConnectorBase_V1",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 15
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+        "class": "KVConnectorBase_V1",
+        "method": "register_kv_caches",
+        "line": 251,
+        "signature": "def register_kv_caches(self, kv_caches: dict[str, torch.Tensor]):"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/kv_pool/recompute_cpu_offload/recompute_cpu_offload_connector.py",
+        "class": "RecomputeCPUOffloadConnectorV1",
+        "method": "register_kv_caches",
+        "line": 99,
+        "signature": "def register_kv_caches(self, kv_caches: dict[str, torch.Tensor]) -> None:"
+      },
+      "base_expression": "KVConnectorBase_V1",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 16
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+        "class": "KVConnectorBase_V1",
+        "method": "bind_connector_metadata",
+        "line": 211,
+        "signature": "def bind_connector_metadata(self, connector_metadata: KVConnectorMetadata) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/kv_pool/recompute_cpu_offload/recompute_cpu_offload_connector.py",
+        "class": "RecomputeCPUOffloadConnectorV1",
+        "method": "bind_connector_metadata",
+        "line": 103,
+        "signature": "def bind_connector_metadata( self, connector_metadata: KVConnectorMetadata, ) -> None:"
+      },
+      "base_expression": "KVConnectorBase_V1",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 17
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+        "class": "KVConnectorBase_V1",
+        "method": "clear_connector_metadata",
+        "line": 223,
+        "signature": "def clear_connector_metadata(self) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/kv_pool/recompute_cpu_offload/recompute_cpu_offload_connector.py",
+        "class": "RecomputeCPUOffloadConnectorV1",
+        "method": "clear_connector_metadata",
+        "line": 112,
+        "signature": "def clear_connector_metadata(self) -> None:"
+      },
+      "base_expression": "KVConnectorBase_V1",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 18
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+        "class": "KVConnectorBase_V1",
+        "method": "handle_preemptions",
+        "line": 285,
+        "signature": "def handle_preemptions(self, kv_connector_metadata: KVConnectorMetadata):"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/kv_pool/recompute_cpu_offload/recompute_cpu_offload_connector.py",
+        "class": "RecomputeCPUOffloadConnectorV1",
+        "method": "handle_preemptions",
+        "line": 117,
+        "signature": "def handle_preemptions(self, kv_connector_metadata: KVConnectorMetadata) -> None:"
+      },
+      "base_expression": "KVConnectorBase_V1",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 19
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+        "class": "KVConnectorBase_V1",
+        "method": "start_load_kv",
+        "line": 293,
+        "signature": "def start_load_kv(self, forward_context: \"ForwardContext\", **kwargs: Any) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/kv_pool/recompute_cpu_offload/recompute_cpu_offload_connector.py",
+        "class": "RecomputeCPUOffloadConnectorV1",
+        "method": "start_load_kv",
+        "line": 122,
+        "signature": "def start_load_kv(self, forward_context: \"ForwardContext\", **kwargs: Any) -> None:"
+      },
+      "base_expression": "KVConnectorBase_V1",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 20
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+        "class": "KVConnectorBase_V1",
+        "method": "wait_for_layer_load",
+        "line": 311,
+        "signature": "def wait_for_layer_load(self, layer_name: str) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/kv_pool/recompute_cpu_offload/recompute_cpu_offload_connector.py",
+        "class": "RecomputeCPUOffloadConnectorV1",
+        "method": "wait_for_layer_load",
+        "line": 126,
+        "signature": "def wait_for_layer_load(self, layer_name: str) -> None:"
+      },
+      "base_expression": "KVConnectorBase_V1",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 21
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+        "class": "KVConnectorBase_V1",
+        "method": "save_kv_layer",
+        "line": 325,
+        "signature": "def save_kv_layer( self, layer_name: str, kv_layer: torch.Tensor, attn_metadata: \"AttentionMetadata\", **kwargs: Any, ) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/kv_pool/recompute_cpu_offload/recompute_cpu_offload_connector.py",
+        "class": "RecomputeCPUOffloadConnectorV1",
+        "method": "save_kv_layer",
+        "line": 130,
+        "signature": "def save_kv_layer( self, layer_name: str, kv_layer: torch.Tensor, attn_metadata: \"AttentionMetadata\", **kwargs: Any, ) -> None:"
+      },
+      "base_expression": "KVConnectorBase_V1",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 22
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+        "class": "KVConnectorBase_V1",
+        "method": "wait_for_save",
+        "line": 347,
+        "signature": "def wait_for_save(self):"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/kv_pool/recompute_cpu_offload/recompute_cpu_offload_connector.py",
+        "class": "RecomputeCPUOffloadConnectorV1",
+        "method": "wait_for_save",
+        "line": 139,
+        "signature": "def wait_for_save(self) -> None:"
+      },
+      "base_expression": "KVConnectorBase_V1",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 23
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+        "class": "KVConnectorBase_V1",
+        "method": "get_finished",
+        "line": 357,
+        "signature": "def get_finished( self, finished_req_ids: set[str] ) -> tuple[set[str] | None, set[str] | None]:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/kv_pool/recompute_cpu_offload/recompute_cpu_offload_connector.py",
+        "class": "RecomputeCPUOffloadConnectorV1",
+        "method": "get_finished",
+        "line": 142,
+        "signature": "def get_finished( self, finished_req_ids: set[str], ) -> tuple[set[str] | None, set[str] | None]:"
+      },
+      "base_expression": "KVConnectorBase_V1",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 24
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+        "class": "KVConnectorBase_V1",
+        "method": "build_connector_worker_meta",
+        "line": 429,
+        "signature": "def build_connector_worker_meta(self) -> KVConnectorWorkerMetadata | None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/kv_pool/recompute_cpu_offload/recompute_cpu_offload_connector.py",
+        "class": "RecomputeCPUOffloadConnectorV1",
+        "method": "build_connector_worker_meta",
+        "line": 150,
+        "signature": "def build_connector_worker_meta(self):"
+      },
+      "base_expression": "KVConnectorBase_V1",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 25
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+        "class": "KVConnectorBase_V1",
+        "method": "bind_gpu_block_pool",
+        "line": 443,
+        "signature": "def bind_gpu_block_pool(self, gpu_block_pool: \"BlockPool\") -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/kv_pool/recompute_cpu_offload/recompute_cpu_offload_connector.py",
+        "class": "RecomputeCPUOffloadConnectorV1",
+        "method": "bind_gpu_block_pool",
+        "line": 158,
+        "signature": "def bind_gpu_block_pool(self, gpu_block_pool: \"BlockPool\") -> None:"
+      },
+      "base_expression": "KVConnectorBase_V1",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 26
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+        "class": "KVConnectorBase_V1",
+        "method": "get_num_new_matched_tokens",
+        "line": 454,
+        "signature": "def get_num_new_matched_tokens( self, request: \"Request\", num_computed_tokens: int, ) -> tuple[int | None, bool]:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/kv_pool/recompute_cpu_offload/recompute_cpu_offload_connector.py",
+        "class": "RecomputeCPUOffloadConnectorV1",
+        "method": "get_num_new_matched_tokens",
+        "line": 162,
+        "signature": "def get_num_new_matched_tokens( self, request: \"Request\", num_computed_tokens: int, ) -> tuple[int | None, bool]:"
+      },
+      "base_expression": "KVConnectorBase_V1",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 27
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+        "class": "KVConnectorBase_V1",
+        "method": "update_state_after_alloc",
+        "line": 489,
+        "signature": "def update_state_after_alloc( self, request: \"Request\", blocks: \"KVCacheBlocks\", num_external_tokens: int ):"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/kv_pool/recompute_cpu_offload/recompute_cpu_offload_connector.py",
+        "class": "RecomputeCPUOffloadConnectorV1",
+        "method": "update_state_after_alloc",
+        "line": 171,
+        "signature": "def update_state_after_alloc( self, request: \"Request\", blocks: \"KVCacheBlocks\", num_external_tokens: int, ) -> None:"
+      },
+      "base_expression": "KVConnectorBase_V1",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 28
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+        "class": "KVConnectorBase_V1",
+        "method": "build_connector_meta",
+        "line": 515,
+        "signature": "def build_connector_meta( self, scheduler_output: SchedulerOutput ) -> KVConnectorMetadata:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/kv_pool/recompute_cpu_offload/recompute_cpu_offload_connector.py",
+        "class": "RecomputeCPUOffloadConnectorV1",
+        "method": "build_connector_meta",
+        "line": 194,
+        "signature": "def build_connector_meta( self, scheduler_output: SchedulerOutput, ) -> KVConnectorMetadata:"
+      },
+      "base_expression": "KVConnectorBase_V1",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 29
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+        "class": "KVConnectorBase_V1",
+        "method": "update_connector_output",
+        "line": 537,
+        "signature": "def update_connector_output(self, connector_output: KVConnectorOutput):"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/kv_pool/recompute_cpu_offload/recompute_cpu_offload_connector.py",
+        "class": "RecomputeCPUOffloadConnectorV1",
+        "method": "update_connector_output",
+        "line": 202,
+        "signature": "def update_connector_output( self, connector_output: KVConnectorOutput, ) -> None:"
+      },
+      "base_expression": "KVConnectorBase_V1",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 30
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+        "class": "KVConnectorBase_V1",
+        "method": "request_finished",
+        "line": 547,
+        "signature": "def request_finished( self, request: \"Request\", block_ids: list[int], ) -> tuple[bool, dict[str, Any] | None]:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/kv_pool/recompute_cpu_offload/recompute_cpu_offload_connector.py",
+        "class": "RecomputeCPUOffloadConnectorV1",
+        "method": "request_finished",
+        "line": 209,
+        "signature": "def request_finished( self, request: \"Request\", block_ids: list[int], ) -> tuple[bool, dict[str, Any] | None]:"
+      },
+      "base_expression": "KVConnectorBase_V1",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 31
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+        "class": "KVConnectorBase_V1",
+        "method": "take_events",
+        "line": 568,
+        "signature": "def take_events(self) -> Iterable[\"KVCacheEvent\"]:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/kv_pool/recompute_cpu_offload/recompute_cpu_offload_connector.py",
+        "class": "RecomputeCPUOffloadConnectorV1",
+        "method": "take_events",
+        "line": 238,
+        "signature": "def take_events(self) -> Iterable[KVCacheEvent]:"
+      },
+      "base_expression": "KVConnectorBase_V1",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 32
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+        "class": "KVConnectorBase_V1",
+        "method": "reset_cache",
+        "line": 696,
+        "signature": "def reset_cache(self) -> bool | None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/kv_pool/recompute_cpu_offload/recompute_cpu_offload_connector.py",
+        "class": "RecomputeCPUOffloadConnectorV1",
+        "method": "reset_cache",
+        "line": 243,
+        "signature": "def reset_cache(self) -> bool | None:"
+      },
+      "base_expression": "KVConnectorBase_V1",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 33
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+        "module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+        "class": "SupportsHMA",
+        "method": "request_finished_all_groups",
+        "line": 93,
+        "signature": "def request_finished_all_groups( self, request: \"Request\", block_ids: tuple[list[int], ...], ) -> tuple[bool, dict[str, Any] | None]:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/kv_transfer/kv_pool/recompute_cpu_offload/recompute_cpu_offload_connector.py",
+        "class": "RecomputeCPUOffloadConnectorV1",
+        "method": "request_finished_all_groups",
+        "line": 218,
+        "signature": "def request_finished_all_groups( self, request: \"Request\", block_ids: tuple[list[int], ...], ) -> tuple[bool, dict[str, Any] | None]:"
+      },
+      "base_expression": "SupportsHMA",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 34
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/distributed/weight_transfer/base.py",
+        "module": "vllm.distributed.weight_transfer.base",
+        "class": "WeightTransferEngine",
+        "method": "__init__",
+        "line": 78,
+        "signature": "def __init__( self, config: WeightTransferConfig, vllm_config: \"VllmConfig\", device: torch.device, model: torch.nn.Module, ) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/weight_transfer/hccl_engine.py",
+        "class": "HCCLWeightTransferEngine",
+        "method": "__init__",
+        "line": 132,
+        "signature": "def __init__( # type: ignore[misc] self, config: WeightTransferConfig, vllm_config: VllmConfig, device: torch.device, model: torch.nn.Module, ) -> None:"
+      },
+      "base_expression": "WeightTransferEngine",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 35
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/distributed/weight_transfer/base.py",
+        "module": "vllm.distributed.weight_transfer.base",
+        "class": "WeightTransferEngine",
+        "method": "start_weight_update",
+        "line": 169,
+        "signature": "def start_weight_update(self) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/weight_transfer/hccl_engine.py",
+        "class": "HCCLWeightTransferEngine",
+        "method": "start_weight_update",
+        "line": 144,
+        "signature": "def start_weight_update(self) -> None:"
+      },
+      "base_expression": "WeightTransferEngine",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 36
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/distributed/weight_transfer/base.py",
+        "module": "vllm.distributed.weight_transfer.base",
+        "class": "WeightTransferEngine",
+        "method": "finish_weight_update",
+        "line": 180,
+        "signature": "def finish_weight_update(self) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/weight_transfer/hccl_engine.py",
+        "class": "HCCLWeightTransferEngine",
+        "method": "finish_weight_update",
+        "line": 151,
+        "signature": "def finish_weight_update(self) -> None:"
+      },
+      "base_expression": "WeightTransferEngine",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 37
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/distributed/weight_transfer/base.py",
+        "module": "vllm.distributed.weight_transfer.base",
+        "class": "WeightTransferEngine",
+        "method": "init_transfer_engine",
+        "line": 158,
+        "signature": "def init_transfer_engine(self, init_info: TInitInfo) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/weight_transfer/hccl_engine.py",
+        "class": "HCCLWeightTransferEngine",
+        "method": "init_transfer_engine",
+        "line": 158,
+        "signature": "def init_transfer_engine(self, init_info: HCCLWeightTransferInitInfo) -> None:"
+      },
+      "base_expression": "WeightTransferEngine",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 38
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/distributed/weight_transfer/base.py",
+        "module": "vllm.distributed.weight_transfer.base",
+        "class": "WeightTransferEngine",
+        "method": "receive_weights",
+        "line": 203,
+        "signature": "def receive_weights(self, update_info: TUpdateInfo) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/weight_transfer/hccl_engine.py",
+        "class": "HCCLWeightTransferEngine",
+        "method": "receive_weights",
+        "line": 186,
+        "signature": "def receive_weights( self, update_info: HCCLWeightTransferUpdateInfo, load_weights: Callable[[list[tuple[str, torch.Tensor]]], None], ) -> None:"
+      },
+      "base_expression": "WeightTransferEngine",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 39
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/distributed/weight_transfer/base.py",
+        "module": "vllm.distributed.weight_transfer.base",
+        "class": "WeightTransferEngine",
+        "method": "shutdown",
+        "line": 214,
+        "signature": "def shutdown(self) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/weight_transfer/hccl_engine.py",
+        "class": "HCCLWeightTransferEngine",
+        "method": "shutdown",
+        "line": 231,
+        "signature": "def shutdown(self) -> None:"
+      },
+      "base_expression": "WeightTransferEngine",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 40
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/distributed/weight_transfer/base.py",
+        "module": "vllm.distributed.weight_transfer.base",
+        "class": "WeightTransferEngine",
+        "method": "trainer_send_weights",
+        "line": 223,
+        "signature": "def trainer_send_weights( iterator: Iterator[Any], trainer_args: dict[str, Any] | Any, ) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/weight_transfer/hccl_engine.py",
+        "class": "HCCLWeightTransferEngine",
+        "method": "trainer_send_weights",
+        "line": 237,
+        "signature": "def trainer_send_weights( iterator: Iterator[tuple[str, torch.Tensor]], trainer_args: dict[str, Any] | HCCLTrainerSendWeightsArgs, ) -> None:"
+      },
+      "base_expression": "WeightTransferEngine",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 41
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/distributed/weight_transfer/base.py",
+        "module": "vllm.distributed.weight_transfer.base",
+        "class": "WeightTransferEngine",
+        "method": "__init__",
+        "line": 78,
+        "signature": "def __init__( self, config: WeightTransferConfig, vllm_config: \"VllmConfig\", device: torch.device, model: torch.nn.Module, ) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/weight_transfer/npu_ipc_engine.py",
+        "class": "NPUIPCWeightTransferEngine",
+        "method": "__init__",
+        "line": 133,
+        "signature": "def __init__( # type: ignore[misc] self, config: WeightTransferConfig, vllm_config: VllmConfig, device: torch.device, model: torch.nn.Module, ) -> None:"
+      },
+      "base_expression": "WeightTransferEngine",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 42
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/distributed/weight_transfer/base.py",
+        "module": "vllm.distributed.weight_transfer.base",
+        "class": "WeightTransferEngine",
+        "method": "parse_update_info",
+        "line": 137,
+        "signature": "def parse_update_info(self, update_dict: dict[str, Any]) -> TUpdateInfo:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/weight_transfer/npu_ipc_engine.py",
+        "class": "NPUIPCWeightTransferEngine",
+        "method": "parse_update_info",
+        "line": 142,
+        "signature": "def parse_update_info(self, update_dict: dict[str, Any]) -> NPUIPCWeightTransferUpdateInfo:"
+      },
+      "base_expression": "WeightTransferEngine",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 43
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/distributed/weight_transfer/base.py",
+        "module": "vllm.distributed.weight_transfer.base",
+        "class": "WeightTransferEngine",
+        "method": "init_transfer_engine",
+        "line": 158,
+        "signature": "def init_transfer_engine(self, init_info: TInitInfo) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/weight_transfer/npu_ipc_engine.py",
+        "class": "NPUIPCWeightTransferEngine",
+        "method": "init_transfer_engine",
+        "line": 167,
+        "signature": "def init_transfer_engine(self, init_info: NPUIPCWeightTransferInitInfo) -> None:"
+      },
+      "base_expression": "WeightTransferEngine",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 44
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/distributed/weight_transfer/base.py",
+        "module": "vllm.distributed.weight_transfer.base",
+        "class": "WeightTransferEngine",
+        "method": "start_weight_update",
+        "line": 169,
+        "signature": "def start_weight_update(self) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/weight_transfer/npu_ipc_engine.py",
+        "class": "NPUIPCWeightTransferEngine",
+        "method": "start_weight_update",
+        "line": 173,
+        "signature": "def start_weight_update(self) -> None:"
+      },
+      "base_expression": "WeightTransferEngine",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 45
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/distributed/weight_transfer/base.py",
+        "module": "vllm.distributed.weight_transfer.base",
+        "class": "WeightTransferEngine",
+        "method": "finish_weight_update",
+        "line": 180,
+        "signature": "def finish_weight_update(self) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/weight_transfer/npu_ipc_engine.py",
+        "class": "NPUIPCWeightTransferEngine",
+        "method": "finish_weight_update",
+        "line": 177,
+        "signature": "def finish_weight_update(self) -> None:"
+      },
+      "base_expression": "WeightTransferEngine",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 46
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/distributed/weight_transfer/base.py",
+        "module": "vllm.distributed.weight_transfer.base",
+        "class": "WeightTransferEngine",
+        "method": "receive_weights",
+        "line": 203,
+        "signature": "def receive_weights(self, update_info: TUpdateInfo) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/weight_transfer/npu_ipc_engine.py",
+        "class": "NPUIPCWeightTransferEngine",
+        "method": "receive_weights",
+        "line": 181,
+        "signature": "def receive_weights( self, update_info: NPUIPCWeightTransferUpdateInfo, load_weights: Callable[[list[tuple[str, torch.Tensor]]], None], ) -> None:"
+      },
+      "base_expression": "WeightTransferEngine",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 47
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/distributed/weight_transfer/base.py",
+        "module": "vllm.distributed.weight_transfer.base",
+        "class": "WeightTransferEngine",
+        "method": "shutdown",
+        "line": 214,
+        "signature": "def shutdown(self) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/weight_transfer/npu_ipc_engine.py",
+        "class": "NPUIPCWeightTransferEngine",
+        "method": "shutdown",
+        "line": 240,
+        "signature": "def shutdown(self) -> None:"
+      },
+      "base_expression": "WeightTransferEngine",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 48
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/distributed/weight_transfer/base.py",
+        "module": "vllm.distributed.weight_transfer.base",
+        "class": "WeightTransferEngine",
+        "method": "trainer_send_weights",
+        "line": 223,
+        "signature": "def trainer_send_weights( iterator: Iterator[Any], trainer_args: dict[str, Any] | Any, ) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/distributed/weight_transfer/npu_ipc_engine.py",
+        "class": "NPUIPCWeightTransferEngine",
+        "method": "trainer_send_weights",
+        "line": 244,
+        "signature": "def trainer_send_weights( iterator: Iterator[tuple[str, torch.Tensor]], trainer_args: dict[str, Any] | NPUIPCTrainerSendWeightsArgs, ) -> None:"
+      },
+      "base_expression": "WeightTransferEngine",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 49
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/lora/layers/fused_moe.py",
+        "module": "vllm.lora.layers.fused_moe",
+        "class": "FusedMoEWithLoRA",
+        "method": "__init__",
+        "line": 34,
+        "signature": "def __init__(self, base_layer: MoERunner) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/lora/fused_moe.py",
+        "class": "AscendFusedMoEWithLoRA",
+        "method": "__init__",
+        "line": 167,
+        "signature": "def __init__(self, base_layer: nn.Module) -> None:"
+      },
+      "base_expression": "FusedMoEWithLoRA",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 50
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/lora/layers/fused_moe.py",
+        "module": "vllm.lora.layers.fused_moe",
+        "class": "FusedMoEWithLoRA",
+        "method": "set_mapping",
+        "line": 419,
+        "signature": "def set_mapping(self, punica_wrapper):"
+      },
+      "ascend": {
+        "file": "vllm_ascend/lora/fused_moe.py",
+        "class": "AscendFusedMoEWithLoRA",
+        "method": "set_mapping",
+        "line": 183,
+        "signature": "def set_mapping(self, punica_wrapper):"
+      },
+      "base_expression": "FusedMoEWithLoRA",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 51
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/lora/layers/fused_moe.py",
+        "module": "vllm.lora.layers.fused_moe",
+        "class": "FusedMoE3DWithLoRA",
+        "method": "__init__",
+        "line": 462,
+        "signature": "def __init__(self, base_layer: MoERunner):"
+      },
+      "ascend": {
+        "file": "vllm_ascend/lora/fused_moe.py",
+        "class": "AscendFusedMoE3DWithLoRA",
+        "method": "__init__",
+        "line": 203,
+        "signature": "def __init__(self, base_layer: nn.Module) -> None:"
+      },
+      "base_expression": "FusedMoE3DWithLoRA",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 52
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/lora/punica_wrapper/punica_base.py",
+        "module": "vllm.lora.punica_wrapper.punica_base",
+        "class": "PunicaWrapperBase",
+        "method": "add_lora_fused_moe",
+        "line": 470,
+        "signature": "def add_lora_fused_moe( self, y: torch.Tensor, x: torch.Tensor, lora_a_stacked: tuple[torch.Tensor, ...], lora_b_stacked: tuple[torch.Tensor, ...], topk_weights: torch.Tensor, sorted_token_ids: torch.Tensor | None, expert_ids: torch.Tensor, num_tokens_post_padded: torch.Tensor | None, max_lora_rank: int, top_k_num: int, shrink_config, expand_config, adapter_enabled: torch.Tensor, mul_routed_weight=False, fully_sharded: bool = False, offset: int = 0, token_lora_mapping: torch.Tensor | None = None, ):"
+      },
+      "ascend": {
+        "file": "vllm_ascend/lora/punica_npu.py",
+        "class": "PunicaWrapperNPU",
+        "method": "add_lora_fused_moe",
+        "line": 324,
+        "signature": "def add_lora_fused_moe( self, y: torch.Tensor, x: torch.Tensor, lora_a_stacked: tuple[torch.Tensor, ...], lora_b_stacked: tuple[torch.Tensor, ...], *, topk_weights: torch.Tensor | None = None, sorted_token_ids: torch.Tensor | None = None, expert_ids: torch.Tensor, num_tokens_post_padded: torch.Tensor | None = None, max_lora_rank: int = 0, top_k_num: int = 1, shrink_config=None, expand_config=None, adapter_enabled: torch.Tensor, mul_routed_weight: bool = False, fully_sharded: bool = False, offset: int = 0, token_lora_mapping: torch.Tensor | None = None, ) -> None:"
+      },
+      "base_expression": "PunicaWrapperBase",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 53
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/models/deepseek_v4/compressor.py",
+        "module": "vllm.models.deepseek_v4.compressor",
+        "class": "CompressorStateCache",
+        "method": "__init__",
+        "line": 119,
+        "signature": "def __init__( self, state_dim: int, dtype: torch.dtype, compress_ratio: int, prefix: str, ):"
+      },
+      "ascend": {
+        "file": "vllm_ascend/models/deepseek_v4.py",
+        "class": "AscendCompressorStateCache",
+        "method": "__init__",
+        "line": 109,
+        "signature": "def __init__( self, state_dim: int, dtype: torch.dtype, compress_ratio: int, block_size: int, prefix: str, ):"
+      },
+      "base_expression": "CompressorStateCache",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 54
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/models/deepseek_v4/compressor.py",
+        "module": "vllm.models.deepseek_v4.compressor",
+        "class": "CompressorStateCache",
+        "method": "get_kv_cache_spec",
+        "line": 154,
+        "signature": "def get_kv_cache_spec(self, vllm_config: VllmConfig) -> KVCacheSpec:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/models/deepseek_v4.py",
+        "class": "AscendCompressorStateCache",
+        "method": "get_kv_cache_spec",
+        "line": 121,
+        "signature": "def get_kv_cache_spec(self, vllm_config: VllmConfig) -> KVCacheSpec:"
+      },
+      "base_expression": "CompressorStateCache",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 55
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/models/deepseek_v4/compressor.py",
+        "module": "vllm.models.deepseek_v4.compressor",
+        "class": "CompressorStateCache",
+        "method": "forward",
+        "line": 168,
+        "signature": "def forward(self): ... def get_attn_backend(self) -> type[AttentionBackend]:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/models/deepseek_v4.py",
+        "class": "AscendCompressorStateCache",
+        "method": "forward",
+        "line": 135,
+        "signature": "def forward(self): ... def get_attn_backend(self):"
+      },
+      "base_expression": "CompressorStateCache",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 56
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/models/deepseek_v4/compressor.py",
+        "module": "vllm.models.deepseek_v4.compressor",
+        "class": "CompressorStateCache",
+        "method": "get_attn_backend",
+        "line": 170,
+        "signature": "def get_attn_backend(self) -> type[AttentionBackend]:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/models/deepseek_v4.py",
+        "class": "AscendCompressorStateCache",
+        "method": "get_attn_backend",
+        "line": 137,
+        "signature": "def get_attn_backend(self):"
+      },
+      "base_expression": "CompressorStateCache",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 57
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/models/deepseek_v4/attention.py",
+        "module": "vllm.models.deepseek_v4.attention",
+        "class": "DeepseekV4IndexerCache",
+        "method": "__init__",
+        "line": 628,
+        "signature": "def __init__( self, head_dim: int, dtype: torch.dtype, prefix: str, cache_config: CacheConfig, compress_ratio: int = 1, ):"
+      },
+      "ascend": {
+        "file": "vllm_ascend/models/deepseek_v4.py",
+        "class": "AscendDeepseekV4IndexerCache",
+        "method": "__init__",
+        "line": 142,
+        "signature": "def __init__( self, head_dim: int, dtype: torch.dtype, prefix: str, cache_config: CacheConfig, compress_ratio: int = 1, ):"
+      },
+      "base_expression": "DeepseekV4IndexerCache",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 58
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/models/deepseek_v4/attention.py",
+        "module": "vllm.models.deepseek_v4.attention",
+        "class": "DeepseekV4IndexerCache",
+        "method": "get_kv_cache_spec",
+        "line": 648,
+        "signature": "def get_kv_cache_spec(self, vllm_config: VllmConfig) -> KVCacheSpec:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/models/deepseek_v4.py",
+        "class": "AscendDeepseekV4IndexerCache",
+        "method": "get_kv_cache_spec",
+        "line": 152,
+        "signature": "def get_kv_cache_spec(self, vllm_config: VllmConfig) -> KVCacheSpec:"
+      },
+      "base_expression": "DeepseekV4IndexerCache",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 59
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/models/deepseek_v4/attention.py",
+        "module": "vllm.models.deepseek_v4.attention",
+        "class": "DeepseekV4IndexerCache",
+        "method": "forward",
+        "line": 662,
+        "signature": "def forward(self): ... def get_attn_backend(self) -> type[AttentionBackend]:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/models/deepseek_v4.py",
+        "class": "AscendDeepseekV4IndexerCache",
+        "method": "forward",
+        "line": 171,
+        "signature": "def forward(self): ... def get_attn_backend(self):"
+      },
+      "base_expression": "DeepseekV4IndexerCache",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 60
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/models/deepseek_v4/attention.py",
+        "module": "vllm.models.deepseek_v4.attention",
+        "class": "DeepseekV4IndexerCache",
+        "method": "get_attn_backend",
+        "line": 664,
+        "signature": "def get_attn_backend(self) -> type[AttentionBackend]:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/models/deepseek_v4.py",
+        "class": "AscendDeepseekV4IndexerCache",
+        "method": "get_attn_backend",
+        "line": 173,
+        "signature": "def get_attn_backend(self):"
+      },
+      "base_expression": "DeepseekV4IndexerCache",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 61
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/model_executor/models/llama_eagle3.py",
+        "module": "vllm.model_executor.models.llama_eagle3",
+        "class": "LlamaDecoderLayer",
+        "method": "__init__",
+        "line": 36,
+        "signature": "def __init__( self, vllm_config: VllmConfig, prefix: str = \"\", config: LlamaConfig | None = None, layer_idx: int = 0, ) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/models/llama_eagle3_vwn.py",
+        "class": "VwnLlamaDecoderLayer",
+        "method": "__init__",
+        "line": 54,
+        "signature": "def __init__(self, vllm_config, prefix=\"\", config=None, layer_idx=0):"
+      },
+      "base_expression": "Eagle3LlamaDecoderLayer",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 62
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/model_executor/models/llama_eagle3.py",
+        "module": "vllm.model_executor.models.llama_eagle3",
+        "class": "LlamaDecoderLayer",
+        "method": "forward",
+        "line": 92,
+        "signature": "def forward( self, positions: torch.Tensor, embeds: torch.Tensor, hidden_states: torch.Tensor, residual: torch.Tensor | None, ) -> tuple[torch.Tensor, torch.Tensor]:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/models/llama_eagle3_vwn.py",
+        "class": "VwnLlamaDecoderLayer",
+        "method": "forward",
+        "line": 85,
+        "signature": "def forward(self, positions, embeds, hidden_states, residual):"
+      },
+      "base_expression": "Eagle3LlamaDecoderLayer",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 63
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/model_executor/models/llama_eagle3.py",
+        "module": "vllm.model_executor.models.llama_eagle3",
+        "class": "LlamaModel",
+        "method": "__init__",
+        "line": 131,
+        "signature": "def __init__( self, *, vllm_config: VllmConfig, start_layer_id: int = 0, prefix: str = \"\", ) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/models/llama_eagle3_vwn.py",
+        "class": "VwnLlamaModel",
+        "method": "__init__",
+        "line": 108,
+        "signature": "def __init__(self, *, vllm_config, start_layer_id=0, prefix=\"\"):"
+      },
+      "base_expression": "Eagle3LlamaModel",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 64
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/model_executor/models/llama_eagle3.py",
+        "module": "vllm.model_executor.models.llama_eagle3",
+        "class": "LlamaModel",
+        "method": "forward",
+        "line": 227,
+        "signature": "def forward( self, input_ids: torch.Tensor, positions: torch.Tensor, hidden_states: torch.Tensor, input_embeds: torch.Tensor | None = None, ) -> tuple[torch.Tensor, torch.Tensor]:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/models/llama_eagle3_vwn.py",
+        "class": "VwnLlamaModel",
+        "method": "forward",
+        "line": 162,
+        "signature": "def forward(self, input_ids, positions, hidden_states, input_embeds=None):"
+      },
+      "base_expression": "Eagle3LlamaModel",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 65
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/model_executor/models/llama_eagle3.py",
+        "module": "vllm.model_executor.models.llama_eagle3",
+        "class": "Eagle3LlamaForCausalLM",
+        "method": "__init__",
+        "line": 273,
+        "signature": "def __init__(self, *, vllm_config: VllmConfig, prefix: str = \"\"):"
+      },
+      "ascend": {
+        "file": "vllm_ascend/models/llama_eagle3_vwn.py",
+        "class": "Eagle3VwnLlamaForCausalLM",
+        "method": "__init__",
+        "line": 174,
+        "signature": "def __init__(self, *, vllm_config, prefix=\"\"):"
+      },
+      "base_expression": "Eagle3LlamaForCausalLM",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 66
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/model_executor/models/llama_eagle3.py",
+        "module": "vllm.model_executor.models.llama_eagle3",
+        "class": "Eagle3LlamaForCausalLM",
+        "method": "compute_logits",
+        "line": 335,
+        "signature": "def compute_logits( self, hidden_states: torch.Tensor, ) -> torch.Tensor | None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/models/llama_eagle3_vwn.py",
+        "class": "Eagle3VwnLlamaForCausalLM",
+        "method": "compute_logits",
+        "line": 214,
+        "signature": "def compute_logits( self, hidden_states: torch.Tensor, ) -> torch.Tensor | None:"
+      },
+      "base_expression": "Eagle3LlamaForCausalLM",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 67
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/model_executor/models/llama_eagle3.py",
+        "module": "vllm.model_executor.models.llama_eagle3",
+        "class": "Eagle3LlamaForCausalLM",
+        "method": "combine_hidden_states",
+        "line": 359,
+        "signature": "def combine_hidden_states( self, hidden_states: torch.Tensor, ) -> torch.Tensor:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/models/llama_eagle3_vwn.py",
+        "class": "Eagle3VwnLlamaForCausalLM",
+        "method": "combine_hidden_states",
+        "line": 237,
+        "signature": "def combine_hidden_states( self, hidden_states: torch.Tensor, ) -> torch.Tensor:"
+      },
+      "base_expression": "Eagle3LlamaForCausalLM",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 68
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/v1/attention/backends/gdn_attn.py",
+        "module": "vllm.v1.attention.backends.gdn_attn",
+        "class": "GDNAttentionMetadataBuilder",
+        "method": "__init__",
+        "line": 87,
+        "signature": "def __init__( self, kv_cache_spec: AttentionSpec, layer_names: list[str], vllm_config: VllmConfig, device: torch.device, ):"
+      },
+      "ascend": {
+        "file": "vllm_ascend/ops/gdn_attn_builder.py",
+        "class": "AscendGDNAttentionMetadataBuilder",
+        "method": "__init__",
+        "line": 156,
+        "signature": "def __init__( self, kv_cache_spec: AttentionSpec, layer_names: list[str], vllm_config: VllmConfig, device: torch.device, ):"
+      },
+      "base_expression": "GDNAttentionMetadataBuilder",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 69
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/v1/attention/backends/gdn_attn.py",
+        "module": "vllm.v1.attention.backends.gdn_attn",
+        "class": "GDNAttentionMetadataBuilder",
+        "method": "build",
+        "line": 168,
+        "signature": "def build( # type: ignore[override] self, common_prefix_len: int, common_attn_metadata: CommonAttentionMetadata, num_accepted_tokens: torch.Tensor | None = None, num_decode_draft_tokens_cpu: torch.Tensor | None = None, fast_build: bool = False, ) -> GDNAttentionMetadata:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/ops/gdn_attn_builder.py",
+        "class": "AscendGDNAttentionMetadataBuilder",
+        "method": "build",
+        "line": 366,
+        "signature": "def build( # type: ignore[override] self, common_prefix_len: int, common_attn_metadata: CommonAttentionMetadata, num_accepted_tokens: torch.Tensor | None = None, num_decode_draft_tokens_cpu: torch.Tensor | None = None, fast_build: bool = False, ) -> GDNAttentionMetadata:"
+      },
+      "base_expression": "GDNAttentionMetadataBuilder",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 70
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/v1/attention/backends/gdn_attn.py",
+        "module": "vllm.v1.attention.backends.gdn_attn",
+        "class": "GDNAttentionBackend",
+        "method": "get_builder_cls",
+        "line": 33,
+        "signature": "def get_builder_cls() -> type[\"GDNAttentionMetadataBuilder\"]:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/ops/gdn_attn_builder.py",
+        "class": "AscendGDNAttentionBackend",
+        "method": "get_builder_cls",
+        "line": 764,
+        "signature": "def get_builder_cls() -> type[AscendGDNAttentionMetadataBuilder]:"
+      },
+      "base_expression": "GDNAttentionBackend",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 71
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/v1/core/kv_cache_coordinator.py",
+        "module": "vllm.v1.core.kv_cache_coordinator",
+        "class": "HybridKVCacheCoordinator",
+        "method": "find_longest_cache_hit_per_group",
+        "line": 812,
+        "signature": "def find_longest_cache_hit_per_group( self, block_hashes: list[BlockHash], max_cache_hit_length: int, ) -> tuple[tuple[list[KVCacheBlock], ...], tuple[int, ...]]:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/patch/platform/patch_kv_cache_coordinator.py",
+        "class": "AscendHybridKVCacheCoordinator",
+        "method": "find_longest_cache_hit_per_group",
+        "line": 365,
+        "signature": "def find_longest_cache_hit_per_group( self, block_hashes: list[BlockHash], max_cache_hit_length: int, ) -> tuple[tuple[list[KVCacheBlock], ...], int]:"
+      },
+      "base_expression": "HybridKVCacheCoordinator",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 72
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/v1/core/single_type_kv_cache_manager.py",
+        "module": "vllm.v1.core.single_type_kv_cache_manager",
+        "class": "MambaManager",
+        "method": "get_num_blocks_to_allocate",
+        "line": 1415,
+        "signature": "def get_num_blocks_to_allocate( self, request_id: str, num_tokens: int, new_computed_blocks: Sequence[KVCacheBlock], total_computed_tokens: int, num_local_computed_tokens: int, num_tokens_main_model: int, apply_admission_cap: bool = False, ) -> int:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/patch/platform/patch_mamba_manager.py",
+        "class": "AscendMambaManager",
+        "method": "get_num_blocks_to_allocate",
+        "line": 52,
+        "signature": "def get_num_blocks_to_allocate( self, request_id: str, num_tokens: int, new_computed_blocks: Sequence[KVCacheBlock], total_computed_tokens: int, num_tokens_main_model: int, apply_admission_cap: bool = False, ) -> int:"
+      },
+      "base_expression": "MambaManager",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 73
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/v1/sample/rejection_sampler.py",
+        "module": "vllm.v1.sample.rejection_sampler",
+        "class": "RejectionSampler",
+        "method": "apply_logits_processors",
+        "line": 285,
+        "signature": "def apply_logits_processors( self, logits: torch.Tensor, sampling_metadata: SamplingMetadata, metadata: SpecDecodeMetadata, ) -> torch.Tensor:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/sample/rejection_sampler.py",
+        "class": "AscendRejectionSampler",
+        "method": "apply_logits_processors",
+        "line": 100,
+        "signature": "def apply_logits_processors( self, logits: torch.Tensor, sampling_metadata: SamplingMetadata, metadata: SpecDecodeMetadata, ) -> torch.Tensor:"
+      },
+      "base_expression": "RejectionSampler",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 74
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/v1/worker/encoder_cudagraph.py",
+        "module": "vllm.v1.worker.encoder_cudagraph",
+        "class": "EncoderCudaGraphManager",
+        "method": "__init__",
+        "line": 56,
+        "signature": "def __init__( self, vllm_config: VllmConfig, device: torch.device, dtype: torch.dtype, model: SupportsEncoderCudaGraph, ):"
+      },
+      "ascend": {
+        "file": "vllm_ascend/worker/encoder_acl_graph.py",
+        "class": "EncoderAclGraphManager",
+        "method": "__init__",
+        "line": 268,
+        "signature": "def __init__(self, *args: Any, **kwargs: Any) -> None:"
+      },
+      "base_expression": "EncoderCudaGraphManager",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 75
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/v1/worker/encoder_cudagraph.py",
+        "module": "vllm.v1.worker.encoder_cudagraph",
+        "class": "EncoderCudaGraphManager",
+        "method": "capture",
+        "line": 213,
+        "signature": "def capture(self, graph_pool: Any):"
+      },
+      "ascend": {
+        "file": "vllm_ascend/worker/encoder_acl_graph.py",
+        "class": "EncoderAclGraphManager",
+        "method": "capture",
+        "line": 276,
+        "signature": "def capture(self, graph_pool: Any | None = None):"
+      },
+      "base_expression": "EncoderCudaGraphManager",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 76
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/v1/worker/gpu/model_runner.py",
+        "module": "vllm.v1.worker.gpu.model_runner",
+        "class": "GPUModelRunner",
+        "method": "postprocess_sampled",
+        "line": 1101,
+        "signature": "def postprocess_sampled( self, idx_mapping: torch.Tensor, # May include -1 for masked entries sampled_tokens: torch.Tensor, num_sampled: torch.Tensor, num_rejected: torch.Tensor, query_start_loc: torch.Tensor | None = None, ) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/worker/v2/model_runner.py",
+        "class": "NPUModelRunner",
+        "method": "postprocess_sampled",
+        "line": 391,
+        "signature": "def postprocess_sampled( self, idx_mapping, sampled_tokens, num_sampled, num_rejected, query_start_loc=None, ):"
+      },
+      "base_expression": "GPUModelRunner",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 77
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/v1/worker/gpu/spec_decode/dflash/speculator.py",
+        "module": "vllm.v1.worker.gpu.spec_decode.dflash.speculator",
+        "class": "DFlashSpeculator",
+        "method": "__init__",
+        "line": 36,
+        "signature": "def __init__(self, vllm_config: VllmConfig, device: torch.device):"
+      },
+      "ascend": {
+        "file": "vllm_ascend/worker/v2/spec_decode/dflash/speculator.py",
+        "class": "AscendDFlashSpeculator",
+        "method": "__init__",
+        "line": 19,
+        "signature": "def __init__(self, vllm_config: VllmConfig, device: torch.device):"
+      },
+      "base_expression": "DFlashSpeculator",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 78
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/v1/worker/gpu/spec_decode/dflash/speculator.py",
+        "module": "vllm.v1.worker.gpu.spec_decode.dflash.speculator",
+        "class": "DFlashSpeculator",
+        "method": "set_attn",
+        "line": 127,
+        "signature": "def set_attn( self, model_state: ModelState, kv_cache_config: KVCacheConfig, block_tables: BlockTables, target_input_buffers: InputBuffers, target_attn_groups: list[list[AttentionGroup]], ) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/worker/v2/spec_decode/dflash/speculator.py",
+        "class": "AscendDFlashSpeculator",
+        "method": "set_attn",
+        "line": 22,
+        "signature": "def set_attn( self, model_state: Any, kv_cache_config: Any, block_tables: Any, ) -> None:"
+      },
+      "base_expression": "DFlashSpeculator",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 79
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/v1/worker/gpu/spec_decode/dflash/speculator.py",
+        "module": "vllm.v1.worker.gpu.spec_decode.dflash.speculator",
+        "class": "DFlashSpeculator",
+        "method": "propose",
+        "line": 262,
+        "signature": "def propose( self, input_batch: InputBatch, attn_metadata: dict[str, Any], slot_mappings: dict[str, torch.Tensor], # [num_tokens, hidden_size] last_hidden_states: torch.Tensor, # num_layers x [num_tokens, hidden_size] aux_hidden_states: list[torch.Tensor] | None, # [num_reqs] num_sampled: torch.Tensor, # [num_reqs] num_rejected: torch.Tensor, # [max_num_reqs] last_sampled: torch.Tensor, # [max_num_reqs] next_prefill_tokens: torch.Tensor, # [max_num_reqs] temperature: torch.Tensor, # [max_num_reqs] seeds: torch.Tensor, num_tokens_across_dp: torch.Tensor | None = None, dummy_run: bool = False, skip_attn_for_dummy_run: bool = False, mm_inputs: tuple[list[torch.Tensor], torch.Tensor] | None = None, is_profile: bool = False, ) -> torch.Tensor:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/worker/v2/spec_decode/dflash/speculator.py",
+        "class": "AscendDFlashSpeculator",
+        "method": "propose",
+        "line": 36,
+        "signature": "def propose( self, input_batch: InputBatch, attn_metadata: dict[str, Any], slot_mappings: dict[str, torch.Tensor], last_hidden_states: torch.Tensor, aux_hidden_states: list[torch.Tensor] | None, num_sampled: torch.Tensor, num_rejected: torch.Tensor, last_sampled: torch.Tensor, next_prefill_tokens: torch.Tensor, temperature: torch.Tensor, seeds: torch.Tensor, num_tokens_across_dp: torch.Tensor | None = None, dummy_run: bool = False, skip_attn_for_dummy_run: bool = False, mm_inputs: tuple[list[torch.Tensor], torch.Tensor] | None = None, is_profile: bool = False, ) -> torch.Tensor:"
+      },
+      "base_expression": "DFlashSpeculator",
+      "signature_changed": true,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 80
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/v1/worker/gpu/spec_decode/dspark/speculator.py",
+        "module": "vllm.v1.worker.gpu.spec_decode.dspark.speculator",
+        "class": "DSparkSpeculator",
+        "method": "__init__",
+        "line": 40,
+        "signature": "def __init__(self, vllm_config: VllmConfig, device: torch.device):"
+      },
+      "ascend": {
+        "file": "vllm_ascend/worker/v2/spec_decode/dspark/speculator.py",
+        "class": "AscendDSparkSpeculator",
+        "method": "__init__",
+        "line": 34,
+        "signature": "def __init__(self, vllm_config: VllmConfig, device: torch.device):"
+      },
+      "base_expression": "DSparkSpeculator",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 81
+      }
+    },
+    {
+      "relation": "override_candidate",
+      "risk": "high",
+      "upstream": {
+        "file": "vllm/v1/worker/worker_base.py",
+        "module": "vllm.v1.worker.worker_base",
+        "class": "WorkerBase",
+        "method": "shutdown",
+        "line": 182,
+        "signature": "def shutdown(self) -> None:"
+      },
+      "ascend": {
+        "file": "vllm_ascend/worker/worker.py",
+        "class": "NPUWorker",
+        "method": "shutdown",
+        "line": 379,
+        "signature": "def shutdown(self) -> None:"
+      },
+      "base_expression": "WorkerBase",
+      "signature_changed": false,
+      "reason": "Ascend class inherits a vLLM class and overrides the same method, but method mapping table has no exact entry.",
+      "relationship_verified": true,
+      "action": "review",
+      "confidence": "high",
+      "verification": {
+        "status": "verified",
+        "reason": "At the pinned source SHAs, the Ascend class directly inherits an imported vLLM class and defines the same method."
+      },
+      "curated_source": {
+        "validation_report": "optimized_validate_v3.json",
+        "source_record_index": 82
+      }
+    }
+  ]
+}

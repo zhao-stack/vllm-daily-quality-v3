@@ -1,0 +1,1174 @@
+[
+  {
+    "_thought_process": "公开判定摘要：共享专家gate采用平台优化GEMM分派。ROCm小矩阵分派不进入NPU；可对NPU gate投影评估同类选核。 最终路由：medium/idea-copy/P2；源码依据与局限见精确复核及测试页。",
+    "sha": "17322375",
+    "full_sha": "17322375a2d7815ed3d7c9c3ffd718196564314e",
+    "date": "2026-09-22",
+    "repo": "vllm-project/vllm",
+    "title": "[ROCm][Perf] Route the fused shared-expert gate GEMM through the platform dispatcher",
+    "pr_number": "54185",
+    "pr_url": "https://github.com/vllm-project/vllm/pull/54185",
+    "commit_url": "https://github.com/vllm-project/vllm/commit/17322375a2d7815ed3d7c9c3ffd718196564314e",
+    "upstream_status": "merged",
+    "merged_at": "2026-09-21T17:17:56Z",
+    "author": {
+      "name": "mjkvaak-amd",
+      "email": ""
+    },
+    "labels": [
+      "rocm",
+      "ready"
+    ],
+    "category": "moe-fusion",
+    "target_ascend_module": "csrc/moe",
+    "change_type": "performance",
+    "optimization_point": "共享专家gate采用平台优化GEMM分派",
+    "architecture_candidate_keys": [],
+    "verified_patch_bindings": [],
+    "affected_files": [
+      "vllm/model_executor/layers/fused_moe/runner/moe_runner.py"
+    ],
+    "ascend_value": "medium",
+    "ascend_value_reason": "ROCm小矩阵分派不进入NPU；可对NPU gate投影评估同类选核。",
+    "ascend_impact_ref": {
+      "ascend_affected": true,
+      "functionality": "NPU FusedMoEFactory创建自有router/expert，ROCm dispatcher不会提供NPU快核；可在NPU gate projection评估小矩阵选核。",
+      "source": "pinned vllm-ascend a71b766ce6fc0a9669a412e15a5cf53f7f827093"
+    },
+    "migration_method": "idea-copy",
+    "migration_steps": [
+      "profile NPU gate投影shape与launch，比较现有linear和优化GEMM分派；覆盖低高并发与量化精度。"
+    ],
+    "patch_conflict": false,
+    "patch_matched_keys": [],
+    "priority": "P2",
+    "priority_reason": "ROCm小矩阵分派不进入NPU；可对NPU gate投影评估同类选核。",
+    "effort_estimate": "M",
+    "risk_level": "medium-risk",
+    "test_verification": [
+      "profile NPU gate投影shape与launch，比较现有linear和优化GEMM分派；覆盖低高并发与量化精度。"
+    ],
+    "status": "pending",
+    "assignee": "魏谨谦",
+    "key_files": "vllm/model_executor/layers/fused_moe/runner/moe_runner.py",
+    "blocking_issues": [],
+    "review_notes": "收益集中低并发；不能因共享MoERunner类便宣称NPU自动加速。",
+    "low_confidence": false,
+    "confidence_reason": null
+  },
+  {
+    "_thought_process": "公开判定摘要：镜像zstd压缩缩短拉取与首次响应。NPU镜像链独立，压缩方法可复用；需验证运行时兼容和端到端冷启动收益。 最终路由：medium/idea-copy/P2；源码依据与局限见精确复核及测试页。",
+    "sha": "9fe1cbd4",
+    "full_sha": "9fe1cbd463055314863a6de210d5f898200a0a9a",
+    "date": "2026-09-22",
+    "repo": "vllm-project/vllm",
+    "title": "[Docker] Use zstd for CI images and offer a Docker Hub variant",
+    "pr_number": "55608",
+    "pr_url": "https://github.com/vllm-project/vllm/pull/55608",
+    "commit_url": "https://github.com/vllm-project/vllm/commit/9fe1cbd463055314863a6de210d5f898200a0a9a",
+    "upstream_status": "merged",
+    "merged_at": "2026-09-21T20:40:15Z",
+    "author": {
+      "name": "matteso1",
+      "email": ""
+    },
+    "labels": [
+      "rocm",
+      "ready",
+      "ci/build",
+      "kv-connector"
+    ],
+    "category": "test-ci",
+    "target_ascend_module": "python-adapter",
+    "change_type": "performance",
+    "optimization_point": "镜像zstd压缩缩短拉取与首次响应",
+    "architecture_candidate_keys": [],
+    "verified_patch_bindings": [],
+    "affected_files": [
+      ".buildkite/image_build/image_build.sh",
+      ".buildkite/image_build/zstd.hcl",
+      ".buildkite/scripts/publish-release-images.sh",
+      ".buildkite/scripts/publish-zstd-image.sh"
+    ],
+    "ascend_value": "medium",
+    "ascend_value_reason": "NPU镜像链独立，压缩方法可复用；需验证运行时兼容和端到端冷启动收益。",
+    "ascend_impact_ref": {
+      "ascend_affected": true,
+      "functionality": "Ascend独立Docker/镜像发布工作流不继承上游构建参数；压缩方法跨硬件，但NPU运行时兼容和网络/CPU瓶颈需测量。",
+      "source": "pinned vllm-ascend a71b766ce6fc0a9669a412e15a5cf53f7f827093"
+    },
+    "migration_method": "idea-copy",
+    "migration_steps": [
+      "在Ascend发布链增加可选zstd变体，先验证Docker/containerd/Enroot及镜像扫描兼容，测真实远端拉取到首响应。"
+    ],
+    "patch_conflict": false,
+    "patch_matched_keys": [],
+    "priority": "P2",
+    "priority_reason": "NPU镜像链独立，压缩方法可复用；需验证运行时兼容和端到端冷启动收益。",
+    "effort_estimate": "M",
+    "risk_level": "medium-risk",
+    "test_verification": [
+      "在Ascend发布链增加可选zstd变体，先验证Docker/containerd/Enroot及镜像扫描兼容，测真实远端拉取到首响应。"
+    ],
+    "status": "pending",
+    "assignee": "张新悦",
+    "key_files": ".buildkite/image_build/image_build.sh; .buildkite/image_build/zstd.hcl; .buildkite/scripts/publish-release-images.sh; .buildkite/scripts/publish-zstd-image.sh",
+    "blocking_issues": [],
+    "review_notes": "gzip保留；Docker20/Enroot3.5等旧运行时存在兼容风险，不能统一替换。",
+    "low_confidence": false,
+    "confidence_reason": null
+  },
+  {
+    "_thought_process": "公开判定摘要：Kimi attention直接返回结果，减少输出搬运。NPU已直接返回attention结果；仅剩余copy和残差累积思路值得单独评估。 最终路由：medium/idea-copy/P2；源码依据与局限见精确复核及测试页。",
+    "sha": "382970ee",
+    "full_sha": "382970ee6ca490aeaaaf4e32c53695b581ff61ba",
+    "date": "2026-09-22",
+    "repo": "vllm-project/vllm",
+    "title": "[Kimi-K3][AMD] Return KDA and MLA projection outputs directly",
+    "pr_number": "50592",
+    "pr_url": "https://github.com/vllm-project/vllm/pull/50592",
+    "commit_url": "https://github.com/vllm-project/vllm/commit/382970ee6ca490aeaaaf4e32c53695b581ff61ba",
+    "upstream_status": "merged",
+    "merged_at": "2026-09-21T20:44:43Z",
+    "author": {
+      "name": "LiuYinfeng01",
+      "email": ""
+    },
+    "labels": [
+      "rocm",
+      "ready",
+      "kimi",
+      "k3"
+    ],
+    "category": "model-architecture",
+    "target_ascend_module": "python-adapter",
+    "change_type": "performance",
+    "optimization_point": "Kimi attention直接返回结果，减少输出搬运",
+    "architecture_candidate_keys": [],
+    "verified_patch_bindings": [],
+    "affected_files": [
+      "tests/models/kimi_k3/test_amd_kda_direct_return.py",
+      "tests/models/kimi_k3/test_amd_mla_direct_return.py",
+      "tests/models/kimi_k3/test_nvidia_kda_direct_return.py",
+      "vllm/model_executor/layers/mamba/gdn/kimi_gdn_linear_attn.py",
+      "vllm/models/kimi_k3/amd/kda.py",
+      "vllm/models/kimi_k3/amd/linear.py",
+      "vllm/models/kimi_k3/nvidia/model.py"
+    ],
+    "ascend_value": "medium",
+    "ascend_value_reason": "NPU已直接返回attention结果；仅剩余copy和残差累积思路值得单独评估。",
+    "ascend_impact_ref": {
+      "ascend_affected": true,
+      "functionality": "AscendKimiDecoderLayer._run_self_attn已直接return self.self_attn；NPU无需迁移AMD output缓冲接口。AMD prefix_delta和剩余NPU norm/copy可另做profile，不能重复计已有直接返回收益。",
+      "source": "pinned vllm-ascend a71b766ce6fc0a9669a412e15a5cf53f7f827093"
+    },
+    "migration_method": "idea-copy",
+    "migration_steps": [
+      "NPU按attention返回、KDA norm copy及残差prefix_sum分别抓trace，仅优化真实多余copy；校验残差捕获与ACLgraph地址。"
+    ],
+    "patch_conflict": false,
+    "patch_matched_keys": [],
+    "priority": "P2",
+    "priority_reason": "NPU已直接返回attention结果；仅剩余copy和残差累积思路值得单独评估。",
+    "effort_estimate": "M",
+    "risk_level": "medium-risk",
+    "test_verification": [
+      "NPU按attention返回、KDA norm copy及残差prefix_sum分别抓trace，仅优化真实多余copy；校验残差捕获与ACLgraph地址。"
+    ],
+    "status": "pending",
+    "assignee": "龙钢",
+    "key_files": "tests/models/kimi_k3/test_amd_kda_direct_return.py; tests/models/kimi_k3/test_amd_mla_direct_return.py; tests/models/kimi_k3/test_nvidia_kda_direct_return.py; vllm/model_executor/layers/mamba/gdn/kimi_gdn_linear_attn.py; vllm/models/kimi_k3/amd/kda.py; vllm/models/kimi_k3/amd/linear.py; vllm/models/kimi_k3/nvidia/model.py",
+    "blocking_issues": [],
+    "review_notes": "不要重做NPU已有返回值方案；93个copy删除统计是AMD路径，不是NPU测量。",
+    "low_confidence": false,
+    "confidence_reason": null
+  },
+  {
+    "_thought_process": "公开判定摘要：初始化快照减少进程重建激活时间。CUDA进程checkpoint不可直用，NPU可借鉴初始化拆分和恢复oracle。 最终路由：medium/idea-copy/P2；源码依据与局限见精确复核及测试页。",
+    "sha": "13058faa",
+    "full_sha": "13058faa49f5e4a4d50e1ca562ba0c2fdd73c7bc",
+    "date": "2026-09-22",
+    "repo": "vllm-project/vllm",
+    "title": "[Frontend] Add reusable TP1 initialized-engine snapshots",
+    "pr_number": "51360",
+    "pr_url": "https://github.com/vllm-project/vllm/pull/51360",
+    "commit_url": "https://github.com/vllm-project/vllm/commit/13058faa49f5e4a4d50e1ca562ba0c2fdd73c7bc",
+    "upstream_status": "merged",
+    "merged_at": "2026-09-21T23:18:50Z",
+    "author": {
+      "name": "matteso1",
+      "email": ""
+    },
+    "labels": [
+      "documentation",
+      "frontend",
+      "ready",
+      "ci/build",
+      "deepseek",
+      "kv-connector",
+      "nvidia",
+      "DSv4"
+    ],
+    "category": "core-engine",
+    "target_ascend_module": "python-adapter",
+    "change_type": "performance",
+    "optimization_point": "初始化快照减少进程重建激活时间",
+    "architecture_candidate_keys": [],
+    "verified_patch_bindings": [],
+    "affected_files": [
+      ".buildkite/scripts/initialized-snapshot-e2e.sh",
+      ".buildkite/test_areas/entrypoints.yaml",
+      "docker/Dockerfile",
+      "docs/features/initialized_snapshots.md",
+      "tests/entrypoints/launchers/test_launch_cli.py",
+      "tests/models/quantization/test_mimo_v2_qkv_shard.py",
+      "tools/install_snapshot_runtime.sh",
+      "vllm/entrypoints/cli/main.py",
+      "vllm/entrypoints/cli/snapshot.py",
+      "vllm/snapshot/__init__.py",
+      "vllm/snapshot/controller.py",
+      "vllm/snapshot/manifest.py",
+      "vllm/snapshot/runtime.py",
+      "vllm/snapshot/server.py",
+      "vllm/snapshot/types.py",
+      "vllm/utils/argparse_utils.py"
+    ],
+    "ascend_value": "medium",
+    "ascend_value_reason": "CUDA进程checkpoint不可直用，NPU可借鉴初始化拆分和恢复oracle。",
+    "ascend_impact_ref": {
+      "ascend_affected": true,
+      "functionality": "CUDA CRIU checkpoint不能用于NPU；Ascend rfork处理权重共享不等同进程恢复。可借鉴初始化阶段拆分、指纹和恢复oracle，但需NPU驱动恢复能力POC。",
+      "source": "pinned vllm-ascend a71b766ce6fc0a9669a412e15a5cf53f7f827093"
+    },
+    "migration_method": "idea-copy",
+    "migration_steps": [
+      "先验证NPU进程/allocator/流可恢复边界，隔离可复用CPU初始化；建立同版本指纹、token oracle与失败清理，不直接调用CUDA checkpoint。"
+    ],
+    "patch_conflict": false,
+    "patch_matched_keys": [],
+    "priority": "P2",
+    "priority_reason": "CUDA进程checkpoint不可直用，NPU可借鉴初始化拆分和恢复oracle。",
+    "effort_estimate": "M",
+    "risk_level": "medium-risk",
+    "test_verification": [
+      "先验证NPU进程/allocator/流可恢复边界，隔离可复用CPU初始化；建立同版本指纹、token oracle与失败清理，不直接调用CUDA checkpoint。"
+    ],
+    "status": "pending",
+    "assignee": "徐驰",
+    "key_files": ".buildkite/scripts/initialized-snapshot-e2e.sh; .buildkite/test_areas/entrypoints.yaml; docker/Dockerfile; docs/features/initialized_snapshots.md; tests/entrypoints/launchers/test_launch_cli.py; tests/models/quantization/test_mimo_v2_qkv_shard.py; tools/install_snapshot_runtime.sh; vllm/entrypoints/cli/main.py; vllm/entrypoints/cli/snapshot.py; vllm/snapshot/__init__.py; vllm/snapshot/controller.py; vllm/snapshot/manifest.py; vllm/snapshot/runtime.py; vllm/snapshot/server.py; vllm/snapshot/types.py; vllm/utils/argparse_utils.py",
+    "blocking_issues": [],
+    "review_notes": "仅同机Linux x86_64 TP1，特权artifact含内存秘密；最终性能与历史测试SHA必须区分。",
+    "low_confidence": false,
+    "confidence_reason": null
+  },
+  {
+    "_thought_process": "公开判定摘要：shutdown解除pooling模型引用。NPU MRV2继承共享shutdown，解除pooling引用；关闭后内存收益待NPU回归。 最终路由：medium/auto-inherit/P2；源码依据与局限见精确复核及测试页。",
+    "sha": "7d06dd1f",
+    "full_sha": "7d06dd1ffaab13bb6b9a34e86a8a62e4d715bd1e",
+    "date": "2026-09-22",
+    "repo": "vllm-project/vllm",
+    "title": "[Pooling] MRV2 pooling shutdown model ref",
+    "pr_number": "57737",
+    "pr_url": "https://github.com/vllm-project/vllm/pull/57737",
+    "commit_url": "https://github.com/vllm-project/vllm/commit/7d06dd1ffaab13bb6b9a34e86a8a62e4d715bd1e",
+    "upstream_status": "merged",
+    "merged_at": "2026-09-21T23:54:58Z",
+    "author": {
+      "name": "taneem-ibrahim",
+      "email": ""
+    },
+    "labels": [
+      "ready",
+      "mrv2"
+    ],
+    "category": "core-engine",
+    "target_ascend_module": "none",
+    "change_type": "performance",
+    "optimization_point": "shutdown解除pooling模型引用",
+    "architecture_candidate_keys": [],
+    "verified_patch_bindings": [],
+    "affected_files": [
+      "vllm/v1/worker/gpu/model_runner.py"
+    ],
+    "ascend_value": "medium",
+    "ascend_value_reason": "NPU MRV2继承共享shutdown，解除pooling引用；关闭后内存收益待NPU回归。",
+    "ascend_impact_ref": {
+      "ascend_affected": true,
+      "functionality": "worker/v2/model_runner.py的NPUModelRunner继承GPUModelRunner，未重写shutdown；worker.shutdown调用runner关闭，清空共享pooling_runner进入。",
+      "source": "pinned vllm-ascend a71b766ce6fc0a9669a412e15a5cf53f7f827093"
+    },
+    "migration_method": "auto-inherit",
+    "migration_steps": [
+      "保留LLM/worker对象，调用shutdown后查模型weakref与torch.npu.memory_allocated；embedding输出和多次关闭回归。"
+    ],
+    "patch_conflict": false,
+    "patch_matched_keys": [],
+    "priority": "P2",
+    "priority_reason": "NPU MRV2继承共享shutdown，解除pooling引用；关闭后内存收益待NPU回归。",
+    "effort_estimate": "M",
+    "risk_level": "medium-risk",
+    "test_verification": [
+      "保留LLM/worker对象，调用shutdown后查模型weakref与torch.npu.memory_allocated；embedding输出和多次关闭回归。"
+    ],
+    "status": "pending",
+    "assignee": "郭小辉",
+    "key_files": "vllm/v1/worker/gpu/model_runner.py",
+    "blocking_issues": [],
+    "review_notes": "只在关闭生命周期获益，不能写为运行中KV容量或推理吞吐提升。",
+    "low_confidence": false,
+    "confidence_reason": null
+  },
+  {
+    "_thought_process": "公开判定摘要：评测按模型拆job缩短CI关键路径。NPU CI独立；按模型拆分可缩短关键路径，但排队和总卡时需核算。 最终路由：medium/idea-copy/P2；源码依据与局限见精确复核及测试页。",
+    "sha": "78d78365",
+    "full_sha": "78d78365254dfa20d3a265b6da695ab8151ec8b1",
+    "date": "2026-09-22",
+    "repo": "vllm-project/vllm",
+    "title": "[CI] Split (H200) LM Eval Large Models into per-model jobs",
+    "pr_number": "57965",
+    "pr_url": "https://github.com/vllm-project/vllm/pull/57965",
+    "commit_url": "https://github.com/vllm-project/vllm/commit/78d78365254dfa20d3a265b6da695ab8151ec8b1",
+    "upstream_status": "merged",
+    "merged_at": "2026-09-22T00:19:18Z",
+    "author": {
+      "name": "Thangnguyenvn98",
+      "email": ""
+    },
+    "labels": [
+      "ci/build"
+    ],
+    "category": "test-ci",
+    "target_ascend_module": "python-adapter",
+    "change_type": "performance",
+    "optimization_point": "评测按模型拆job缩短CI关键路径",
+    "architecture_candidate_keys": [],
+    "verified_patch_bindings": [],
+    "affected_files": [
+      ".buildkite/test_areas/lm_eval.yaml",
+      "tests/evals/gsm8k/configs/models-h200-deepseek-r1-dp.txt",
+      "tests/evals/gsm8k/configs/models-h200-deepseek-r1-tp.txt",
+      "tests/evals/gsm8k/configs/models-h200-deepseek-v32-dp.txt",
+      "tests/evals/gsm8k/configs/models-h200-deepseek-v32-tp.txt",
+      "tests/evals/gsm8k/configs/models-h200-nemotron-3-super.txt",
+      "tests/evals/gsm8k/configs/models-h200.txt"
+    ],
+    "ascend_value": "medium",
+    "ascend_value_reason": "NPU CI独立；按模型拆分可缩短关键路径，但排队和总卡时需核算。",
+    "ascend_impact_ref": {
+      "ascend_affected": true,
+      "functionality": "Ascend有独立nightly/CI资源池，不执行H200 Buildkite job。方法可跨平台迁移，但排队和多job加载成本须测。",
+      "source": "pinned vllm-ascend a71b766ce6fc0a9669a412e15a5cf53f7f827093"
+    },
+    "migration_method": "idea-copy",
+    "migration_steps": [
+      "按Ascend nightly实际耗时拆最慢模型组，确认用例不重不漏、并发卡预算与排队时间；同时报告总卡时。"
+    ],
+    "patch_conflict": false,
+    "patch_matched_keys": [],
+    "priority": "P2",
+    "priority_reason": "NPU CI独立；按模型拆分可缩短关键路径，但排队和总卡时需核算。",
+    "effort_estimate": "M",
+    "risk_level": "medium-risk",
+    "test_verification": [
+      "按Ascend nightly实际耗时拆最慢模型组，确认用例不重不漏、并发卡预算与排队时间；同时报告总卡时。"
+    ],
+    "status": "pending",
+    "assignee": "吴文俊",
+    "key_files": ".buildkite/test_areas/lm_eval.yaml; tests/evals/gsm8k/configs/models-h200-deepseek-r1-dp.txt; tests/evals/gsm8k/configs/models-h200-deepseek-r1-tp.txt; tests/evals/gsm8k/configs/models-h200-deepseek-v32-dp.txt; tests/evals/gsm8k/configs/models-h200-deepseek-v32-tp.txt; tests/evals/gsm8k/configs/models-h200-nemotron-3-super.txt; tests/evals/gsm8k/configs/models-h200.txt",
+    "blocking_issues": [],
+    "review_notes": "不能把预计最长job缩短直接填为CI实测节省。",
+    "low_confidence": false,
+    "confidence_reason": null
+  },
+  {
+    "_thought_process": "公开判定摘要：单请求prefill取消不必要阈值分块。NPU多个自有schedule仍无条件限制单请求prefill，需同步放宽门禁。 最终路由：medium/patch-sync/P1；源码依据与局限见精确复核及测试页。",
+    "sha": "c64b15cd",
+    "full_sha": "c64b15cde583c7dd3cbb906b30164131a030d6b4",
+    "date": "2026-09-22",
+    "repo": "vllm-project/vllm",
+    "title": "[Scheduler] Soften Long Prefill Tokens Threshhold",
+    "pr_number": "57951",
+    "pr_url": "https://github.com/vllm-project/vllm/pull/57951",
+    "commit_url": "https://github.com/vllm-project/vllm/commit/c64b15cde583c7dd3cbb906b30164131a030d6b4",
+    "upstream_status": "merged",
+    "merged_at": "2026-09-22T00:19:42Z",
+    "author": {
+      "name": "robertgshaw2-redhat",
+      "email": ""
+    },
+    "labels": [
+      "ready",
+      "scheduler"
+    ],
+    "category": "scheduler",
+    "target_ascend_module": "python-adapter",
+    "change_type": "performance",
+    "optimization_point": "单请求prefill取消不必要阈值分块",
+    "architecture_candidate_keys": [
+      "vllm.config"
+    ],
+    "verified_patch_bindings": [
+      "vllm.v1.core.sched.scheduler.Scheduler.schedule → BalanceScheduler/DyntraLB/Recompute/ProfilingChunk.schedule（当前源码覆盖）"
+    ],
+    "affected_files": [
+      "tests/v1/core/test_deferred_block_free.py",
+      "tests/v1/core/test_scheduler.py",
+      "tests/v1/e2e/general/test_pooling_chunked_prefill.py",
+      "vllm/config/scheduler.py",
+      "vllm/v1/core/sched/scheduler.py"
+    ],
+    "ascend_value": "medium",
+    "ascend_value_reason": "NPU多个自有schedule仍无条件限制单请求prefill，需同步放宽门禁。",
+    "ascend_impact_ref": {
+      "ascend_affected": true,
+      "functionality": "Ascend BalanceScheduler及DyntraLB/Recompute/ProfilingChunk自有schedule仍无条件应用long_prefill_token_threshold；platform能选这些类。默认共享路径可继承，覆盖路径相同空耗仍存在，需同步。",
+      "source": "pinned vllm-ascend a71b766ce6fc0a9669a412e15a5cf53f7f827093"
+    },
+    "migration_method": "patch-sync",
+    "migration_steps": [
+      "在各有效schedule统一计算running+waiting+skipped_waiting是否>1，再用于running/waiting两分支；保留ProfilingChunk额外预算和PD约束，回归公平性及TTFT。"
+    ],
+    "patch_conflict": true,
+    "patch_conflict_detail": "Ascend BalanceScheduler及DyntraLB/Recompute/ProfilingChunk自有schedule仍无条件应用long_prefill_token_threshold；platform能选这些类。默认共享路径可继承，覆盖路径相同空耗仍存在，需同步。",
+    "patch_matched_keys": [
+      "vllm.v1.core.sched.scheduler"
+    ],
+    "priority": "P1",
+    "priority_reason": "NPU多个自有schedule仍无条件限制单请求prefill，需同步放宽门禁。",
+    "effort_estimate": "M",
+    "risk_level": "medium-risk",
+    "test_verification": [
+      "在各有效schedule统一计算running+waiting+skipped_waiting是否>1，再用于running/waiting两分支；保留ProfilingChunk额外预算和PD约束，回归公平性及TTFT。"
+    ],
+    "status": "pending",
+    "assignee": "姜凯强",
+    "key_files": "tests/v1/core/test_deferred_block_free.py; tests/v1/core/test_scheduler.py; tests/v1/e2e/general/test_pooling_chunked_prefill.py; vllm/config/scheduler.py; vllm/v1/core/sched/scheduler.py",
+    "blocking_issues": [],
+    "review_notes": "不是所有chunk限制都删除；max_num_batched_tokens和专用调度预算仍有效。",
+    "low_confidence": false,
+    "confidence_reason": null
+  },
+  {
+    "_thought_process": "公开判定摘要：NoPE sparse MLA融合索引准备与消除空cat。NPU不使用FlashInfer路径，可借鉴索引准备融合和空rope旁路。 最终路由：medium/idea-copy/P2；源码依据与局限见精确复核及测试页。",
+    "sha": "a369a7be",
+    "full_sha": "a369a7becc20c6c4dda601aedef51b8cc8387971",
+    "date": "2026-09-22",
+    "repo": "vllm-project/vllm",
+    "title": "[Perf][Attention] Reduce GLM sparse MLA preparation overhead",
+    "pr_number": "57458",
+    "pr_url": "https://github.com/vllm-project/vllm/pull/57458",
+    "commit_url": "https://github.com/vllm-project/vllm/commit/a369a7becc20c6c4dda601aedef51b8cc8387971",
+    "upstream_status": "merged",
+    "merged_at": "2026-09-22T00:24:26Z",
+    "author": {
+      "name": "GirasoleY",
+      "email": ""
+    },
+    "labels": [
+      "ready",
+      "nvidia",
+      "glm"
+    ],
+    "category": "attention-kv-cache",
+    "target_ascend_module": "csrc/attention",
+    "change_type": "performance",
+    "optimization_point": "NoPE sparse MLA融合索引准备与消除空cat",
+    "architecture_candidate_keys": [],
+    "verified_patch_bindings": [],
+    "affected_files": [
+      "tests/kernels/attention/test_flashinfer_mla_decode.py",
+      "tests/kernels/test_concat_mla_q.py",
+      "tests/v1/attention/test_indexer_dcp_localize.py",
+      "tests/v1/attention/test_sparse_mla_backends.py",
+      "vllm/model_executor/layers/attention/mla_attention.py",
+      "vllm/v1/attention/backends/mla/flashinfer_mla_sparse.py",
+      "vllm/v1/attention/backends/mla/sparse_utils.py"
+    ],
+    "ascend_value": "medium",
+    "ascend_value_reason": "NPU不使用FlashInfer路径，可借鉴索引准备融合和空rope旁路。",
+    "ascend_impact_ref": {
+      "ascend_affected": true,
+      "functionality": "Ascend使用dsa_v1、自有indexer及NPU MLA算子，不进入FlashInfer safe_lengths/remap CUDA链；可借鉴单tile计数填充融合及空rope旁路。",
+      "source": "pinned vllm-ascend a71b766ce6fc0a9669a412e15a5cf53f7f827093"
+    },
+    "migration_method": "idea-copy",
+    "migration_steps": [
+      "NPU profile index remap、fill、计数及query concat；确认零行与DCP局部选择语义再融合，覆盖2176/4096及大容量回退。"
+    ],
+    "patch_conflict": false,
+    "patch_matched_keys": [],
+    "priority": "P2",
+    "priority_reason": "NPU不使用FlashInfer路径，可借鉴索引准备融合和空rope旁路。",
+    "effort_estimate": "M",
+    "risk_level": "medium-risk",
+    "test_verification": [
+      "NPU profile index remap、fill、计数及query concat；确认零行与DCP局部选择语义再融合，覆盖2176/4096及大容量回退。"
+    ],
+    "status": "pending",
+    "assignee": "朱意霖",
+    "key_files": "tests/kernels/attention/test_flashinfer_mla_decode.py; tests/kernels/test_concat_mla_q.py; tests/v1/attention/test_indexer_dcp_localize.py; tests/v1/attention/test_sparse_mla_backends.py; vllm/model_executor/layers/attention/mla_attention.py; vllm/v1/attention/backends/mla/flashinfer_mla_sparse.py; vllm/v1/attention/backends/mla/sparse_utils.py",
+    "blocking_issues": [],
+    "review_notes": "旧微基准和最终服务A/B口径不同；不能删除NPU需要的空行mask。",
+    "low_confidence": false,
+    "confidence_reason": null
+  },
+  {
+    "_thought_process": "公开判定摘要：draft独立daemon缓存避免重复加载。CUDA IPC缓存不支持NPU；target/draft角色隔离可借鉴至NPU缓存方案。 最终路由：medium/idea-copy/P2；源码依据与局限见精确复核及测试页。",
+    "sha": "c723a831",
+    "full_sha": "c723a831a81cb4ff89ea6d61b2d15109306ed1bc",
+    "date": "2026-09-22",
+    "repo": "vllm-project/vllm",
+    "title": "[Fast Start] Cache the MTP draft model in a separate daemon group",
+    "pr_number": "57312",
+    "pr_url": "https://github.com/vllm-project/vllm/pull/57312",
+    "commit_url": "https://github.com/vllm-project/vllm/commit/c723a831a81cb4ff89ea6d61b2d15109306ed1bc",
+    "upstream_status": "merged",
+    "merged_at": "2026-09-22T03:13:39Z",
+    "author": {
+      "name": "liusy58",
+      "email": ""
+    },
+    "labels": [
+      "speculative-decoding",
+      "ready",
+      "qwen",
+      "mrv2",
+      "dflash"
+    ],
+    "category": "core-engine",
+    "target_ascend_module": "python-adapter",
+    "change_type": "performance",
+    "optimization_point": "draft独立daemon缓存避免重复加载",
+    "architecture_candidate_keys": [
+      "vllm.config",
+      "vllm.v1.spec_decode"
+    ],
+    "verified_patch_bindings": [],
+    "affected_files": [
+      "tests/model_executor/model_loader/test_weight_cache.py",
+      "tests/model_executor/test_qwen3_omni.py",
+      "tests/v1/spec_decode/test_draft_attention_backend_override.py",
+      "tests/v1/spec_decode/test_draft_moe_backend_override.py",
+      "vllm/config/speculative.py",
+      "vllm/model_executor/model_loader/utils.py",
+      "vllm/model_executor/model_loader/weight_cache/__init__.py",
+      "vllm/model_executor/model_loader/weight_cache/daemon.py",
+      "vllm/model_executor/model_loader/weight_cache/ipc_loader.py",
+      "vllm/model_executor/model_loader/weight_cache/protocol.py",
+      "vllm/model_executor/model_loader/weight_cache/utils.py",
+      "vllm/v1/spec_decode/llm_base_proposer.py",
+      "vllm/v1/worker/gpu/spec_decode/dflash/utils.py",
+      "vllm/v1/worker/gpu/spec_decode/dspark/utils.py",
+      "vllm/v1/worker/gpu/spec_decode/eagle/utils.py",
+      "vllm/v1/worker/gpu/spec_decode/gemma4/speculator.py"
+    ],
+    "ascend_value": "medium",
+    "ascend_value_reason": "CUDA IPC缓存不支持NPU；target/draft角色隔离可借鉴至NPU缓存方案。",
+    "ascend_impact_ref": {
+      "ascend_affected": true,
+      "functionality": "上游weight_cache/protocol.check_ipc_platform_support只允许is_cuda_alike；NPU不走CUDA IPC loader，现有rfork和NPU IPC权重传输不是此daemon协议。优化思想另列POC。",
+      "source": "pinned vllm-ascend a71b766ce6fc0a9669a412e15a5cf53f7f827093"
+    },
+    "migration_method": "idea-copy",
+    "migration_steps": [
+      "结合Ascend rfork/NPU IPC loader评估独立draft缓存key与生命周期，校验别名/ownership flag、socket冲突和不支持draft回退磁盘。"
+    ],
+    "patch_conflict": false,
+    "patch_matched_keys": [],
+    "priority": "P2",
+    "priority_reason": "CUDA IPC缓存不支持NPU；target/draft角色隔离可借鉴至NPU缓存方案。",
+    "effort_estimate": "M",
+    "risk_level": "medium-risk",
+    "test_verification": [
+      "结合Ascend rfork/NPU IPC loader评估独立draft缓存key与生命周期，校验别名/ownership flag、socket冲突和不支持draft回退磁盘。"
+    ],
+    "status": "pending",
+    "assignee": "徐驰",
+    "key_files": "tests/model_executor/model_loader/test_weight_cache.py; tests/model_executor/test_qwen3_omni.py; tests/v1/spec_decode/test_draft_attention_backend_override.py; tests/v1/spec_decode/test_draft_moe_backend_override.py; vllm/config/speculative.py; vllm/model_executor/model_loader/utils.py; vllm/model_executor/model_loader/weight_cache/__init__.py; vllm/model_executor/model_loader/weight_cache/daemon.py; vllm/model_executor/model_loader/weight_cache/ipc_loader.py; vllm/model_executor/model_loader/weight_cache/protocol.py; vllm/model_executor/model_loader/weight_cache/utils.py; vllm/v1/spec_decode/llm_base_proposer.py; vllm/v1/worker/gpu/spec_decode/dflash/utils.py; vllm/v1/worker/gpu/spec_decode/dspark/utils.py; vllm/v1/worker/gpu/spec_decode/eagle/utils.py; vllm/v1/worker/gpu/spec_decode/gemma4/speculator.py",
+    "blocking_issues": [],
+    "review_notes": "以最终diff为准，不沿用正文MTP-only和_draft0.sock描述。",
+    "low_confidence": false,
+    "confidence_reason": null
+  },
+  {
+    "_thought_process": "公开判定摘要：睡眠保留冻结参数，减少不必要权重重传。NPU sleep仅保留buffers，缺少冻结参数保留；功能及免重传机制需适配。 最终路由：medium/patch-sync/P1；源码依据与局限见精确复核及测试页。",
+    "sha": "639461ed",
+    "full_sha": "639461eda424debe7bbdf2b1fc577bf83e29c643",
+    "date": "2026-09-22",
+    "repo": "vllm-project/vllm",
+    "title": "[RL][Sleep] Retain frozen weights across level-2 sleep",
+    "pr_number": "57891",
+    "pr_url": "https://github.com/vllm-project/vllm/pull/57891",
+    "commit_url": "https://github.com/vllm-project/vllm/commit/639461eda424debe7bbdf2b1fc577bf83e29c643",
+    "upstream_status": "merged",
+    "merged_at": "2026-09-22T04:36:56Z",
+    "author": {
+      "name": "aoshen02",
+      "email": ""
+    },
+    "labels": [
+      "documentation",
+      "ready"
+    ],
+    "category": "core-engine",
+    "target_ascend_module": "python-adapter",
+    "change_type": "performance",
+    "optimization_point": "睡眠保留冻结参数，减少不必要权重重传",
+    "architecture_candidate_keys": [
+      "vllm.config"
+    ],
+    "verified_patch_bindings": [
+      "vllm.v1.worker.gpu_worker.Worker.sleep/wake_up → vllm_ascend.worker.worker.Worker.sleep/wake_up（独立覆盖）"
+    ],
+    "affected_files": [
+      "docs/features/sleep_mode.md",
+      "tests/v1/worker/test_sleep_mode_backend.py",
+      "vllm/config/model.py",
+      "vllm/engine/arg_utils.py",
+      "vllm/v1/worker/gpu_worker.py"
+    ],
+    "ascend_value": "medium",
+    "ascend_value_reason": "NPU sleep仅保留buffers，缺少冻结参数保留；功能及免重传机制需适配。",
+    "ascend_impact_ref": {
+      "ascend_affected": true,
+      "functionality": "Ascend worker.py自有sleep/wake_up，仅备份named_buffers，CaMemAllocator level2丢弃weights；未读取新sleep_preserve_parameter_names，也无named_parameters备份。trainer省略冻结参数时缺口确定。",
+      "source": "pinned vllm-ascend a71b766ce6fc0a9669a412e15a5cf53f7f827093"
+    },
+    "migration_method": "patch-sync",
+    "migration_steps": [
+      "在NPU sleep前按glob备份选中参数、weights wake原位恢复并释放；验证未匹配报错、CPU权重、三轮sleep、图地址稳定及host容量，trainer必须不覆盖保留权重。"
+    ],
+    "patch_conflict": true,
+    "patch_conflict_detail": "Ascend worker.py自有sleep/wake_up，仅备份named_buffers，CaMemAllocator level2丢弃weights；未读取新sleep_preserve_parameter_names，也无named_parameters备份。trainer省略冻结参数时缺口确定。",
+    "patch_matched_keys": [
+      "vllm.v1.worker.gpu_worker"
+    ],
+    "priority": "P1",
+    "priority_reason": "NPU sleep仅保留buffers，缺少冻结参数保留；功能及免重传机制需适配。",
+    "effort_estimate": "M",
+    "risk_level": "medium-risk",
+    "test_verification": [
+      "在NPU sleep前按glob备份选中参数、weights wake原位恢复并释放；验证未匹配报错、CPU权重、三轮sleep、图地址稳定及host容量，trainer必须不覆盖保留权重。"
+    ],
+    "status": "pending",
+    "assignee": "刘荣",
+    "key_files": "docs/features/sleep_mode.md; tests/v1/worker/test_sleep_mode_backend.py; vllm/config/model.py; vllm/engine/arg_utils.py; vllm/v1/worker/gpu_worker.py",
+    "blocking_issues": [],
+    "review_notes": "明确功能适配必须完成；收益方向为免传冻结参数，不声称NPU已提速或节省全部CPU驻留量。",
+    "low_confidence": false,
+    "confidence_reason": null
+  },
+  {
+    "_thought_process": "公开判定摘要：允许DFlash异步调度以重叠CPU工作。allowlist共享，但NPU默认V1及自有DFlash链需验证，不自动视为组合可用。 最终路由：medium/idea-copy/P2；源码依据与局限见精确复核及测试页。",
+    "sha": "0961bbae",
+    "full_sha": "0961bbae2894d574be790d219651824eb199318e",
+    "date": "2026-09-22",
+    "repo": "vllm-project/vllm",
+    "title": "[Spec Decode] Enable async scheduling for DFlash",
+    "pr_number": "58065",
+    "pr_url": "https://github.com/vllm-project/vllm/pull/58065",
+    "commit_url": "https://github.com/vllm-project/vllm/commit/0961bbae2894d574be790d219651824eb199318e",
+    "upstream_status": "merged",
+    "merged_at": "2026-09-22T05:05:45Z",
+    "author": {
+      "name": "majunze2001",
+      "email": ""
+    },
+    "labels": [
+      "dflash"
+    ],
+    "category": "spec-decode",
+    "target_ascend_module": "python-adapter",
+    "change_type": "performance",
+    "optimization_point": "允许DFlash异步调度以重叠CPU工作",
+    "architecture_candidate_keys": [
+      "vllm.config"
+    ],
+    "verified_patch_bindings": [],
+    "affected_files": [
+      "tests/test_config.py",
+      "vllm/config/vllm.py"
+    ],
+    "ascend_value": "medium",
+    "ascend_value_reason": "allowlist共享，但NPU默认V1及自有DFlash链需验证，不自动视为组合可用。",
+    "ascend_impact_ref": {
+      "ascend_affected": true,
+      "functionality": "共享allowlist进入，但Ascend默认仍是V1，另有NPU DFlash/V2实现；不能把上游默认MRV2视为NPU默认。",
+      "source": "pinned vllm-ascend a71b766ce6fc0a9669a412e15a5cf53f7f827093"
+    },
+    "migration_method": "idea-copy",
+    "migration_steps": [
+      "分别显式开启V2和V1测试异步输出/拒绝采样，记录支持矩阵，不支持组合明确拒绝。比较真实接受率与合成口径，测低高并发TPOT/P99。"
+    ],
+    "patch_conflict": false,
+    "patch_matched_keys": [],
+    "priority": "P2",
+    "priority_reason": "allowlist共享，但NPU默认V1及自有DFlash链需验证，不自动视为组合可用。",
+    "effort_estimate": "M",
+    "risk_level": "medium-risk",
+    "test_verification": [
+      "分别显式开启V2和V1测试异步输出/拒绝采样，记录支持矩阵，不支持组合明确拒绝。比较真实接受率与合成口径，测低高并发TPOT/P99。"
+    ],
+    "status": "pending",
+    "assignee": "李泽桐",
+    "key_files": "tests/test_config.py; vllm/config/vllm.py",
+    "blocking_issues": [],
+    "review_notes": "配置放行不等于NPU组合可用；上游额外关闭allreduce-rms融合并使用特定draft后端。",
+    "low_confidence": false,
+    "confidence_reason": null
+  },
+  {
+    "_thought_process": "公开判定摘要：GDN norm保留原rank以消除编译reshape copy。NPU自有GDN保留reshape；是否产生设备copy和净收益需profile。 最终路由：medium/idea-copy/P2；源码依据与局限见精确复核及测试页。",
+    "sha": "68363d64",
+    "full_sha": "68363d64ec476bbbf5025b30ced0f6a2425b1291",
+    "date": "2026-09-22",
+    "repo": "vllm-project/vllm",
+    "title": "[ROCm][Perf] Avoid extra reshape kernel in Qwen GDN output norm",
+    "pr_number": "47842",
+    "pr_url": "https://github.com/vllm-project/vllm/pull/47842",
+    "commit_url": "https://github.com/vllm-project/vllm/commit/68363d64ec476bbbf5025b30ced0f6a2425b1291",
+    "upstream_status": "merged",
+    "merged_at": "2026-09-22T06:38:16Z",
+    "author": {
+      "name": "mjkvaak-amd",
+      "email": ""
+    },
+    "labels": [
+      "performance",
+      "rocm",
+      "ready",
+      "torch.compile",
+      "ci/build",
+      "qwen"
+    ],
+    "category": "operator-kernel",
+    "target_ascend_module": "python-adapter",
+    "change_type": "performance",
+    "optimization_point": "GDN norm保留原rank以消除编译reshape copy",
+    "architecture_candidate_keys": [],
+    "verified_patch_bindings": [],
+    "affected_files": [
+      "tests/compile/passes/test_fusion.py",
+      "tests/kernels/mamba/test_gdn_output_projection.py",
+      "tests/kernels/test_fla_layernorm_guard.py",
+      "vllm/compilation/passes/fusion/rocm_aiter_fusion.py",
+      "vllm/compilation/passes/vllm_inductor_pass.py",
+      "vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py"
+    ],
+    "ascend_value": "medium",
+    "ascend_value_reason": "NPU自有GDN保留reshape；是否产生设备copy和净收益需profile。",
+    "ascend_impact_ref": {
+      "ascend_affected": true,
+      "functionality": "Ascend ops/gdn.py自有forward仍reshape为2D再norm/rearrange；AscendRMSNormGated走LayerNormFn而非AITER fusion。代码不自动进入，但reshape是否产生设备copy须NPU profile。",
+      "source": "pinned vllm-ascend a71b766ce6fc0a9669a412e15a5cf53f7f827093"
+    },
+    "migration_method": "idea-copy",
+    "migration_steps": [
+      "记录NPU norm输入stride/shape和设备trace，验证LayerNormFn的3D语义，再移除真正产生copy的reshape；同时回归量化与ACLgraph。"
+    ],
+    "patch_conflict": false,
+    "patch_matched_keys": [],
+    "priority": "P2",
+    "priority_reason": "NPU自有GDN保留reshape；是否产生设备copy和净收益需profile。",
+    "effort_estimate": "M",
+    "risk_level": "medium-risk",
+    "test_verification": [
+      "记录NPU norm输入stride/shape和设备trace，验证LayerNormFn的3D语义，再移除真正产生copy的reshape；同时回归量化与ACLgraph。"
+    ],
+    "status": "pending",
+    "assignee": "曾彦嘉",
+    "key_files": "tests/compile/passes/test_fusion.py; tests/kernels/mamba/test_gdn_output_projection.py; tests/kernels/test_fla_layernorm_guard.py; vllm/compilation/passes/fusion/rocm_aiter_fusion.py; vllm/compilation/passes/vllm_inductor_pass.py; vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py",
+    "blocking_issues": [],
+    "review_notes": "最终diff是共享Qwen代码，不应按ROCm标题直接skip；NPU独立forward仍需验证。",
+    "low_confidence": false,
+    "confidence_reason": null
+  },
+  {
+    "_thought_process": "公开判定摘要：仿真权重加载时一次反量化换取推理少计算。NPU量化路径独立，可借鉴一次反量化换计算，需权衡常驻内存与KV容量。 最终路由：medium/idea-copy/P2；源码依据与局限见精确复核及测试页。",
+    "sha": "2af05512",
+    "full_sha": "2af05512cf94eda87b4eb51e9f1345a12337a36d",
+    "date": "2026-09-22",
+    "repo": "vllm-project/vllm",
+    "title": "[Kernel] Add opt-in load-time MXFP4 dequantization",
+    "pr_number": "50814",
+    "pr_url": "https://github.com/vllm-project/vllm/pull/50814",
+    "commit_url": "https://github.com/vllm-project/vllm/commit/2af05512cf94eda87b4eb51e9f1345a12337a36d",
+    "upstream_status": "merged",
+    "merged_at": "2026-09-22T06:51:13Z",
+    "author": {
+      "name": "LiuYinfeng01",
+      "email": ""
+    },
+    "labels": [
+      "rocm",
+      "quantization",
+      "verified",
+      "kimi",
+      "k3"
+    ],
+    "category": "quantization",
+    "target_ascend_module": "csrc/quantization",
+    "change_type": "performance",
+    "optimization_point": "仿真权重加载时一次反量化换取推理少计算",
+    "architecture_candidate_keys": [],
+    "verified_patch_bindings": [],
+    "affected_files": [
+      "tests/kernels/quantization/test_mxfp4_kernel_selection.py",
+      "vllm/envs.py",
+      "vllm/model_executor/kernels/linear/mxfp4/emulation.py"
+    ],
+    "ascend_value": "medium",
+    "ascend_value_reason": "NPU量化路径独立，可借鉴一次反量化换计算，需权衡常驻内存与KV容量。",
+    "ascend_impact_ref": {
+      "ascend_affected": true,
+      "functionality": "NPU采用自有量化方法和算子，未进入上游EmulationMxfp4LinearKernel；可对确有逐步反量化的NPU回退路径借鉴，不能扩大BF16内存而忽视KV容量。",
+      "source": "pinned vllm-ascend a71b766ce6fc0a9669a412e15a5cf53f7f827093"
+    },
+    "migration_method": "idea-copy",
+    "migration_steps": [
+      "先找NPU重复反量化回退，比较加载展开与融合反量化GEMM；同时测权重驻留、KV预算、TTFT/TPOT和精度，默认保持关闭。"
+    ],
+    "patch_conflict": false,
+    "patch_matched_keys": [],
+    "priority": "P2",
+    "priority_reason": "NPU量化路径独立，可借鉴一次反量化换计算，需权衡常驻内存与KV容量。",
+    "effort_estimate": "M",
+    "risk_level": "medium-risk",
+    "test_verification": [
+      "先找NPU重复反量化回退，比较加载展开与融合反量化GEMM；同时测权重驻留、KV预算、TTFT/TPOT和精度，默认保持关闭。"
+    ],
+    "status": "pending",
+    "assignee": "王锟鹏",
+    "key_files": "tests/kernels/quantization/test_mxfp4_kernel_selection.py; vllm/envs.py; vllm/model_executor/kernels/linear/mxfp4/emulation.py",
+    "blocking_issues": [],
+    "review_notes": "原生MXFP4与MoE无变化；新runtime相对BF16的1.93%不能归因本开关。",
+    "low_confidence": false,
+    "confidence_reason": null
+  },
+  {
+    "_thought_process": "公开判定摘要：GEMM与SP reduce-scatter融合减少往返。SM100 GEMM-RS不可直用，可借鉴NPU计算通信融合及按shape回退。 最终路由：medium/idea-copy/P2；源码依据与局限见精确复核及测试页。",
+    "sha": "f92b78f6",
+    "full_sha": "f92b78f6ef9c9b28f60668da77af5b65645b1a45",
+    "date": "2026-09-22",
+    "repo": "vllm-project/vllm",
+    "title": "[Kernel][DSV4.1] Fuse MXFP8 wo_b GEMM with sequence-parallel reduce-scatter",
+    "pr_number": "57428",
+    "pr_url": "https://github.com/vllm-project/vllm/pull/57428",
+    "commit_url": "https://github.com/vllm-project/vllm/commit/f92b78f6ef9c9b28f60668da77af5b65645b1a45",
+    "upstream_status": "merged",
+    "merged_at": "2026-09-22T08:07:18Z",
+    "author": {
+      "name": "gcanlin",
+      "email": ""
+    },
+    "labels": [
+      "performance",
+      "ready",
+      "ci/build",
+      "deepseek",
+      "nvidia",
+      "DSv4",
+      "kimi",
+      "k3",
+      "DSv4.1"
+    ],
+    "category": "distributed",
+    "target_ascend_module": "fallback_comm",
+    "change_type": "performance",
+    "optimization_point": "GEMM与SP reduce-scatter融合减少往返",
+    "architecture_candidate_keys": [],
+    "verified_patch_bindings": [],
+    "affected_files": [
+      ".buildkite/test_areas/distributed.yaml",
+      "benchmarks/kernels/benchmark_gemm_rs_ar.py",
+      "benchmarks/kernels/benchmark_kimi_k3_gemm_rs_ar.py",
+      "tests/kernels/test_gemm_rs_ar.py",
+      "tests/kernels/test_kimi_k3_gemm_rs_ar.py",
+      "vllm/cute_utils/_tcgen05.py",
+      "vllm/envs.py",
+      "vllm/model_executor/kernels/linear/cute_dsl/gemm_rs_ar.py",
+      "vllm/model_executor/warmup/kernel_warmup.py",
+      "vllm/models/deepseek_v4/nvidia/ops/o_proj.py",
+      "vllm/models/deepseek_v41/attention.py",
+      "vllm/models/deepseek_v41/nvidia/dspark.py",
+      "vllm/models/deepseek_v41/nvidia/flash_mla_mega_attn.py",
+      "vllm/models/deepseek_v41/nvidia/flashinfer_sparse.py",
+      "vllm/models/deepseek_v41/nvidia/flashmla.py",
+      "vllm/models/deepseek_v41/nvidia/model.py",
+      "vllm/models/kimi_k3/nvidia/kda.py",
+      "vllm/models/kimi_k3/nvidia/mla.py",
+      "vllm/models/kimi_k3/nvidia/model.py",
+      "vllm/models/kimi_k3/nvidia/ops/cute_dsl/gemm_rs_ar.py"
+    ],
+    "ascend_value": "medium",
+    "ascend_value_reason": "SM100 GEMM-RS不可直用，可借鉴NPU计算通信融合及按shape回退。",
+    "ascend_impact_ref": {
+      "ascend_affected": true,
+      "functionality": "NPU DSV4.1模型使用自有wo_b/通信与HCCL，不执行SM100 CuTe multicast kernel；计算通信融合边界可借鉴，但布局/精度及同步须重做。",
+      "source": "pinned vllm-ascend a71b766ce6fc0a9669a412e15a5cf53f7f827093"
+    },
+    "migration_method": "idea-copy",
+    "migration_steps": [
+      "NPU量测wo_b和HCCL独立耗时与下界，按token数选择融合/回退；验证TP/EP/SP、padding、舍入和图同步，服务至少多轮交替。"
+    ],
+    "patch_conflict": false,
+    "patch_matched_keys": [],
+    "priority": "P2",
+    "priority_reason": "SM100 GEMM-RS不可直用，可借鉴NPU计算通信融合及按shape回退。",
+    "effort_estimate": "M",
+    "risk_level": "medium-risk",
+    "test_verification": [
+      "NPU量测wo_b和HCCL独立耗时与下界，按token数选择融合/回退；验证TP/EP/SP、padding、舍入和图同步，服务至少多轮交替。"
+    ],
+    "status": "pending",
+    "assignee": "毛琦",
+    "key_files": ".buildkite/test_areas/distributed.yaml; benchmarks/kernels/benchmark_gemm_rs_ar.py; benchmarks/kernels/benchmark_kimi_k3_gemm_rs_ar.py; tests/kernels/test_gemm_rs_ar.py; tests/kernels/test_kimi_k3_gemm_rs_ar.py; vllm/cute_utils/_tcgen05.py; vllm/envs.py; vllm/model_executor/kernels/linear/cute_dsl/gemm_rs_ar.py; vllm/model_executor/warmup/kernel_warmup.py; vllm/models/deepseek_v4/nvidia/ops/o_proj.py; vllm/models/deepseek_v41/attention.py; vllm/models/deepseek_v41/nvidia/dspark.py; vllm/models/deepseek_v41/nvidia/flash_mla_mega_attn.py; vllm/models/deepseek_v41/nvidia/flashinfer_sparse.py; vllm/models/deepseek_v41/nvidia/flashmla.py; vllm/models/deepseek_v41/nvidia/model.py; vllm/models/kimi_k3/nvidia/kda.py; vllm/models/kimi_k3/nvidia/mla.py; vllm/models/kimi_k3/nvidia/model.py; vllm/models/kimi_k3/nvidia/ops/cute_dsl/gemm_rs_ar.py",
+    "blocking_issues": [],
+    "review_notes": "小batch融合会回退，不能把算子37.1%当整模收益；1K/2K服务差异被高波动覆盖。",
+    "low_confidence": false,
+    "confidence_reason": null
+  },
+  {
+    "_thought_process": "公开判定摘要：构建symbol映射与运行trace联合缩小测试集合。CUDA symbol工具不可直用，可为NPU建立构建符号与测试动态覆盖映射。 最终路由：medium/idea-copy/P2；源码依据与局限见精确复核及测试页。",
+    "sha": "64a48b19",
+    "full_sha": "64a48b19b41005f1e783a69b9fdd0b5364aea4cf",
+    "date": "2026-09-22",
+    "repo": "vllm-project/vllm",
+    "title": "[CI] Emit a kernel symbol map from the csrc build (opt-in, for test selection)",
+    "pr_number": "58097",
+    "pr_url": "https://github.com/vllm-project/vllm/pull/58097",
+    "commit_url": "https://github.com/vllm-project/vllm/commit/64a48b19b41005f1e783a69b9fdd0b5364aea4cf",
+    "upstream_status": "merged",
+    "merged_at": "2026-09-22T08:37:34Z",
+    "author": {
+      "name": "khluu",
+      "email": ""
+    },
+    "labels": [
+      "documentation",
+      "ci/build"
+    ],
+    "category": "test-ci",
+    "target_ascend_module": "python-adapter",
+    "change_type": "performance",
+    "optimization_point": "构建symbol映射与运行trace联合缩小测试集合",
+    "architecture_candidate_keys": [],
+    "verified_patch_bindings": [],
+    "affected_files": [
+      ".buildkite/image_build/image_build.sh",
+      "docker/Dockerfile",
+      "docs/assets/contributing/dockerfile-stages-dependency.png",
+      "tools/ci/kernel_symbol_map.py"
+    ],
+    "ascend_value": "medium",
+    "ascend_value_reason": "CUDA symbol工具不可直用，可为NPU建立构建符号与测试动态覆盖映射。",
+    "ascend_impact_ref": {
+      "ascend_affected": true,
+      "functionality": "上游cuobjdump/fatbin专属CUDA，Ascend使用AscendC/Triton-NPU和不同CI。可借鉴构建产物到测试的动态覆盖关联，不直接套用GPU symbol工具。",
+      "source": "pinned vllm-ascend a71b766ce6fc0a9669a412e15a5cf53f7f827093"
+    },
+    "migration_method": "idea-copy",
+    "migration_steps": [
+      "为Ascend构建产物和NPU profiler建立源码→算子→测试映射，变更头文件扩大依赖，无映射时全量回退，先影子模式验证漏选率。"
+    ],
+    "patch_conflict": false,
+    "patch_matched_keys": [],
+    "priority": "P2",
+    "priority_reason": "CUDA symbol工具不可直用，可为NPU建立构建符号与测试动态覆盖映射。",
+    "effort_estimate": "M",
+    "risk_level": "medium-risk",
+    "test_verification": [
+      "为Ascend构建产物和NPU profiler建立源码→算子→测试映射，变更头文件扩大依赖，无映射时全量回退，先影子模式验证漏选率。"
+    ],
+    "status": "pending",
+    "assignee": "张新悦",
+    "key_files": ".buildkite/image_build/image_build.sh; docker/Dockerfile; docs/assets/contributing/dockerfile-stages-dependency.png; tools/ci/kernel_symbol_map.py",
+    "blocking_issues": [],
+    "review_notes": "不得将无symbol或采集失败解释为无需测试；脚本失败仅输出reason，消费端必须守住回退。",
+    "low_confidence": false,
+    "confidence_reason": null
+  },
+  {
+    "_thought_process": "公开判定摘要：NoPE sparse MLA多后端比较与空rope旁路。SM90后端不进入NPU，可借鉴NoPE专用路径与固定上下文的公平对照。 最终路由：medium/idea-copy/P2；源码依据与局限见精确复核及测试页。",
+    "sha": "91d7324c",
+    "full_sha": "91d7324cb19d301c72d849e457221ee8dd645024",
+    "date": "2026-09-22",
+    "repo": "vllm-project/vllm",
+    "title": "[perf] wire FA and FlashMLA for sm90 GLM5Next NoPE SparseMLA",
+    "pr_number": "55385",
+    "pr_url": "https://github.com/vllm-project/vllm/pull/55385",
+    "commit_url": "https://github.com/vllm-project/vllm/commit/91d7324cb19d301c72d849e457221ee8dd645024",
+    "upstream_status": "merged",
+    "merged_at": "2026-09-22T09:04:00Z",
+    "author": {
+      "name": "JaredforReal",
+      "email": ""
+    },
+    "labels": [
+      "ready",
+      "ci/build",
+      "glm"
+    ],
+    "category": "attention-kv-cache",
+    "target_ascend_module": "csrc/attention",
+    "change_type": "performance",
+    "optimization_point": "NoPE sparse MLA多后端比较与空rope旁路",
+    "architecture_candidate_keys": [],
+    "verified_patch_bindings": [],
+    "affected_files": [
+      "cmake/external_projects/vllm_flash_attn.cmake",
+      "tests/v1/attention/test_flashmla_nope_sm90_backend_selection.py",
+      "vllm/v1/attention/backends/mla/flashattn_mla_sparse.py",
+      "vllm/v1/attention/backends/mla/flashmla_sparse.py"
+    ],
+    "ascend_value": "medium",
+    "ascend_value_reason": "SM90后端不进入NPU，可借鉴NoPE专用路径与固定上下文的公平对照。",
+    "ascend_impact_ref": {
+      "ascend_affected": true,
+      "functionality": "SM90 FlashMLA/FA3不在NPU平台候选；Ascend自有DSA实现可借鉴NoPE几何专用路径和公平后端对照方法，不能移植FA内核。",
+      "source": "pinned vllm-ascend a71b766ce6fc0a9669a412e15a5cf53f7f827093"
+    },
+    "migration_method": "idea-copy",
+    "migration_steps": [
+      "NPU对rope0/head512检查无用拼接和支持门禁；固定max_model_len/prefix/输入长度比较后端，分开host plan与kernel时延。"
+    ],
+    "patch_conflict": false,
+    "patch_matched_keys": [],
+    "priority": "P2",
+    "priority_reason": "SM90后端不进入NPU，可借鉴NoPE专用路径与固定上下文的公平对照。",
+    "effort_estimate": "M",
+    "risk_level": "medium-risk",
+    "test_verification": [
+      "NPU对rope0/head512检查无用拼接和支持门禁；固定max_model_len/prefix/输入长度比较后端，分开host plan与kernel时延。"
+    ],
+    "status": "pending",
+    "assignee": "朱意霖",
+    "key_files": "cmake/external_projects/vllm_flash_attn.cmake; tests/v1/attention/test_flashmla_nope_sm90_backend_selection.py; vllm/v1/attention/backends/mla/flashattn_mla_sparse.py; vllm/v1/attention/backends/mla/flashmla_sparse.py",
+    "blocking_issues": [],
+    "review_notes": "Review发现长maxlen混淆；FA无prefix组合IMA另立问题，不宣称本PR解决。",
+    "low_confidence": false,
+    "confidence_reason": null
+  },
+  {
+    "_thought_process": "公开判定摘要：视觉processor模型级构造与复用。Rust processor复用机制存在，但实际NPU部署可达性和性能收益未确认。 最终路由：medium/idea-copy/P2；源码依据与局限见精确复核及测试页。",
+    "sha": "81d7293c",
+    "full_sha": "81d7293c2167e39f3ffddc9a82d633f94e8a1eaa",
+    "date": "2026-09-22",
+    "repo": "vllm-project/vllm",
+    "title": "[Rust Frontend] Construct model-owned vision processors through specs",
+    "pr_number": "58109",
+    "pr_url": "https://github.com/vllm-project/vllm/pull/58109",
+    "commit_url": "https://github.com/vllm-project/vllm/commit/81d7293c2167e39f3ffddc9a82d633f94e8a1eaa",
+    "upstream_status": "merged",
+    "merged_at": "2026-09-22T10:01:54Z",
+    "author": {
+      "name": "BugenZhao",
+      "email": ""
+    },
+    "labels": [
+      "ready",
+      "rust"
+    ],
+    "category": "multimodal",
+    "target_ascend_module": "python-adapter",
+    "change_type": "performance",
+    "optimization_point": "视觉processor模型级构造与复用",
+    "architecture_candidate_keys": [],
+    "verified_patch_bindings": [],
+    "affected_files": [
+      "rust/Cargo.lock",
+      "rust/Cargo.toml",
+      "rust/src/chat/src/multimodal.rs",
+      "rust/src/chat/src/multimodal/image.rs",
+      "rust/src/chat/src/multimodal/video.rs"
+    ],
+    "ascend_value": "medium",
+    "ascend_value_reason": "Rust processor复用机制存在，但实际NPU部署可达性和性能收益未确认。",
+    "ascend_impact_ref": {
+      "ascend_affected": true,
+      "functionality": "Rust model spec改为Arc持有processor；NPU Python前端不走Rust生命周期，实际Rust+NPU部署可达性未确认。仅作为构造复用收益候选。",
+      "source": "pinned vllm-ascend a71b766ce6fc0a9669a412e15a5cf53f7f827093"
+    },
+    "migration_method": "idea-copy",
+    "migration_steps": [
+      "先确认实际Rust+NPU入口，再测并发图像视频下构造次数、CPU时延和内存；验证模型配置隔离、错误传播与processor线程安全。"
+    ],
+    "patch_conflict": false,
+    "patch_matched_keys": [],
+    "priority": "P2",
+    "priority_reason": "Rust processor复用机制存在，但实际NPU部署可达性和性能收益未确认。",
+    "effort_estimate": "M",
+    "risk_level": "medium-risk",
+    "test_verification": [
+      "先确认实际Rust+NPU入口，再测并发图像视频下构造次数、CPU时延和内存；验证模型配置隔离、错误传播与processor线程安全。"
+    ],
+    "status": "pending",
+    "assignee": "龙钢",
+    "key_files": "rust/Cargo.lock; rust/Cargo.toml; rust/src/chat/src/multimodal.rs; rust/src/chat/src/multimodal/image.rs; rust/src/chat/src/multimodal/video.rs",
+    "blocking_issues": [],
+    "review_notes": "这是生命周期重构，不承诺一定提速；在无Rust部署时不算直接承接。",
+    "low_confidence": true,
+    "confidence_reason": "未确认实际Rust+NPU部署及构造复用收益"
+  },
+  {
+    "_thought_process": "公开判定摘要：grammar就绪检查非阻塞，去除逐请求空等。NPU共用grammar future轮询，非阻塞修复进入；实际调度收益待测。 最终路由：medium/auto-inherit/P2；源码依据与局限见精确复核及测试页。",
+    "sha": "9815732c",
+    "full_sha": "9815732c16ca076c60b65fccd787167d6a9c5328",
+    "date": "2026-09-22",
+    "repo": "vllm-project/vllm",
+    "title": "[BugFix][Core] Make the structured-output grammar poll non-blocking",
+    "pr_number": "55931",
+    "pr_url": "https://github.com/vllm-project/vllm/pull/55931",
+    "commit_url": "https://github.com/vllm-project/vllm/commit/9815732c16ca076c60b65fccd787167d6a9c5328",
+    "upstream_status": "merged",
+    "merged_at": "2026-09-22T11:39:47Z",
+    "author": {
+      "name": "ubwzwd",
+      "email": ""
+    },
+    "labels": [
+      "bug",
+      "structured-output",
+      "ready"
+    ],
+    "category": "scheduler",
+    "target_ascend_module": "none",
+    "change_type": "performance",
+    "optimization_point": "grammar就绪检查非阻塞，去除逐请求空等",
+    "architecture_candidate_keys": [
+      "vllm.v1.structured_output"
+    ],
+    "verified_patch_bindings": [],
+    "affected_files": [
+      "tests/v1/structured_output/test_request.py",
+      "vllm/v1/structured_output/request.py"
+    ],
+    "ascend_value": "medium",
+    "ascend_value_reason": "NPU共用grammar future轮询，非阻塞修复进入；实际调度收益待测。",
+    "ascend_impact_ref": {
+      "ascend_affected": true,
+      "functionality": "Ascend patch_structured_output包装SamplingParams与StructuredOutputManager，未覆盖StructuredOutputRequest._check_grammar_completion；共享done/result逻辑进入所有相关scheduler。",
+      "source": "pinned vllm-ascend a71b766ce6fc0a9669a412e15a5cf53f7f827093"
+    },
+    "migration_method": "auto-inherit",
+    "migration_steps": [
+      "未完成Future不阻塞；已完成且抛TimeoutError应结束为失败，不能永久等待。积压数递增测schedule时长和请求隔离。"
+    ],
+    "patch_conflict": false,
+    "patch_matched_keys": [],
+    "priority": "P2",
+    "priority_reason": "NPU共用grammar future轮询，非阻塞修复进入；实际调度收益待测。",
+    "effort_estimate": "M",
+    "risk_level": "medium-risk",
+    "test_verification": [
+      "未完成Future不阻塞；已完成且抛TimeoutError应结束为失败，不能永久等待。积压数递增测schedule时长和请求隔离。"
+    ],
+    "status": "pending",
+    "assignee": "温劲",
+    "key_files": "tests/v1/structured_output/test_request.py; vllm/v1/structured_output/request.py",
+    "blocking_issues": [],
+    "review_notes": "正确性与调度等待收益分别管理；done检查不减少grammar编译本身时间。",
+    "low_confidence": false,
+    "confidence_reason": null
+  }
+]

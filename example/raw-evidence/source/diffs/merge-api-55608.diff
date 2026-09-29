@@ -1,0 +1,112 @@
+diff --git a/.buildkite/image_build/image_build.sh b/.buildkite/image_build/image_build.sh
+index b81cd4ec0cbe..a1134e9a4d9a 100755
+--- a/.buildkite/image_build/image_build.sh
++++ b/.buildkite/image_build/image_build.sh
+@@ -154,7 +154,7 @@ print_bake_config() {
+     local bake_tmp
+     bake_tmp="$(mktemp -d)"
+     BAKE_CONFIG_FILE="${bake_tmp}/bake-config-build-${BUILDKITE_BUILD_NUMBER:-local}.json"
+-    docker buildx bake -f "${VLLM_BAKE_FILE_PATH}" -f "${CI_HCL_PATH}" --print "${TARGET}" | tee "${BAKE_CONFIG_FILE}" || true
++    docker buildx bake "${BAKE_FILES[@]}" --print "${TARGET}" | tee "${BAKE_CONFIG_FILE}" || true
+     echo "Saved bake config to ${BAKE_CONFIG_FILE}"
+     echo "--- :arrow_down: Uploading bake config to Buildkite"
+     (cd "$(dirname "${BAKE_CONFIG_FILE}")" && buildkite-agent artifact upload "$(basename "${BAKE_CONFIG_FILE}")")
+@@ -230,8 +230,10 @@ TARGET="test-ci"
+ VLLM_BAKE_FILE_PATH="${VLLM_BAKE_FILE_PATH:-docker/docker-bake.hcl}"
+ BUILDER_NAME="${BUILDER_NAME:-vllm-builder}"
+ CI_HCL_URL="${CI_HCL_URL:-https://raw.githubusercontent.com/vllm-project/ci-infra/main/docker/ci.hcl}"
+-CI_HCL_PATH="/tmp/ci.hcl"
++CI_HCL_PATH="${CI_HCL_PATH:-/tmp/ci.hcl}"
++ZSTD_HCL_PATH="${ZSTD_HCL_PATH:-.buildkite/image_build/zstd.hcl}"
+ BUILDKIT_SOCKET="/run/buildkit/buildkitd.sock"
++BAKE_FILES=(-f "${VLLM_BAKE_FILE_PATH}" -f "${CI_HCL_PATH}" -f "${ZSTD_HCL_PATH}")
+ 
+ prepare_cache_tags
+ ecr_login
+@@ -309,7 +311,7 @@ BUILD_TMP_DIR="$(mktemp -d)"
+ trap 'rm -rf -- "${BUILD_TMP_DIR}"' EXIT
+ BUILD_METADATA_FILE="${BUILD_TMP_DIR}/build-metadata.json"
+ BUILD_STATUS=0
+-docker --debug buildx bake -f "${VLLM_BAKE_FILE_PATH}" -f "${CI_HCL_PATH}" \
++docker --debug buildx bake "${BAKE_FILES[@]}" \
+     --progress plain --metadata-file "${BUILD_METADATA_FILE}" "${TARGET}" || BUILD_STATUS=$?
+ 
+ record_buildkit_trace "${BUILD_METADATA_FILE}" || true
+diff --git a/.buildkite/image_build/zstd.hcl b/.buildkite/image_build/zstd.hcl
+new file mode 100644
+index 000000000000..1f795c5f9150
+--- /dev/null
++++ b/.buildkite/image_build/zstd.hcl
+@@ -0,0 +1,3 @@
++target "test-ci" {
++  output = ["type=registry,compression=zstd,compression-level=3,force-compression=true,oci-mediatypes=true"]
++}
+diff --git a/.buildkite/scripts/publish-release-images.sh b/.buildkite/scripts/publish-release-images.sh
+index 2fa334241fce..dec366390b00 100755
+--- a/.buildkite/scripts/publish-release-images.sh
++++ b/.buildkite/scripts/publish-release-images.sh
+@@ -61,6 +61,13 @@ if target_enabled cuda-13-0; then
+   docker manifest create "vllm/vllm-openai:v${RELEASE_VERSION}" "vllm/vllm-openai:v${RELEASE_VERSION}-x86_64" "vllm/vllm-openai:v${RELEASE_VERSION}-aarch64"
+   docker manifest push vllm/vllm-openai:latest
+   docker manifest push "vllm/vllm-openai:v${RELEASE_VERSION}"
++
++  ZSTD_DIGEST=$(docker buildx imagetools inspect \
++    "public.ecr.aws/q9t5s3a7/vllm-release-repo:${COMMIT}-x86_64" \
++    --format '{{json .Manifest.Digest}}' | tr -d '"')
++  .buildkite/scripts/publish-zstd-image.sh \
++    "public.ecr.aws/q9t5s3a7/vllm-release-repo@${ZSTD_DIGEST}" \
++    "vllm/vllm-openai:v${RELEASE_VERSION}-x86_64-zstd"
+ fi
+ 
+ # ---- CUDA 12.9 ----
+diff --git a/.buildkite/scripts/publish-zstd-image.sh b/.buildkite/scripts/publish-zstd-image.sh
+new file mode 100755
+index 000000000000..bd3d2f99d65c
+--- /dev/null
++++ b/.buildkite/scripts/publish-zstd-image.sh
+@@ -0,0 +1,45 @@
++#!/bin/bash
++# SPDX-License-Identifier: Apache-2.0
++# SPDX-FileCopyrightText: Copyright contributors to the vLLM project
++
++set -euo pipefail
++
++if [ "$#" -ne 2 ]; then
++  echo "Usage: $0 SOURCE@sha256:DIGEST DESTINATION-zstd" >&2
++  exit 2
++fi
++
++SOURCE=$1
++DESTINATION=$2
++if [[ ! "$SOURCE" =~ ^[a-zA-Z0-9][a-zA-Z0-9._:/-]*@sha256:[a-f0-9]{64}$ ]] ||
++  [[ ! "$DESTINATION" =~ ^[a-zA-Z0-9][a-zA-Z0-9._:/-]*:[a-zA-Z0-9_][a-zA-Z0-9_.-]*-zstd$ ]]; then
++  echo "ERROR: source must use an immutable sha256 digest and destination must end in -zstd" >&2
++  exit 2
++fi
++
++BUILDER=
++cleanup() {
++  status=$?
++  trap - EXIT INT TERM
++  if [ -n "$BUILDER" ] && ! docker buildx rm --force "$BUILDER"; then
++    echo "ERROR: failed to remove Buildx builder $BUILDER" >&2
++    [ "$status" -ne 0 ] || status=1
++  fi
++  exit "$status"
++}
++trap cleanup EXIT
++trap 'exit 130' INT
++trap 'exit 143' TERM
++
++BUILDER=$(docker buildx create \
++  --driver docker-container \
++  --driver-opt network=host \
++  --driver-opt 'image=moby/buildkit:v0.32.2@sha256:28a898719c18a33f4e8000685287fa36fd0dd9560c6440227d3a732d79bb41d8')
++
++printf '# check=error=true\n\nFROM %s\n' "$SOURCE" | docker buildx build \
++  --builder "$BUILDER" \
++  --platform linux/amd64 \
++  --progress plain \
++  --provenance=mode=min \
++  --output "type=image,name=${DESTINATION},push=true,compression=zstd,compression-level=3,force-compression=true,oci-mediatypes=true" \
++  -

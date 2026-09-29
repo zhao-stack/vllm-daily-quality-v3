@@ -1,0 +1,2162 @@
+diff --git a/rust/Cargo.lock b/rust/Cargo.lock
+index b4917a303b8c..713f25582dc4 100644
+--- a/rust/Cargo.lock
++++ b/rust/Cargo.lock
+@@ -5931,6 +5931,7 @@ dependencies = [
+  "openai-protocol",
+  "serde",
+  "serde_json",
++ "serde_with",
+  "thiserror 2.0.18",
+  "thiserror-ext",
+  "tool-parser",
+diff --git a/rust/src/chat/src/error.rs b/rust/src/chat/src/error.rs
+index db985df58d22..52e26370afcb 100644
+--- a/rust/src/chat/src/error.rs
++++ b/rust/src/chat/src/error.rs
+@@ -60,6 +60,11 @@ pub enum Error {
+         #[source]
+         error: BoxedError,
+     },
++    #[error("failed to initialize request output parser")]
++    OutputParserInitialization {
++        #[source]
++        error: BoxedError,
++    },
+     #[error(
+         "gpt_oss uses native Harmony output parsing; generic {kind} parser override `{selection}` is not supported"
+     )]
+@@ -87,8 +92,11 @@ pub enum Error {
+     ToolChoiceRequiresTools,
+     #[error("tool_choice function `{name}` was not found in the available tools")]
+     ToolChoiceFunctionNotFound { name: String },
+-    #[error("failed to build structural tag: {message}")]
+-    StructuralTag { message: String },
++    #[error("failed to build output grammar")]
++    OutputGrammar {
++        #[source]
++        error: BoxedError,
++    },
+     #[error(transparent)]
+     Text(#[from] vllm_text::Error),
+     #[error(transparent)]
+diff --git a/rust/src/chat/src/lib.rs b/rust/src/chat/src/lib.rs
+index 806554b5a5f3..a0e2298c3b8e 100644
+--- a/rust/src/chat/src/lib.rs
++++ b/rust/src/chat/src/lib.rs
+@@ -22,6 +22,7 @@ pub use event::{
+ };
+ use futures::{StreamExt, TryStreamExt as _};
+ pub use llm_multimodal::MediaContentPart;
++use output::apply_output_grammar;
+ pub use output::{
+     ChatOutputProcessor, DefaultChatOutputProcessor, DynChatOutputProcessor,
+     HarmonyChatOutputProcessor,
+@@ -62,7 +63,7 @@ use vllm_engine_core_client::EngineCoreClient;
+ use vllm_engine_core_client::protocol::dtype::ModelDtype;
+ use vllm_engine_core_client::protocol::request::ReasoningParserKwargs;
+ use vllm_llm::Llm;
+-use vllm_text::{Prompt, TextLlm, TextRequest};
++use vllm_text::{Prompt, TextLlm, TextRequest, TextRequestProcessor};
+ 
+ /// Chat request preparation shared by inference and render-only frontends.
+ pub struct ChatRequestProcessor {
+@@ -171,15 +172,8 @@ impl ChatRequestProcessor {
+     async fn prepare_text_request(&self, request: ChatRequest) -> Result<TextRequest> {
+         // Stamp before rendering so render and tokenize count toward TTFT/e2e.
+         let arrival_time = vllm_llm::current_unix_timestamp_secs();
+-        let rendered = self.backend.chat_renderer().render(&request)?;
+-        let reasoning_parser_kwargs =
+-            request
+-                .sampling_params
+-                .structured_outputs
+-                .is_some()
+-                .then(|| ReasoningParserKwargs {
+-                    chat_template_kwargs: rendered.effective_template_kwargs.clone(),
+-                });
++        let mut rendered = self.backend.chat_renderer().render(&request)?;
++        let chat_template_kwargs = std::mem::take(&mut rendered.effective_template_kwargs);
+         let (prompt, mm_features) = self.finalize_rendered_prompt(&request, rendered).await?;
+         Ok(TextRequest {
+             request_id: request.request_id,
+@@ -195,7 +189,10 @@ impl ChatRequestProcessor {
+             data_parallel_rank: request.data_parallel_rank,
+             session_id: request.session_id,
+             kv_hints: None,
+-            reasoning_parser_kwargs,
++            reasoning_parser_kwargs: ReasoningParserKwargs {
++                chat_template_kwargs,
++            },
++            reasoning_ended: None,
+             lora_request: request.lora_request,
+             arrival_time: Some(arrival_time),
+         })
+@@ -208,12 +205,19 @@ impl ChatRequestProcessor {
+     }
+ 
+     /// Prepare one chat request without submitting it to an engine.
++    ///
++    /// The returned text request is already tokenized: the output processor
++    /// is initialized from the final prompt token IDs and its grammar, if any,
++    /// is applied to the request before it is handed to `text_processor` again
++    /// for lowering.
+     pub async fn prepare(
+         &self,
+         mut request: ChatRequest,
++        text_processor: &TextRequestProcessor,
+     ) -> Result<(TextRequest, DynChatOutputProcessor)> {
+         request.validate()?;
+-        let output_processor = self.backend.new_chat_output_processor(
++
++        let mut output_processor = self.backend.new_chat_output_processor(
+             &mut request,
+             NewChatOutputProcessorOptions {
+                 tool_call_parser: &self.tool_call_parser,
+@@ -221,7 +225,17 @@ impl ChatRequestProcessor {
+                 tool_strict_level: self.tool_strict_level,
+             },
+         )?;
+-        let text_request = self.prepare_text_request(request).await?;
++        let mut text_request = self.prepare_text_request(request).await?;
++
++        // Initialize the output processor from the final prompt token IDs and apply
++        // the output grammar to the request, if any.
++        let prompt_token_ids = text_processor.tokenize_in_place(&mut text_request)?;
++        let grammar = {
++            output_processor.initialize(prompt_token_ids)?;
++            output_processor.build_output_grammar()?
++        };
++        apply_output_grammar(&mut text_request, grammar)?;
++
+         Ok((text_request, output_processor))
+     }
+ }
+@@ -339,7 +353,8 @@ impl ChatLlm {
+ 
+     /// Render, tokenize, and submit one chat request.
+     pub async fn chat(&self, request: ChatRequest) -> Result<ChatEventStream> {
+-        let (text_request, output_processor) = self.processor.prepare(request).await?;
++        let (text_request, output_processor) =
++            self.processor.prepare(request, self.text.request_processor()).await?;
+         let request_id = text_request.request_id.clone();
+         let decoded_stream = self.text.generate(text_request).await?.map_err(Error::from).boxed();
+ 
+diff --git a/rust/src/chat/src/output/default/mod.rs b/rust/src/chat/src/output/default/mod.rs
+index 9fb3d02b114f..ee067764cf77 100644
+--- a/rust/src/chat/src/output/default/mod.rs
++++ b/rust/src/chat/src/output/default/mod.rs
+@@ -3,17 +3,17 @@
+ 
+ //! Default output processing pipeline.
+ 
+-mod structural_tag;
+ mod unified;
+ 
+ use std::sync::Once;
+ 
+ use futures::StreamExt as _;
+ use tracing::info;
++use vllm_parser::output_grammar::{BuiltOutputGrammar, OutputGrammarContext};
+ use vllm_parser::unified::{CombinedParser, UnifiedParser};
+ use vllm_text::tokenizer::DynTokenizer;
++use xgrammar_structural_tag::ToolChoice;
+ 
+-use self::structural_tag::apply_structural_tag_constraint;
+ use self::unified::unified_event_stream;
+ use super::structured::structured_chat_event_stream;
+ use crate::error::Result;
+@@ -34,6 +34,18 @@ use crate::{Error, Result as ChatResult};
+ pub struct DefaultChatOutputProcessor {
+     parser: Box<dyn UnifiedParser>,
+     parallel_tool_calls: bool,
++    /// Request facts the initialized parser needs to build its output grammar.
++    /// Absent for the plain-text-only processor, which never builds one.
++    grammar_inputs: Option<GrammarInputs>,
++}
++
++/// Request-scoped inputs for [`UnifiedParser::build_output_grammar`], captured
++/// at construction because the chat request is consumed before the prompt is
++/// tokenized.
++struct GrammarInputs {
++    tools: Vec<ChatTool>,
++    tool_choice: ToolChoice,
++    tool_strict_level: ToolStrictLevel,
+ }
+ 
+ impl DefaultChatOutputProcessor {
+@@ -42,7 +54,8 @@ impl DefaultChatOutputProcessor {
+     ///
+     /// Parser resolution happens here so that request validation, prompt
+     /// rendering, and streaming all observe the same parser-adjusted
+-    /// request state.
++    /// request state. The parser is initialized and its output grammar built
++    /// later, once the final prompt token IDs are known.
+     pub fn new(
+         request: &mut ChatRequest,
+         model_id: &str,
+@@ -74,12 +87,6 @@ impl DefaultChatOutputProcessor {
+             Box::new(CombinedParser::new(reasoning_parser, tool_parser)) as Box<dyn UnifiedParser>
+         };
+ 
+-        apply_structural_tag_constraint(
+-            request,
+-            parser.structural_tag_builder(),
+-            tool_strict_level,
+-        )?;
+-
+         if parser.preserve_special_tokens() {
+             request.decode_options.skip_special_tokens = false;
+         }
+@@ -87,6 +94,11 @@ impl DefaultChatOutputProcessor {
+         Ok(Self {
+             parser,
+             parallel_tool_calls: request.parallel_tool_calls(),
++            grammar_inputs: Some(GrammarInputs {
++                tools: request.tools().to_vec(),
++                tool_choice: request.tool_choice().into(),
++                tool_strict_level,
++            }),
+         })
+     }
+ 
+@@ -99,6 +111,7 @@ impl DefaultChatOutputProcessor {
+         Self {
+             parser: Box::new(CombinedParser::plain_text_only()),
+             parallel_tool_calls: true,
++            grammar_inputs: None,
+         }
+     }
+ 
+@@ -175,6 +188,30 @@ static REASONING_PARSER_LOG_ONCE: Once = Once::new();
+ static UNIFIED_PARSER_LOG_ONCE: Once = Once::new();
+ 
+ impl ChatOutputProcessor for DefaultChatOutputProcessor {
++    fn initialize(&mut self, prompt_token_ids: &[u32]) -> Result<()> {
++        self.parser.initialize(prompt_token_ids).map_err(|error| {
++            Error::OutputParserInitialization {
++                error: Box::new(error),
++            }
++        })
++    }
++
++    fn build_output_grammar(&self) -> Result<Option<BuiltOutputGrammar>> {
++        let Some(inputs) = &self.grammar_inputs else {
++            return Ok(None);
++        };
++        self.parser
++            .build_output_grammar(&OutputGrammarContext {
++                tools: &inputs.tools,
++                tool_choice: &inputs.tool_choice,
++                tool_strict_level: inputs.tool_strict_level,
++                parallel_tool_calls: self.parallel_tool_calls,
++            })
++            .map_err(|error| Error::OutputGrammar {
++                error: Box::new(error),
++            })
++    }
++
+     /// Transforms a raw generate-output token stream into structured chat
+     /// events through two sequential stages once text decoding has
+     /// already happened:
+@@ -196,8 +233,9 @@ mod tests {
+     use vllm_tokenizer::test_utils::TestTokenizer;
+ 
+     use super::DefaultChatOutputProcessor;
++    use crate::output::ChatOutputProcessor;
+     use crate::parser::{ParserSelection, ToolStrictLevel};
+-    use crate::request::ChatRequest;
++    use crate::request::{ChatRequest, ChatTool, ChatToolChoice, ResolvedToolContext};
+ 
+     fn tokenizer() -> Arc<TestTokenizer> {
+         Arc::new(
+@@ -207,6 +245,83 @@ mod tests {
+         )
+     }
+ 
++    #[test]
++    fn output_grammar_preserves_tool_strict_level() {
++        let build = |level, strict, choice| {
++            let tools = vec![ChatTool {
++                name: "search".to_string(),
++                description: None,
++                parameters: serde_json::json!({
++                    "type": "object",
++                    "properties": { "query": { "type": "string" } },
++                    "required": ["query"]
++                }),
++                strict,
++            }];
++            let mut request = ChatRequest {
++                tool_context: ResolvedToolContext::new(&[], tools, Some(choice), true).unwrap(),
++                ..ChatRequest::for_test()
++            };
++            let mut processor = DefaultChatOutputProcessor::new(
++                &mut request,
++                "other-model",
++                tokenizer(),
++                &ParserSelection::Explicit("qwen3_coder".to_string()),
++                &ParserSelection::None,
++                level,
++            )
++            .unwrap();
++            processor.initialize(&[]).unwrap();
++            processor.build_output_grammar().unwrap()
++        };
++
++        assert!(build(ToolStrictLevel::Auto, None, ChatToolChoice::Auto).is_none());
++        let envelope = build(ToolStrictLevel::Function, None, ChatToolChoice::Auto).unwrap();
++        let parameters = build(ToolStrictLevel::Parameter, None, ChatToolChoice::Auto).unwrap();
++        let strict = build(ToolStrictLevel::Auto, Some(true), ChatToolChoice::Auto).unwrap();
++        assert_eq!(parameters, strict);
++        assert_ne!(envelope, parameters);
++        assert!(build(ToolStrictLevel::Parameter, None, ChatToolChoice::None).is_none());
++    }
++
++    #[test]
++    fn tool_grammar_honors_parallel_call_policy() {
++        for parallel in [false, true] {
++            let tools = vec![ChatTool {
++                name: "lookup".to_string(),
++                description: None,
++                parameters: serde_json::json!({"type": "object"}),
++                strict: Some(true),
++            }];
++            let mut request = ChatRequest {
++                tool_context: ResolvedToolContext::new(
++                    &[],
++                    tools,
++                    Some(ChatToolChoice::Auto),
++                    parallel,
++                )
++                .unwrap(),
++                ..ChatRequest::for_test()
++            };
++            let mut processor = DefaultChatOutputProcessor::new(
++                &mut request,
++                "other-model",
++                tokenizer(),
++                &ParserSelection::Explicit("qwen3_coder".to_string()),
++                &ParserSelection::None,
++                ToolStrictLevel::Auto,
++            )
++            .unwrap();
++            processor.initialize(&[]).unwrap();
++            let built = processor.build_output_grammar().unwrap().unwrap();
++            let tag =
++                serde_json::to_value(xgrammar_structural_tag::StructuralTag::new(built.format))
++                    .unwrap();
++            assert_eq!(tag["format"]["type"], "triggered_tags");
++            assert_eq!(tag["format"]["stop_after_first"], !parallel);
++        }
++    }
++
+     #[test]
+     fn equal_explicit_gemma4_uses_unified_parser() {
+         let mut request = ChatRequest::for_test();
+diff --git a/rust/src/chat/src/output/default/structural_tag.rs b/rust/src/chat/src/output/default/structural_tag.rs
+deleted file mode 100644
+index 0a115d17df79..000000000000
+--- a/rust/src/chat/src/output/default/structural_tag.rs
++++ /dev/null
+@@ -1,507 +0,0 @@
+-// SPDX-License-Identifier: Apache-2.0
+-// SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+-
+-//! Applies xgrammar structural-tag constraints for strict tool calling.
+-
+-use thiserror_ext::AsReport;
+-use vllm_engine_core_client::protocol::structured_outputs::{
+-    StructuredOutputBackend, StructuredOutputsParams,
+-};
+-use vllm_parser::tool::StructuralTagBuilder;
+-use xgrammar_structural_tag::builders::StructuralTagOptions;
+-use xgrammar_structural_tag::{
+-    FunctionDefinition, FunctionToolParam, ToolChoice as StructuralTagToolChoice, ToolParam,
+-    build_structural_tag,
+-};
+-
+-use crate::parser::ToolStrictLevel;
+-use crate::request::{ChatRequest, ChatToolChoice};
+-use crate::{Error, Result as ChatResult};
+-
+-/// Apply structural tag constraints to the request based on the tool parser's structural tag
+-/// support, the request's tool choice, and the server-side strictness floor.
+-pub(super) fn apply_structural_tag_constraint(
+-    request: &mut ChatRequest,
+-    builder: Option<&dyn StructuralTagBuilder>,
+-    strict_level: ToolStrictLevel,
+-) -> ChatResult<()> {
+-    let Some(builder) = builder else {
+-        return Ok(());
+-    };
+-    let Some(tool_choice) = structural_tag_tool_choice(request, strict_level) else {
+-        return Ok(());
+-    };
+-
+-    let tools = request
+-        .tools()
+-        .iter()
+-        .map(|tool| {
+-            // A tool without an explicit `strict` is non-strict: its call envelope is
+-            // constrained, but its arguments stay free unless the server level is `parameter`.
+-            let strict = strict_level >= ToolStrictLevel::Parameter || tool.strict == Some(true);
+-            ToolParam::Function(FunctionToolParam::new(FunctionDefinition {
+-                name: tool.name.clone(),
+-                description: tool.description.clone(),
+-                parameters: Some(tool.parameters.clone()),
+-                strict: Some(strict),
+-            }))
+-        })
+-        .collect::<Vec<_>>();
+-
+-    let structural_tag = build_structural_tag(
+-        builder,
+-        &tools,
+-        tool_choice,
+-        StructuralTagOptions::default()
+-            .with_reasoning(false)
+-            .with_parallel_tool_calls(request.parallel_tool_calls()),
+-    )
+-    .and_then(|tag| tag.to_json_string())
+-    .map_err(|error| Error::StructuralTag {
+-        message: error.to_report_string(),
+-    })?;
+-
+-    // Overwrite any existing structured output settings with the structural tag constraint.
+-    request.sampling_params.structured_outputs = Some(StructuredOutputsParams {
+-        backend: StructuredOutputBackend::Xgrammar,
+-        ..StructuredOutputsParams::structural_tag(structural_tag)
+-    });
+-
+-    Ok(())
+-}
+-
+-/// Resolve the tool choice used for [`xgrammar_structural_tag`] based on the request.
+-///
+-/// Returns `None` if no structural tag constraints should be applied.
+-fn structural_tag_tool_choice(
+-    request: &ChatRequest,
+-    strict_level: ToolStrictLevel,
+-) -> Option<StructuralTagToolChoice> {
+-    if request.tools().is_empty() {
+-        return None;
+-    }
+-
+-    match request.tool_choice() {
+-        ChatToolChoice::None => None,
+-        // For `Auto`, apply the structural tag only when the server raises the floor or at
+-        // least one tool opts in with `strict: true`.
+-        ChatToolChoice::Auto => (strict_level >= ToolStrictLevel::Function
+-            || request.tools().iter().any(|tool| tool.strict == Some(true)))
+-        .then(StructuralTagToolChoice::auto),
+-
+-        ChatToolChoice::Required => Some(StructuralTagToolChoice::required()),
+-        ChatToolChoice::Function { name } => Some(StructuralTagToolChoice::function(name.clone())),
+-    }
+-}
+-
+-#[cfg(test)]
+-mod tests {
+-    use serde_json::{Value, json};
+-    use vllm_engine_core_client::protocol::structured_outputs::{
+-        StructuredOutputBackend, StructuredOutputsParams,
+-    };
+-    use vllm_parser::tool::{Qwen3CoderToolParser, Tool, ToolParser};
+-
+-    use super::*;
+-    use crate::request::{ChatMessage, ResolvedToolContext};
+-
+-    fn chat_tool(name: &str, strict: Option<bool>) -> Tool {
+-        Tool {
+-            name: name.to_string(),
+-            description: None,
+-            parameters: json!({
+-                "type": "object",
+-                "properties": {
+-                    "query": { "type": "string" }
+-                },
+-                "required": ["query"]
+-            }),
+-            strict,
+-        }
+-    }
+-
+-    fn qwen3_coder_parser(tools: &[Tool]) -> Box<dyn ToolParser> {
+-        Qwen3CoderToolParser::create(tools).expect("Qwen3 Coder parser should build")
+-    }
+-
+-    fn request(tool_choice: ChatToolChoice, tools: Vec<Tool>) -> ChatRequest {
+-        ChatRequest {
+-            tool_context: ResolvedToolContext::new(&[], tools, Some(tool_choice), true)
+-                .expect("tool context should resolve"),
+-            ..ChatRequest::for_test()
+-        }
+-    }
+-
+-    fn structural_tag_value(request: &ChatRequest) -> Value {
+-        let params = request
+-            .sampling_params
+-            .structured_outputs
+-            .as_ref()
+-            .expect("structured outputs should be set");
+-        assert_eq!(params.backend, StructuredOutputBackend::Xgrammar);
+-        let structural_tag = params
+-            .constraint
+-            .as_structural_tag()
+-            .expect("structured output constraint should be structural_tag");
+-        serde_json::from_str(structural_tag).expect("structural_tag should be valid JSON")
+-    }
+-
+-    fn structured_outputs(request: &ChatRequest) -> &StructuredOutputsParams {
+-        request
+-            .sampling_params
+-            .structured_outputs
+-            .as_ref()
+-            .expect("structured outputs should be set")
+-    }
+-
+-    #[test]
+-    fn tool_grammar_honors_parallel_call_policy() {
+-        for parallel in [false, true] {
+-            let tools = vec![chat_tool("lookup", Some(true))];
+-            let mut request = ChatRequest {
+-                tool_context: ResolvedToolContext::new(
+-                    &[],
+-                    tools,
+-                    Some(ChatToolChoice::Auto),
+-                    parallel,
+-                )
+-                .unwrap(),
+-                ..ChatRequest::for_test()
+-            };
+-            let parser = qwen3_coder_parser(request.tools());
+-            apply_structural_tag_constraint(
+-                &mut request,
+-                parser.structural_tag_builder(),
+-                ToolStrictLevel::Auto,
+-            )
+-            .unwrap();
+-            let tag = structural_tag_value(&request);
+-            assert_eq!(tag["format"]["type"], "triggered_tags");
+-            assert_eq!(tag["format"]["stop_after_first"], !parallel);
+-        }
+-    }
+-
+-    #[test]
+-    fn auto_strict_tool_choice_builds_structural_tag() {
+-        let mut request = request(ChatToolChoice::Auto, vec![chat_tool("search", Some(true))]);
+-        let parser = qwen3_coder_parser(request.tools());
+-
+-        apply_structural_tag_constraint(
+-            &mut request,
+-            parser.structural_tag_builder(),
+-            ToolStrictLevel::Auto,
+-        )
+-        .expect("structural tag should build");
+-
+-        let tag = structural_tag_value(&request);
+-        assert_eq!(tag["type"], "structural_tag");
+-        assert!(tag.to_string().contains("search"));
+-    }
+-
+-    #[test]
+-    fn required_dynamic_tool_builds_structural_tag_from_effective_tools() {
+-        let messages = vec![ChatMessage::developer(
+-            "",
+-            Some(vec![chat_tool("lookup", None)]),
+-        )];
+-        let tool_context =
+-            ResolvedToolContext::new(&messages, Vec::new(), Some(ChatToolChoice::Required), true)
+-                .expect("dynamic tool context should resolve");
+-        let mut request = ChatRequest {
+-            messages,
+-            tool_context,
+-            ..ChatRequest::for_test()
+-        };
+-        let parser = qwen3_coder_parser(request.tools());
+-
+-        apply_structural_tag_constraint(
+-            &mut request,
+-            parser.structural_tag_builder(),
+-            ToolStrictLevel::Auto,
+-        )
+-        .expect("structural tag should build");
+-
+-        let tag = structural_tag_value(&request);
+-        assert!(tag.to_string().contains("lookup"));
+-    }
+-
+-    #[test]
+-    fn required_initial_and_dynamic_tools_build_one_structural_tag() {
+-        let messages = vec![ChatMessage::developer(
+-            "",
+-            Some(vec![chat_tool("lookup", None)]),
+-        )];
+-        let tool_context = ResolvedToolContext::new(
+-            &messages,
+-            vec![chat_tool("search", None)],
+-            Some(ChatToolChoice::Required),
+-            true,
+-        )
+-        .expect("tool context should resolve");
+-        let mut request = ChatRequest {
+-            messages,
+-            tool_context,
+-            ..ChatRequest::for_test()
+-        };
+-        let parser = qwen3_coder_parser(request.tools());
+-
+-        apply_structural_tag_constraint(
+-            &mut request,
+-            parser.structural_tag_builder(),
+-            ToolStrictLevel::Auto,
+-        )
+-        .expect("structural tag should build");
+-
+-        let tag = structural_tag_value(&request).to_string();
+-        assert!(tag.contains("search"));
+-        assert!(tag.contains("lookup"));
+-    }
+-
+-    #[test]
+-    fn auto_non_strict_tool_choice_skips_structural_tag() {
+-        let mut request = request(ChatToolChoice::Auto, vec![chat_tool("search", None)]);
+-        let parser = qwen3_coder_parser(request.tools());
+-
+-        apply_structural_tag_constraint(
+-            &mut request,
+-            parser.structural_tag_builder(),
+-            ToolStrictLevel::Auto,
+-        )
+-        .expect("structural tag decision should succeed");
+-
+-        assert!(request.sampling_params.structured_outputs.is_none());
+-    }
+-
+-    #[test]
+-    fn auto_strict_tool_choice_overwrites_existing_json_guidance() {
+-        let mut request = request(ChatToolChoice::Auto, vec![chat_tool("search", Some(true))]);
+-        request.sampling_params.structured_outputs = Some(StructuredOutputsParams {
+-            backend: StructuredOutputBackend::Xgrammar,
+-            ..StructuredOutputsParams::json(json!({"type": "object"}))
+-        });
+-        let parser = qwen3_coder_parser(request.tools());
+-
+-        apply_structural_tag_constraint(
+-            &mut request,
+-            parser.structural_tag_builder(),
+-            ToolStrictLevel::Auto,
+-        )
+-        .expect("structural tag should build");
+-
+-        let params = structured_outputs(&request);
+-        assert!(params.constraint.is_structural_tag());
+-        let tag = structural_tag_value(&request);
+-        assert_eq!(tag["type"], "structural_tag");
+-        assert!(tag.to_string().contains("search"));
+-    }
+-
+-    #[test]
+-    fn required_tool_choice_builds_structural_tag_without_strict_tools() {
+-        let mut request = request(ChatToolChoice::Required, vec![chat_tool("search", None)]);
+-        let parser = qwen3_coder_parser(request.tools());
+-
+-        apply_structural_tag_constraint(
+-            &mut request,
+-            parser.structural_tag_builder(),
+-            ToolStrictLevel::Auto,
+-        )
+-        .expect("structural tag should build");
+-
+-        let tag = structural_tag_value(&request);
+-        assert_eq!(tag["type"], "structural_tag");
+-        assert!(tag.to_string().contains("search"));
+-    }
+-
+-    #[test]
+-    fn required_tool_choice_overwrites_existing_json_object_guidance() {
+-        let mut request = request(ChatToolChoice::Required, vec![chat_tool("search", None)]);
+-        request.sampling_params.structured_outputs = Some(StructuredOutputsParams {
+-            backend: StructuredOutputBackend::Xgrammar,
+-            ..StructuredOutputsParams::json_object()
+-        });
+-        let parser = qwen3_coder_parser(request.tools());
+-
+-        apply_structural_tag_constraint(
+-            &mut request,
+-            parser.structural_tag_builder(),
+-            ToolStrictLevel::Auto,
+-        )
+-        .expect("structural tag should build");
+-
+-        let params = structured_outputs(&request);
+-        assert!(params.constraint.is_structural_tag());
+-        let tag = structural_tag_value(&request);
+-        assert_eq!(tag["type"], "structural_tag");
+-        assert!(tag.to_string().contains("search"));
+-    }
+-
+-    #[test]
+-    fn named_tool_choice_builds_structural_tag_for_named_tool_only() {
+-        let mut request = request(
+-            ChatToolChoice::Function {
+-                name: "lookup".to_string(),
+-            },
+-            vec![chat_tool("search", None), chat_tool("lookup", None)],
+-        );
+-        let parser = qwen3_coder_parser(request.tools());
+-
+-        apply_structural_tag_constraint(
+-            &mut request,
+-            parser.structural_tag_builder(),
+-            ToolStrictLevel::Auto,
+-        )
+-        .expect("structural tag should build");
+-
+-        let tag = structural_tag_value(&request).to_string();
+-        assert!(tag.contains("lookup"));
+-        assert!(!tag.contains("search"));
+-    }
+-
+-    #[test]
+-    fn none_tool_choice_skips_structural_tag() {
+-        let mut request = request(ChatToolChoice::None, vec![chat_tool("search", Some(true))]);
+-        let parser = qwen3_coder_parser(request.tools());
+-
+-        apply_structural_tag_constraint(
+-            &mut request,
+-            parser.structural_tag_builder(),
+-            ToolStrictLevel::Auto,
+-        )
+-        .expect("structural tag decision should succeed");
+-
+-        assert!(request.sampling_params.structured_outputs.is_none());
+-    }
+-
+-    #[test]
+-    fn none_tool_choice_preserves_existing_json_object_guidance() {
+-        let mut request = request(ChatToolChoice::None, vec![chat_tool("search", Some(true))]);
+-        request.sampling_params.structured_outputs = Some(StructuredOutputsParams {
+-            backend: StructuredOutputBackend::Xgrammar,
+-            ..StructuredOutputsParams::json_object()
+-        });
+-        let parser = qwen3_coder_parser(request.tools());
+-
+-        apply_structural_tag_constraint(
+-            &mut request,
+-            parser.structural_tag_builder(),
+-            ToolStrictLevel::Auto,
+-        )
+-        .expect("structural tag decision should succeed");
+-
+-        let params = structured_outputs(&request);
+-        assert!(params.constraint.is_json_object());
+-    }
+-
+-    fn build(tool_choice: ChatToolChoice, tools: Vec<Tool>, level: ToolStrictLevel) -> ChatRequest {
+-        let mut request = request(tool_choice, tools);
+-        let parser = qwen3_coder_parser(request.tools());
+-
+-        apply_structural_tag_constraint(&mut request, parser.structural_tag_builder(), level)
+-            .expect("structural tag decision should succeed");
+-        request
+-    }
+-
+-    fn tag_string(request: &ChatRequest) -> String {
+-        structural_tag_value(request).to_string()
+-    }
+-
+-    #[test]
+-    fn function_level_constrains_auto_without_strict_tools() {
+-        let request = build(
+-            ChatToolChoice::Auto,
+-            vec![chat_tool("search", None)],
+-            ToolStrictLevel::Function,
+-        );
+-
+-        let tag = structural_tag_value(&request);
+-        assert_eq!(tag["type"], "structural_tag");
+-        assert!(tag.to_string().contains("search"));
+-    }
+-
+-    #[test]
+-    fn absent_strict_is_non_strict() {
+-        let unset = build(
+-            ChatToolChoice::Required,
+-            vec![chat_tool("search", None)],
+-            ToolStrictLevel::Auto,
+-        );
+-        let non_strict = build(
+-            ChatToolChoice::Required,
+-            vec![chat_tool("search", Some(false))],
+-            ToolStrictLevel::Auto,
+-        );
+-        let strict = build(
+-            ChatToolChoice::Required,
+-            vec![chat_tool("search", Some(true))],
+-            ToolStrictLevel::Auto,
+-        );
+-
+-        assert_eq!(tag_string(&unset), tag_string(&non_strict));
+-        assert_ne!(tag_string(&unset), tag_string(&strict));
+-    }
+-
+-    #[test]
+-    fn strict_tool_does_not_pin_its_neighbour() {
+-        let mixed = build(
+-            ChatToolChoice::Auto,
+-            vec![chat_tool("weather", Some(true)), chat_tool("search", None)],
+-            ToolStrictLevel::Auto,
+-        );
+-        let explicit = build(
+-            ChatToolChoice::Auto,
+-            vec![
+-                chat_tool("weather", Some(true)),
+-                chat_tool("search", Some(false)),
+-            ],
+-            ToolStrictLevel::Auto,
+-        );
+-
+-        assert_eq!(tag_string(&mixed), tag_string(&explicit));
+-    }
+-
+-    #[test]
+-    fn parameter_level_pins_argument_schemas() {
+-        let pinned = build(
+-            ChatToolChoice::Auto,
+-            vec![chat_tool("search", None)],
+-            ToolStrictLevel::Parameter,
+-        );
+-        let strict = build(
+-            ChatToolChoice::Auto,
+-            vec![chat_tool("search", Some(true))],
+-            ToolStrictLevel::Auto,
+-        );
+-        let envelope_only = build(
+-            ChatToolChoice::Auto,
+-            vec![chat_tool("search", None)],
+-            ToolStrictLevel::Function,
+-        );
+-
+-        assert_eq!(tag_string(&pinned), tag_string(&strict));
+-        assert_ne!(tag_string(&pinned), tag_string(&envelope_only));
+-    }
+-
+-    #[test]
+-    fn tool_strict_level_parses_case_insensitively() {
+-        assert_eq!("AUTO".parse::<ToolStrictLevel>(), Ok(ToolStrictLevel::Auto));
+-        assert_eq!(
+-            "PARAMETER".parse::<ToolStrictLevel>(),
+-            Ok(ToolStrictLevel::Parameter)
+-        );
+-        assert_eq!(
+-            "function".parse::<ToolStrictLevel>(),
+-            Ok(ToolStrictLevel::Function)
+-        );
+-        assert_eq!(ToolStrictLevel::default(), ToolStrictLevel::Auto);
+-        assert_eq!(
+-            serde_json::to_value(ToolStrictLevel::Auto).unwrap(),
+-            json!("auto")
+-        );
+-        assert_eq!(
+-            serde_json::from_value::<ToolStrictLevel>(json!("auto")).unwrap(),
+-            ToolStrictLevel::Auto
+-        );
+-        assert!("off".parse::<ToolStrictLevel>().is_err());
+-        assert!("strict".parse::<ToolStrictLevel>().is_err());
+-    }
+-}
+diff --git a/rust/src/chat/src/output/default/unified.rs b/rust/src/chat/src/output/default/unified.rs
+index 023e3c3ffa3a..b4a2dcbe5d30 100644
+--- a/rust/src/chat/src/output/default/unified.rs
++++ b/rust/src/chat/src/output/default/unified.rs
+@@ -48,25 +48,6 @@ impl UnifiedParserState {
+         }
+     }
+ 
+-    /// Initialize parser state once prompt token IDs are available.
+-    fn initialize(&mut self, prompt_token_ids: &[u32]) {
+-        if self.parser_failed {
+-            return;
+-        }
+-
+-        match self.parser.initialize(prompt_token_ids) {
+-            Ok(()) => {}
+-            Err(error) => {
+-                warn!(
+-                    error = %error.as_report(),
+-                    "failed to initialize unified parser; falling back to plain text deltas"
+-                );
+-                self.parser_failed = true;
+-                self.open_call_index = None;
+-            }
+-        }
+-    }
+-
+     /// Convert one decoded text delta into zero or more parsed assistant events.
+     fn process_delta(&mut self, delta: DecodedText) -> Result<Vec<AssistantEvent>> {
+         if self.parser_failed {
+@@ -262,7 +243,6 @@ pub(crate) async fn unified_event_stream(
+                 prompt_token_ids,
+                 prompt_logprobs,
+             } => {
+-                state.initialize(&prompt_token_ids);
+                 y.yield_ok(AssistantEvent::Start {
+                     prompt_token_ids,
+                     prompt_logprobs,
+diff --git a/rust/src/chat/src/output/mod.rs b/rust/src/chat/src/output/mod.rs
+index dfccf3ba6f8c..8e62f3e8918b 100644
+--- a/rust/src/chat/src/output/mod.rs
++++ b/rust/src/chat/src/output/mod.rs
+@@ -7,6 +7,7 @@ use std::sync::Arc;
+ use futures::Stream;
+ use trait_set::trait_set;
+ use uuid::Uuid;
++use vllm_parser::output_grammar::BuiltOutputGrammar;
+ use vllm_text::output::{DecodedLogprobs, DecodedPromptLogprobs, DecodedTextEvent};
+ 
+ use crate::FinishReason;
+@@ -15,11 +16,13 @@ use crate::event::{AssistantBlockKind, ChatEvent, ChatTokenUsage};
+ 
+ mod default;
+ mod harmony;
++mod structural_tag;
+ mod structured;
+ 
+ pub use default::DefaultChatOutputProcessor;
+ pub use harmony::HarmonyChatOutputProcessor;
+ pub(crate) use harmony::validate_harmony_parser_overrides;
++pub(crate) use structural_tag::apply_output_grammar;
+ 
+ /// Internal assistant event before final assembly.
+ ///
+@@ -65,7 +68,24 @@ pub type DynChatEventStream = Pin<Box<dyn Stream<Item = Result<ChatEvent>> + Sen
+ 
+ /// Request-scoped output processor from decoded text events into structured
+ /// chat events.
++///
++/// A processor is created before the prompt is rendered, so that parser
++/// resolution can adjust the request, and then goes through two more phases
++/// once the final prompt token IDs are known: [`Self::initialize`] and
++/// [`Self::build_output_grammar`], in that order, both before
++/// [`Self::process`].
+ pub trait ChatOutputProcessor: Send {
++    /// Initialize request-scoped parser state from the final prompt token IDs.
++    fn initialize(&mut self, _prompt_token_ids: &[u32]) -> Result<()> {
++        Ok(())
++    }
++
++    /// Build the structured output grammar implied by the initialized parser
++    /// state, or `None` when this request needs no parser-owned grammar.
++    fn build_output_grammar(&self) -> Result<Option<BuiltOutputGrammar>> {
++        Ok(None)
++    }
++
+     /// Consume decoded text stream and return the structured chat-event stream.
+     fn process(self: Box<Self>, decoded: DynDecodedTextEventStream) -> Result<DynChatEventStream>;
+ }
+diff --git a/rust/src/chat/src/output/structural_tag.rs b/rust/src/chat/src/output/structural_tag.rs
+new file mode 100644
+index 000000000000..dba6b6d1b739
+--- /dev/null
++++ b/rust/src/chat/src/output/structural_tag.rs
+@@ -0,0 +1,73 @@
++// SPDX-License-Identifier: Apache-2.0
++// SPDX-FileCopyrightText: Copyright contributors to the vLLM project
++
++//! Applies parser-built xgrammar structural-tag constraints.
++
++use vllm_engine_core_client::protocol::structured_outputs::{
++    StructuredOutputBackend, StructuredOutputsParams,
++};
++use vllm_parser::output_grammar::{BuiltOutputGrammar, GrammarCoverage};
++use vllm_text::TextRequest;
++use xgrammar_structural_tag::StructuralTag;
++
++use crate::{Error, Result};
++
++/// Apply one parser-built output grammar to the prepared text request.
++///
++/// A parser-owned grammar replaces any structured output constraint the user
++/// supplied, matching the Python frontend. `None` leaves the request untouched.
++pub(crate) fn apply_output_grammar(
++    request: &mut TextRequest,
++    built: Option<BuiltOutputGrammar>,
++) -> Result<()> {
++    let Some(built) = built else {
++        return Ok(());
++    };
++    let structural_tag = StructuralTag::new(built.format).to_json_string().map_err(|error| {
++        Error::OutputGrammar {
++            error: Box::new(error),
++        }
++    })?;
++
++    // Overwrite any existing structured output settings with the structural tag constraint.
++    request.sampling_params.structured_outputs = Some(StructuredOutputsParams {
++        backend: StructuredOutputBackend::Xgrammar,
++        ..StructuredOutputsParams::structural_tag(structural_tag)
++    });
++    request.reasoning_ended = match built.coverage {
++        GrammarCoverage::FromTokenZero => Some(true),
++        GrammarCoverage::FinalOutputOnly => None,
++    };
++
++    Ok(())
++}
++
++#[cfg(test)]
++mod tests {
++    use serde_json::json;
++    use vllm_engine_core_client::protocol::structured_outputs::{
++        StructuredOutputBackend, StructuredOutputsParams,
++    };
++    use xgrammar_structural_tag::format::Format;
++
++    use super::*;
++
++    #[test]
++    fn output_grammar_overwrites_answer_constraint() {
++        let mut request = TextRequest::for_test();
++        request.sampling_params.structured_outputs =
++            Some(StructuredOutputsParams::json(json!({ "type": "object" })));
++
++        let built = BuiltOutputGrammar::from_token_zero(Format::const_string("answer"));
++        apply_output_grammar(&mut request, Some(built)).unwrap();
++
++        assert_eq!(request.reasoning_ended, Some(true));
++        let params = request.sampling_params.structured_outputs.unwrap();
++        assert_eq!(params.backend, StructuredOutputBackend::Xgrammar);
++        let serialized = params.constraint.as_structural_tag().unwrap();
++        let value: serde_json::Value = serde_json::from_str(serialized).unwrap();
++        assert_eq!(value["type"], "structural_tag");
++        assert_eq!(value["format"]["type"], "const_string");
++        assert_eq!(value["format"]["value"], "answer");
++    }
++}
+diff --git a/rust/src/chat/src/parser/mod.rs b/rust/src/chat/src/parser/mod.rs
+index 5a86b24934be..632d82aaca1c 100644
+--- a/rust/src/chat/src/parser/mod.rs
++++ b/rust/src/chat/src/parser/mod.rs
+@@ -12,6 +12,8 @@ use std::str::FromStr;
+ 
+ use serde_with::{DeserializeFromStr, SerializeDisplay};
+ 
++pub use vllm_parser::output_grammar::ToolStrictLevel;
++
+ use self::reasoning::ReasoningParserFactory;
+ use self::tool::ToolParserFactory;
+ use self::unified::UnifiedParserFactory;
+@@ -57,66 +59,6 @@ impl ParserSelection {
+     }
+ }
+ 
+-/// Server-side floor for tool-call structural tags (`--tool-strict-level`).
+-#[derive(
+-    Debug,
+-    Clone,
+-    Copy,
+-    PartialEq,
+-    Eq,
+-    PartialOrd,
+-    Ord,
+-    Default,
+-    DeserializeFromStr,
+-    SerializeDisplay,
+-)]
+-pub enum ToolStrictLevel {
+-    /// Derive tool constraints from the request's tool choice and per-tool strictness.
+-    #[default]
+-    Auto,
+-    /// Constrain the tool-call envelope for every request with tools.
+-    Function,
+-    /// Additionally pin argument schemas, as if every tool were `strict: true`.
+-    Parameter,
+-}
+-
+-impl ToolStrictLevel {
+-    pub const AUTO_LITERAL: &str = "auto";
+-    pub const FUNCTION_LITERAL: &str = "function";
+-    pub const PARAMETER_LITERAL: &str = "parameter";
+-}
+-
+-impl FromStr for ToolStrictLevel {
+-    type Err = String;
+-
+-    fn from_str(value: &str) -> Result<Self, Self::Err> {
+-        if value.eq_ignore_ascii_case(Self::AUTO_LITERAL) {
+-            Ok(Self::Auto)
+-        } else if value.eq_ignore_ascii_case(Self::FUNCTION_LITERAL) {
+-            Ok(Self::Function)
+-        } else if value.eq_ignore_ascii_case(Self::PARAMETER_LITERAL) {
+-            Ok(Self::Parameter)
+-        } else {
+-            Err(format!(
+-                "unknown tool strict level {value:?}; expected one of {}, {}, {}",
+-                Self::AUTO_LITERAL,
+-                Self::FUNCTION_LITERAL,
+-                Self::PARAMETER_LITERAL
+-            ))
+-        }
+-    }
+-}
+-
+-impl fmt::Display for ToolStrictLevel {
+-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+-        f.write_str(match self {
+-            Self::Auto => Self::AUTO_LITERAL,
+-            Self::Function => Self::FUNCTION_LITERAL,
+-            Self::Parameter => Self::PARAMETER_LITERAL,
+-        })
+-    }
+-}
+-
+ /// Validate explicit parser override names without starting request processing.
+ pub fn validate_parser_overrides(
+     tool_call_parser: &ParserSelection,
+diff --git a/rust/src/chat/src/request.rs b/rust/src/chat/src/request.rs
+index e3bbcaa2aa51..59e7ec6fba72 100644
+--- a/rust/src/chat/src/request.rs
++++ b/rust/src/chat/src/request.rs
+@@ -435,6 +435,17 @@ pub enum ChatToolChoice {
+     },
+ }
+ 
++impl From<&ChatToolChoice> for xgrammar_structural_tag::ToolChoice {
++    fn from(tool_choice: &ChatToolChoice) -> Self {
++        match tool_choice {
++            ChatToolChoice::None => Self::none(),
++            ChatToolChoice::Auto => Self::auto(),
++            ChatToolChoice::Required => Self::required(),
++            ChatToolChoice::Function { name } => Self::function(name.clone()),
++        }
++    }
++}
++
+ /// Resolved tool state shared by rendering, output parsing, and constraints.
+ #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+ pub struct ResolvedToolContext {
+diff --git a/rust/src/chat/tests/roundtrip.rs b/rust/src/chat/tests/roundtrip.rs
+index 7f969264a0f1..a7bc24bd2a1a 100644
+--- a/rust/src/chat/tests/roundtrip.rs
++++ b/rust/src/chat/tests/roundtrip.rs
+@@ -728,7 +728,7 @@ async fn parse_completion(
+     };
+ 
+     let mut request = base_request.clone();
+-    let processor = backends.chat_backend.new_chat_output_processor(
++    let mut processor = backends.chat_backend.new_chat_output_processor(
+         &mut request,
+         NewChatOutputProcessorOptions {
+             tool_strict_level: vllm_chat::ToolStrictLevel::Auto,
+@@ -736,6 +736,7 @@ async fn parse_completion(
+             reasoning_parser: &case.reasoning_parser,
+         },
+     )?;
++    processor.initialize(&prompt_token_ids)?;
+ 
+     let decoded = decoded_completion_stream(
+         tokenizer.as_ref(),
+diff --git a/rust/src/engine-core-client/src/protocol/request.rs b/rust/src/engine-core-client/src/protocol/request.rs
+index 58c6efb641de..8f38d7da0849 100644
+--- a/rust/src/engine-core-client/src/protocol/request.rs
++++ b/rust/src/engine-core-client/src/protocol/request.rs
+@@ -61,7 +61,7 @@ impl EngineCoreRequestType {
+ ///
+ /// Original Python construction point:
+ /// <https://github.com/vllm-project/vllm/blob/cec2ec11760f9f3beabd4c90451936078bf91533/vllm/entrypoints/openai/chat_completion/serving.py#L367-L369>
+-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
++#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+ pub struct ReasoningParserKwargs {
+     /// Effective kwargs visible to the chat template for this request.
+     pub chat_template_kwargs: HashMap<String, serde_json::Value>,
+diff --git a/rust/src/llm/examples/external_engine_smoke.rs b/rust/src/llm/examples/external_engine_smoke.rs
+index 0a580a222156..a28639e912d2 100644
+--- a/rust/src/llm/examples/external_engine_smoke.rs
++++ b/rust/src/llm/examples/external_engine_smoke.rs
+@@ -62,6 +62,7 @@ fn build_request(request_id: String, max_tokens: u32) -> GenerateRequest {
+         session_id: None,
+         kv_hints: None,
+         reasoning_parser_kwargs: None,
++        reasoning_ended: None,
+         lora_request: None,
+     }
+ }
+diff --git a/rust/src/llm/src/request.rs b/rust/src/llm/src/request.rs
+index 1f9d38ae0e13..da5c7ca56f97 100644
+--- a/rust/src/llm/src/request.rs
++++ b/rust/src/llm/src/request.rs
+@@ -54,6 +54,11 @@ pub struct GenerateRequest {
+     /// Optional reasoning-parser kwargs forwarded to engine-side structured
+     /// output logic.
+     pub reasoning_parser_kwargs: Option<ReasoningParserKwargs>,
++    /// Optional engine reasoning-gate override.
++    ///
++    /// `Some(true)` means the submitted grammar covers reasoning from the first
++    /// generated token.
++    pub reasoning_ended: Option<bool>,
+     /// Optional LoRA adapter request applied to this generation.
+     pub lora_request: Option<LoraRequest>,
+ }
+@@ -84,6 +89,7 @@ impl GenerateRequest {
+             session_id,
+             kv_hints,
+             reasoning_parser_kwargs,
++            reasoning_ended,
+             lora_request,
+         } = self;
+ 
+@@ -115,9 +121,7 @@ impl GenerateRequest {
+                 session_id,
+                 kv_hints,
+                 external_req_id: Some(external_request_id),
+-                // Rust parser doesn't expose this information, leave it unset and let the
+-                // reasoning logic in engine-sided structured output manager handle it.
+-                reasoning_ended: None,
++                reasoning_ended,
+                 reasoning_parser_kwargs,
+                 abort_immediately: false,
+             },
+@@ -180,6 +184,7 @@ mod tests {
+                 )]
+                 .into(),
+             }),
++            reasoning_ended: None,
+             lora_request: None,
+         }
+     }
+diff --git a/rust/src/llm/tests/generate.rs b/rust/src/llm/tests/generate.rs
+index c9849cd57c19..370d5c046f33 100644
+--- a/rust/src/llm/tests/generate.rs
++++ b/rust/src/llm/tests/generate.rs
+@@ -169,6 +169,7 @@ fn sample_generate_request(request_id: &str, max_tokens: u32) -> GenerateRequest
+         session_id: None,
+         kv_hints: None,
+         reasoning_parser_kwargs: None,
++        reasoning_ended: None,
+         lora_request: None,
+     }
+ }
+diff --git a/rust/src/parser/Cargo.toml b/rust/src/parser/Cargo.toml
+index 3c49362c5d27..92d71ae2272b 100644
+--- a/rust/src/parser/Cargo.toml
++++ b/rust/src/parser/Cargo.toml
+@@ -11,6 +11,7 @@ test-util = []
+ easy-ext.workspace = true
+ serde.workspace = true
+ serde_json.workspace = true
++serde_with.workspace = true
+ thiserror.workspace = true
+ thiserror-ext.workspace = true
+ vllm-tokenizer.workspace = true
+diff --git a/rust/src/parser/benches/utils/adapter.rs b/rust/src/parser/benches/utils/adapter.rs
+index a49410f0bf43..d482a011c09f 100644
+--- a/rust/src/parser/benches/utils/adapter.rs
++++ b/rust/src/parser/benches/utils/adapter.rs
+@@ -3,9 +3,7 @@
+ 
+ use std::sync::Arc;
+ 
+-use vllm_parser::tool::{
+-    Result, StructuralTagBuilder, Tool, ToolParser, ToolParserError, ToolParserOutput,
+-};
++use vllm_parser::tool::{Result, Tool, ToolParser, ToolParserError, ToolParserOutput};
+ use vllm_parser::unified::{
+     UnifiedParser, UnifiedParserError, UnifiedParserEvent, UnifiedParserOutput,
+ };
+@@ -89,10 +87,6 @@ impl<T: UnifiedParser> ToolParser for UnifiedToolParserAdapter<T> {
+         self.inner.preserve_special_tokens()
+     }
+ 
+-    fn structural_tag_builder(&self) -> Option<&dyn StructuralTagBuilder> {
+-        self.inner.structural_tag_builder()
+-    }
+-
+     fn tool_call_id(&self, tool_index: usize) -> Option<&str> {
+         self.inner.tool_call_id(tool_index)
+     }
+diff --git a/rust/src/parser/src/lib.rs b/rust/src/parser/src/lib.rs
+index c9ddd53896b2..fd4aa0aa7f71 100644
+--- a/rust/src/parser/src/lib.rs
++++ b/rust/src/parser/src/lib.rs
+@@ -3,6 +3,7 @@
+ 
+ //! Streaming parsers for chat completions.
+ 
++pub mod output_grammar;
+ pub mod reasoning;
+ pub mod tool;
+ pub mod unified;
+diff --git a/rust/src/parser/src/output_grammar.rs b/rust/src/parser/src/output_grammar.rs
+new file mode 100644
+index 000000000000..24f24a225c9b
+--- /dev/null
++++ b/rust/src/parser/src/output_grammar.rs
+@@ -0,0 +1,362 @@
++// SPDX-License-Identifier: Apache-2.0
++// SPDX-FileCopyrightText: Copyright contributors to the vLLM project
++
++//! Output grammar construction shared by reasoning and tool parsers.
++
++use std::{fmt, str::FromStr};
++
++use serde_with::{DeserializeFromStr, SerializeDisplay};
++use thiserror::Error;
++use xgrammar_structural_tag::builders::{StructuralTagBuilder, StructuralTagOptions};
++use xgrammar_structural_tag::format::Format;
++use xgrammar_structural_tag::tool::ToolChoiceValue;
++use xgrammar_structural_tag::{
++    FunctionDefinition, FunctionToolParam, ToolChoice, ToolParam, build_structural_tag,
++};
++
++use crate::tool::Tool;
++
++/// Result alias for output grammar construction.
++pub type Result<T> = std::result::Result<T, OutputGrammarError>;
++
++/// How much of the generated stream an output grammar covers.
++#[derive(Debug, Clone, Copy, PartialEq, Eq)]
++pub enum GrammarCoverage {
++    /// The grammar covers reasoning and advances from the first generated token.
++    FromTokenZero,
++    /// The grammar covers only output emitted after reasoning ends.
++    FinalOutputOnly,
++}
++
++/// One parser-built output grammar and its generated-stream coverage.
++#[derive(Debug, Clone, PartialEq)]
++pub struct BuiltOutputGrammar {
++    /// Typed XGrammar structural-tag format.
++    pub format: Format,
++    /// Portion of the generated stream covered by `format`.
++    pub coverage: GrammarCoverage,
++}
++
++impl BuiltOutputGrammar {
++    /// A grammar that covers reasoning and everything after it.
++    pub fn from_token_zero(format: Format) -> Self {
++        Self {
++            format,
++            coverage: GrammarCoverage::FromTokenZero,
++        }
++    }
++
++    /// A grammar that covers only the output emitted after reasoning ends.
++    pub fn final_output_only(format: Format) -> Self {
++        Self {
++            format,
++            coverage: GrammarCoverage::FinalOutputOnly,
++        }
++    }
++}
++
++/// Server-side floor for tool-call structural tags (`--tool-strict-level`).
++#[derive(
++    Debug,
++    Clone,
++    Copy,
++    PartialEq,
++    Eq,
++    PartialOrd,
++    Ord,
++    Default,
++    DeserializeFromStr,
++    SerializeDisplay,
++)]
++pub enum ToolStrictLevel {
++    /// Derive tool constraints from the request's tool choice and per-tool strictness.
++    #[default]
++    Auto,
++    /// Constrain the tool-call envelope for every request with tools.
++    Function,
++    /// Additionally pin argument schemas, as if every tool were `strict: true`.
++    Parameter,
++}
++
++impl ToolStrictLevel {
++    pub const AUTO_LITERAL: &str = "auto";
++    pub const FUNCTION_LITERAL: &str = "function";
++    pub const PARAMETER_LITERAL: &str = "parameter";
++}
++
++impl FromStr for ToolStrictLevel {
++    type Err = String;
++
++    fn from_str(value: &str) -> std::result::Result<Self, Self::Err> {
++        if value.eq_ignore_ascii_case(Self::AUTO_LITERAL) {
++            Ok(Self::Auto)
++        } else if value.eq_ignore_ascii_case(Self::FUNCTION_LITERAL) {
++            Ok(Self::Function)
++        } else if value.eq_ignore_ascii_case(Self::PARAMETER_LITERAL) {
++            Ok(Self::Parameter)
++        } else {
++            Err(format!(
++                "unknown tool strict level {value:?}; expected one of {}, {}, {}",
++                Self::AUTO_LITERAL,
++                Self::FUNCTION_LITERAL,
++                Self::PARAMETER_LITERAL
++            ))
++        }
++    }
++}
++
++impl fmt::Display for ToolStrictLevel {
++    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
++        f.write_str(match self {
++            Self::Auto => Self::AUTO_LITERAL,
++            Self::Function => Self::FUNCTION_LITERAL,
++            Self::Parameter => Self::PARAMETER_LITERAL,
++        })
++    }
++}
++
++/// Request facts available while an initialized parser builds an output grammar.
++pub struct OutputGrammarContext<'a> {
++    /// Effective tools available for this generation.
++    pub tools: &'a [Tool],
++    /// Effective tool-choice policy.
++    pub tool_choice: &'a ToolChoice,
++    /// Server-side floor for tool-call constraints.
++    pub tool_strict_level: ToolStrictLevel,
++    /// Whether the request permits more than one tool call.
++    pub parallel_tool_calls: bool,
++}
++
++/// Errors produced while building an output grammar.
++#[derive(Debug, Error)]
++pub enum OutputGrammarError {
++    /// A model-specific structural-tag builder rejected its inputs.
++    #[error("failed to build output grammar")]
++    Build(#[from] xgrammar_structural_tag::Error),
++}
++
++/// Build the visible (post-reasoning) language from a crate structural-tag
++/// builder, or `None` when the request does not ask for strict tool calling.
++///
++/// This is the pre-existing strict-tool-calling grammar: the builder runs with
++/// `reasoning = false`, so the result describes only what follows the reasoning
++/// phase. It backs the default `ToolParser::build_visible_format` and the
++/// native unified parsers that have not yet grown their own builder.
++pub(crate) fn visible_format_from_builder(
++    builder: Option<&dyn StructuralTagBuilder>,
++    ctx: &OutputGrammarContext<'_>,
++) -> Result<Option<Format>> {
++    let Some(builder) = builder else {
++        return Ok(None);
++    };
++    if !tool_grammar_applies(ctx) {
++        return Ok(None);
++    }
++
++    let structural_tag = build_structural_tag(
++        builder,
++        &tool_params(ctx.tools, ctx.tool_strict_level),
++        ctx.tool_choice.clone(),
++        StructuralTagOptions::default()
++            .with_reasoning(false)
++            .with_parallel_tool_calls(ctx.parallel_tool_calls),
++    )?;
++
++    Ok(Some(structural_tag.format))
++}
++
++fn tool_params(tools: &[Tool], strict_level: ToolStrictLevel) -> Vec<ToolParam> {
++    tools
++        .iter()
++        .map(|tool| {
++            ToolParam::Function(FunctionToolParam::new(FunctionDefinition {
++                name: tool.name.clone(),
++                description: tool.description.clone(),
++                parameters: Some(tool.parameters.clone()),
++                strict: Some(
++                    strict_level >= ToolStrictLevel::Parameter || tool.strict == Some(true),
++                ),
++            }))
++        })
++        .collect()
++}
++
++/// Whether the request asks for a tool grammar at all.
++fn tool_grammar_applies(ctx: &OutputGrammarContext<'_>) -> bool {
++    if ctx.tools.is_empty() {
++        return false;
++    }
++
++    match ctx.tool_choice {
++        ToolChoice::Value(ToolChoiceValue::None) => false,
++        ToolChoice::Value(ToolChoiceValue::Auto) => {
++            ctx.tool_strict_level >= ToolStrictLevel::Function
++                || ctx.tools.iter().any(|tool| tool.strict == Some(true))
++        }
++        ToolChoice::Value(ToolChoiceValue::Required)
++        | ToolChoice::NamedFunction(_)
++        | ToolChoice::AllowedTools(_)
++        | ToolChoice::FlatAllowedTools(_)
++        | ToolChoice::Builtin(_) => true,
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use serde_json::json;
++    use xgrammar_structural_tag::builders::Qwen3Builder;
++
++    use super::*;
++
++    fn tool(name: &str, strict: Option<bool>) -> Tool {
++        Tool {
++            name: name.to_string(),
++            description: None,
++            parameters: json!({
++                "type": "object",
++                "properties": { "query": { "type": "string" } },
++                "required": ["query"]
++            }),
++            strict,
++        }
++    }
++
++    fn build(tools: &[Tool], tool_choice: &ToolChoice) -> Option<Format> {
++        visible_format_from_builder(
++            Some(&Qwen3Builder),
++            &OutputGrammarContext {
++                tools,
++                tool_choice,
++                tool_strict_level: ToolStrictLevel::Auto,
++                parallel_tool_calls: true,
++            },
++        )
++        .unwrap()
++    }
++
++    #[test]
++    fn tool_grammar_requires_tools_and_a_constraining_choice() {
++        let non_strict = [tool("search", None)];
++        assert!(build(&non_strict, &ToolChoice::none()).is_none());
++        assert!(build(&non_strict, &ToolChoice::auto()).is_none());
++        assert!(build(&non_strict, &ToolChoice::required()).is_some());
++        assert!(build(&non_strict, &ToolChoice::function("search")).is_some());
++
++        // `auto` only constrains once at least one tool is strict.
++        let strict = [tool("search", Some(true)), tool("lookup", None)];
++        assert!(build(&strict, &ToolChoice::auto()).is_some());
++    }
++
++    fn build_at_level(tool_choice: ToolChoice, tools: Vec<Tool>, level: ToolStrictLevel) -> Format {
++        visible_format_from_builder(
++            Some(&Qwen3Builder),
++            &OutputGrammarContext {
++                tools: &tools,
++                tool_choice: &tool_choice,
++                tool_strict_level: level,
++                parallel_tool_calls: true,
++            },
++        )
++        .unwrap()
++        .unwrap()
++    }
++
++    fn tag_string(format: &Format) -> String {
++        serde_json::to_string(format).unwrap()
++    }
++
++    #[test]
++    fn function_level_constrains_auto_without_strict_tools() {
++        let request = build_at_level(
++            ToolChoice::auto(),
++            vec![tool("search", None)],
++            ToolStrictLevel::Function,
++        );
++
++        assert!(tag_string(&request).contains("search"));
++    }
++
++    #[test]
++    fn absent_strict_is_non_strict() {
++        let unset = build_at_level(
++            ToolChoice::required(),
++            vec![tool("search", None)],
++            ToolStrictLevel::Auto,
++        );
++        let non_strict = build_at_level(
++            ToolChoice::required(),
++            vec![tool("search", Some(false))],
++            ToolStrictLevel::Auto,
++        );
++        let strict = build_at_level(
++            ToolChoice::required(),
++            vec![tool("search", Some(true))],
++            ToolStrictLevel::Auto,
++        );
++
++        assert_eq!(tag_string(&unset), tag_string(&non_strict));
++        assert_ne!(tag_string(&unset), tag_string(&strict));
++    }
++
++    #[test]
++    fn strict_tool_does_not_pin_its_neighbour() {
++        let mixed = build_at_level(
++            ToolChoice::auto(),
++            vec![tool("weather", Some(true)), tool("search", None)],
++            ToolStrictLevel::Auto,
++        );
++        let explicit = build_at_level(
++            ToolChoice::auto(),
++            vec![tool("weather", Some(true)), tool("search", Some(false))],
++            ToolStrictLevel::Auto,
++        );
++
++        assert_eq!(tag_string(&mixed), tag_string(&explicit));
++    }
++
++    #[test]
++    fn parameter_level_pins_argument_schemas() {
++        let pinned = build_at_level(
++            ToolChoice::auto(),
++            vec![tool("search", None)],
++            ToolStrictLevel::Parameter,
++        );
++        let strict = build_at_level(
++            ToolChoice::auto(),
++            vec![tool("search", Some(true))],
++            ToolStrictLevel::Auto,
++        );
++        let envelope_only = build_at_level(
++            ToolChoice::auto(),
++            vec![tool("search", None)],
++            ToolStrictLevel::Function,
++        );
++
++        assert_eq!(tag_string(&pinned), tag_string(&strict));
++        assert_ne!(tag_string(&pinned), tag_string(&envelope_only));
++    }
++
++    #[test]
++    fn tool_strict_level_parses_case_insensitively() {
++        assert_eq!("AUTO".parse::<ToolStrictLevel>(), Ok(ToolStrictLevel::Auto));
++        assert_eq!(
++            "PARAMETER".parse::<ToolStrictLevel>(),
++            Ok(ToolStrictLevel::Parameter)
++        );
++        assert_eq!(
++            "function".parse::<ToolStrictLevel>(),
++            Ok(ToolStrictLevel::Function)
++        );
++        assert_eq!(ToolStrictLevel::default(), ToolStrictLevel::Auto);
++        assert_eq!(
++            serde_json::to_value(ToolStrictLevel::Auto).unwrap(),
++            json!("auto")
++        );
++        assert_eq!(
++            serde_json::from_value::<ToolStrictLevel>(json!("auto")).unwrap(),
++            ToolStrictLevel::Auto
++        );
++        assert!("off".parse::<ToolStrictLevel>().is_err());
++        assert!("strict".parse::<ToolStrictLevel>().is_err());
++    }
++}
+diff --git a/rust/src/parser/src/reasoning/mod.rs b/rust/src/parser/src/reasoning/mod.rs
+index 057053d6950d..ead7c0eeff66 100644
+--- a/rust/src/parser/src/reasoning/mod.rs
++++ b/rust/src/parser/src/reasoning/mod.rs
+@@ -31,6 +31,9 @@ mod step3p5;
+ 
+ use thiserror::Error;
+ use vllm_tokenizer::{DecodedText, DynTokenizer};
++use xgrammar_structural_tag::format::Format;
++
++use crate::output_grammar::{self, OutputGrammarContext};
+ 
+ pub use self::cohere_cmd::CohereCmdReasoningParser;
+ pub use self::deepseek_r1::DeepSeekR1ReasoningParser;
+@@ -137,6 +140,15 @@ pub trait ReasoningParser: Send {
+         false
+     }
+ 
++    /// Prepend the reasoning phase implied by the initialized parser state.
++    fn wrap_visible_format(
++        &self,
++        _ctx: &OutputGrammarContext<'_>,
++        _visible: &Format,
++    ) -> output_grammar::Result<Option<Format>> {
++        Ok(None)
++    }
++
+     /// Feed one decoded text delta into the parser.
+     fn push(&mut self, delta: DecodedText) -> Result<ReasoningDelta>;
+ 
+diff --git a/rust/src/parser/src/tool/mod.rs b/rust/src/parser/src/tool/mod.rs
+index 2feba68525ae..94f0b4671175 100644
+--- a/rust/src/parser/src/tool/mod.rs
++++ b/rust/src/parser/src/tool/mod.rs
+@@ -39,7 +39,9 @@ pub use seed_oss::SeedOssToolParser;
+ use serde::{Deserialize, Serialize};
+ use serde_json::Value;
+ pub use xgrammar_structural_tag::builders::StructuralTagBuilder;
++use xgrammar_structural_tag::format::Format;
+ 
++use crate::output_grammar::{self, OutputGrammarContext};
+ use crate::utils;
+ 
+ /// One function-style tool made available to the model.
+@@ -189,7 +191,23 @@ pub trait ToolParser: Send {
+         false
+     }
+ 
++    /// Build the language of everything the model may emit after reasoning
++    /// ends: visible text plus tool calls. `None` means no tool grammar applies.
++    ///
++    /// The default forwards to [`Self::structural_tag_builder`] with reasoning
++    /// disabled, which is exactly today's strict-tool-calling grammar.
++    fn build_visible_format(
++        &self,
++        ctx: &OutputGrammarContext<'_>,
++    ) -> output_grammar::Result<Option<Format>> {
++        output_grammar::visible_format_from_builder(self.structural_tag_builder(), ctx)
++    }
++
+     /// Return the xgrammar structural-tag builder used for strict tool calling.
++    ///
++    /// To be deprecated: this only exists to back the default
++    /// [`Self::build_visible_format`]. New parsers should override that method
++    /// directly instead of exposing a builder.
+     fn structural_tag_builder(&self) -> Option<&dyn StructuralTagBuilder> {
+         None
+     }
+diff --git a/rust/src/parser/src/unified/combined.rs b/rust/src/parser/src/unified/combined.rs
+index a8963517b347..d9a88929486a 100644
+--- a/rust/src/parser/src/unified/combined.rs
++++ b/rust/src/parser/src/unified/combined.rs
+@@ -6,8 +6,9 @@
+ use vllm_tokenizer::{DecodedText, DynTokenizer};
+ 
+ use super::{Result, UnifiedParser, UnifiedParserError, UnifiedParserOutput};
++use crate::output_grammar::{self, BuiltOutputGrammar, OutputGrammarContext};
+ use crate::reasoning::ReasoningParser;
+-use crate::tool::{StructuralTagBuilder, Tool, ToolParser, ToolParserOutput};
++use crate::tool::{Tool, ToolParser, ToolParserOutput};
+ 
+ /// Unified parser that composes existing reasoning and tool parsers.
+ pub struct CombinedParser {
+@@ -79,8 +80,29 @@ impl UnifiedParser for CombinedParser {
+             || self.tool.as_ref().is_some_and(|parser| parser.preserve_special_tokens())
+     }
+ 
+-    fn structural_tag_builder(&self) -> Option<&dyn StructuralTagBuilder> {
+-        self.tool.as_ref().and_then(|parser| parser.structural_tag_builder())
++    fn build_output_grammar(
++        &self,
++        ctx: &OutputGrammarContext<'_>,
++    ) -> output_grammar::Result<Option<BuiltOutputGrammar>> {
++        let Some(tool) = self.tool.as_ref() else {
++            return Ok(None);
++        };
++        let Some(visible) = tool.build_visible_format(ctx)? else {
++            return Ok(None);
++        };
++        // The reasoning parser may wrap that language with the reasoning phase
++        // implied by its initialized (prompt-derived) state. If it does, the
++        // grammar describes the stream from the first generated token and the
++        // engine can skip its own reasoning gate; if it declines, the grammar
++        // covers only the final output and the engine gate stays in charge.
++        let wrapped = match self.reasoning.as_ref() {
++            Some(reasoning) => reasoning.wrap_visible_format(ctx, &visible)?,
++            None => None,
++        };
++        Ok(Some(match wrapped {
++            Some(full) => BuiltOutputGrammar::from_token_zero(full),
++            None => BuiltOutputGrammar::final_output_only(visible),
++        }))
+     }
+ 
+     fn tool_call_id(&self, tool_index: usize) -> Option<&str> {
+@@ -332,7 +354,6 @@ mod tests {
+     fn combined_parser_emits_tool_calls_from_visible_content() {
+         let tool = Qwen3XmlToolParser::create(&test_tools()).unwrap();
+         let mut parser = CombinedParser::new(None, Some(tool));
+-        assert!(parser.structural_tag_builder().is_some());
+ 
+         let output = collect(
+             &mut parser,
+diff --git a/rust/src/parser/src/unified/hy/hy_v3.rs b/rust/src/parser/src/unified/hy/hy_v3.rs
+index 6aebf7f90463..bc2e53cd88af 100644
+--- a/rust/src/parser/src/unified/hy/hy_v3.rs
++++ b/rust/src/parser/src/unified/hy/hy_v3.rs
+@@ -4,8 +4,9 @@
+ use vllm_tokenizer::{DecodedText, DynTokenizer};
+ 
+ use super::detect_hy_token_suffix;
++use crate::output_grammar::{self, BuiltOutputGrammar, OutputGrammarContext};
+ use crate::reasoning::HyReasoningParser;
+-use crate::tool::{HyDialect, HyToolMarkers, HyToolParser, StructuralTagBuilder, Tool};
++use crate::tool::{HyDialect, HyToolMarkers, HyToolParser, Tool};
+ use crate::unified::{CombinedParser, Result, UnifiedParser, UnifiedParserOutput, token_id};
+ 
+ /// Unified reasoning and tool parser for HY3 output.
+@@ -46,8 +47,11 @@ impl UnifiedParser for HyV3UnifiedParser {
+         self.inner.preserve_special_tokens()
+     }
+ 
+-    fn structural_tag_builder(&self) -> Option<&dyn StructuralTagBuilder> {
+-        self.inner.structural_tag_builder()
++    fn build_output_grammar(
++        &self,
++        ctx: &OutputGrammarContext<'_>,
++    ) -> output_grammar::Result<Option<BuiltOutputGrammar>> {
++        self.inner.build_output_grammar(ctx)
+     }
+ 
+     fn tool_call_id(&self, tool_index: usize) -> Option<&str> {
+@@ -73,12 +77,10 @@ mod tests {
+ 
+     use serde_json::json;
+     use vllm_tokenizer::{DecodedText, Tokenizer, test_utils::TestTokenizer};
+-    use xgrammar_structural_tag::builders::StructuralTagOptions;
+-    use xgrammar_structural_tag::{
+-        FunctionDefinition, FunctionToolParam, ToolChoice, ToolParam, build_structural_tag,
+-    };
++    use xgrammar_structural_tag::{StructuralTag, ToolChoice};
+ 
+     use super::{HyV3UnifiedParser, UnifiedParser};
++    use crate::output_grammar::{GrammarCoverage, OutputGrammarContext};
+     use crate::tool::Tool;
+     use crate::unified::{UnifiedParserEvent, UnifiedParserOutput};
+ 
+@@ -151,24 +153,19 @@ mod tests {
+ 
+     #[test]
+     fn structural_tag_uses_tokenizer_detected_suffix() {
+-        let parser = HyV3UnifiedParser::new(&tools(), Arc::new(tokenizer())).unwrap();
+-        let structural_tools = [ToolParam::Function(FunctionToolParam::new(
+-            FunctionDefinition::new("get_weather").with_parameters(json!({
+-                "type": "object",
+-                "properties": { "city": { "type": "string" } },
+-                "required": ["city"]
+-            })),
+-        ))];
+-
+-        let tag = build_structural_tag(
+-            parser.structural_tag_builder().unwrap(),
+-            &structural_tools,
+-            ToolChoice::required(),
+-            StructuralTagOptions::default().with_reasoning(false),
+-        )
+-        .unwrap()
+-        .to_json_string()
+-        .unwrap();
++        let tools = tools();
++        let parser = HyV3UnifiedParser::new(&tools, Arc::new(tokenizer())).unwrap();
++        let tag = parser
++            .build_output_grammar(&OutputGrammarContext {
++                tools: &tools,
++                tool_strict_level: Default::default(),
++                parallel_tool_calls: true,
++                tool_choice: &ToolChoice::required(),
++            })
++            .unwrap()
++            .unwrap();
++        assert_eq!(tag.coverage, GrammarCoverage::FinalOutputOnly);
++        let tag = StructuralTag::new(tag.format).to_json_string().unwrap();
+ 
+         assert!(tag.contains("<tool_calls:opensource>"));
+         assert!(tag.contains("<arg_value:opensource>"));
+diff --git a/rust/src/parser/src/unified/hy/hy_v4.rs b/rust/src/parser/src/unified/hy/hy_v4.rs
+index 58ee042f3cce..b65f2df69d6f 100644
+--- a/rust/src/parser/src/unified/hy/hy_v4.rs
++++ b/rust/src/parser/src/unified/hy/hy_v4.rs
+@@ -4,8 +4,9 @@
+ use vllm_tokenizer::{DecodedText, DynTokenizer};
+ 
+ use super::detect_hy_token_suffix;
++use crate::output_grammar::{self, BuiltOutputGrammar, OutputGrammarContext};
+ use crate::reasoning::HyReasoningParser;
+-use crate::tool::{HyDialect, HyToolMarkers, HyToolParser, StructuralTagBuilder, Tool};
++use crate::tool::{HyDialect, HyToolMarkers, HyToolParser, Tool};
+ use crate::unified::{CombinedParser, Result, UnifiedParser, UnifiedParserOutput, token_id};
+ 
+ /// Unified reasoning and tool parser for HY4 output.
+@@ -46,8 +47,11 @@ impl UnifiedParser for HyV4UnifiedParser {
+         self.inner.preserve_special_tokens()
+     }
+ 
+-    fn structural_tag_builder(&self) -> Option<&dyn StructuralTagBuilder> {
+-        self.inner.structural_tag_builder()
++    fn build_output_grammar(
++        &self,
++        ctx: &OutputGrammarContext<'_>,
++    ) -> output_grammar::Result<Option<BuiltOutputGrammar>> {
++        self.inner.build_output_grammar(ctx)
+     }
+ 
+     fn tool_call_id(&self, tool_index: usize) -> Option<&str> {
+@@ -73,12 +77,10 @@ mod tests {
+ 
+     use serde_json::json;
+     use vllm_tokenizer::{DecodedText, Tokenizer, test_utils::TestTokenizer};
+-    use xgrammar_structural_tag::builders::StructuralTagOptions;
+-    use xgrammar_structural_tag::{
+-        FunctionDefinition, FunctionToolParam, ToolChoice, ToolParam, build_structural_tag,
+-    };
++    use xgrammar_structural_tag::{StructuralTag, ToolChoice};
+ 
+     use super::{HyV4UnifiedParser, UnifiedParser};
++    use crate::output_grammar::{GrammarCoverage, OutputGrammarContext};
+     use crate::tool::Tool;
+     use crate::unified::{UnifiedParserEvent, UnifiedParserOutput};
+ 
+@@ -164,24 +166,19 @@ mod tests {
+ 
+     #[test]
+     fn structural_tag_uses_compact_hy4_skeleton() {
+-        let parser = HyV4UnifiedParser::new(&tools(), Arc::new(tokenizer())).unwrap();
+-        let structural_tools = [ToolParam::Function(FunctionToolParam::new(
+-            FunctionDefinition::new("get_weather").with_parameters(json!({
+-                "type": "object",
+-                "properties": { "city": { "type": "string" } },
+-                "required": ["city"]
+-            })),
+-        ))];
+-
+-        let tag = build_structural_tag(
+-            parser.structural_tag_builder().unwrap(),
+-            &structural_tools,
+-            ToolChoice::required(),
+-            StructuralTagOptions::default().with_reasoning(false),
+-        )
+-        .unwrap()
+-        .to_json_string()
+-        .unwrap();
++        let tools = tools();
++        let parser = HyV4UnifiedParser::new(&tools, Arc::new(tokenizer())).unwrap();
++        let tag = parser
++            .build_output_grammar(&OutputGrammarContext {
++                tools: &tools,
++                tool_strict_level: Default::default(),
++                parallel_tool_calls: true,
++                tool_choice: &ToolChoice::required(),
++            })
++            .unwrap()
++            .unwrap();
++        assert_eq!(tag.coverage, GrammarCoverage::FinalOutputOnly);
++        let tag = StructuralTag::new(tag.format).to_json_string().unwrap();
+ 
+         assert!(tag.contains("<tool_calls:opensource>"));
+         assert!(tag.contains("<tool_call:opensource>get_weather"));
+diff --git a/rust/src/parser/src/unified/kimi_k3.rs b/rust/src/parser/src/unified/kimi_k3.rs
+index 2f8278dc6251..08ad91193ca8 100644
+--- a/rust/src/parser/src/unified/kimi_k3.rs
++++ b/rust/src/parser/src/unified/kimi_k3.rs
+@@ -51,7 +51,10 @@ use winnow::token::{literal, rest, take_till, take_until, take_while};
+ 
+ use self::structural_tag::KIMI_K3_STRUCTURAL_TAG_BUILDER;
+ use super::{Result, UnifiedParser, UnifiedParserOutput, token_id};
+-use crate::tool::{StructuralTagBuilder, Tool, ToolCallDelta};
++use crate::output_grammar::{
++    self, BuiltOutputGrammar, OutputGrammarContext, visible_format_from_builder,
++};
++use crate::tool::{Tool, ToolCallDelta};
+ use crate::unified::parsing_failed;
+ use crate::utils::{MarkerScanState, parse_buffered_event, safe_text_len_mul, take_until_marker};
+ 
+@@ -275,8 +278,14 @@ impl UnifiedParser for KimiK3UnifiedParser {
+         true
+     }
+ 
+-    fn structural_tag_builder(&self) -> Option<&dyn StructuralTagBuilder> {
+-        Some(&KIMI_K3_STRUCTURAL_TAG_BUILDER)
++    fn build_output_grammar(
++        &self,
++        ctx: &OutputGrammarContext<'_>,
++    ) -> output_grammar::Result<Option<BuiltOutputGrammar>> {
++        Ok(
++            visible_format_from_builder(Some(&KIMI_K3_STRUCTURAL_TAG_BUILDER), ctx)?
++                .map(BuiltOutputGrammar::final_output_only),
++        )
+     }
+ 
+     fn parse_into(&mut self, delta: DecodedText, output: &mut UnifiedParserOutput) -> Result<()> {
+diff --git a/rust/src/parser/src/unified/mod.rs b/rust/src/parser/src/unified/mod.rs
+index 17c3dd1b2430..e65f2de08728 100644
+--- a/rust/src/parser/src/unified/mod.rs
++++ b/rust/src/parser/src/unified/mod.rs
+@@ -18,10 +18,9 @@ use thiserror::Error;
+ use thiserror_ext::Macro;
+ use vllm_tokenizer::{DecodedText, DynTokenizer};
+ 
++use crate::output_grammar::{self, BuiltOutputGrammar, OutputGrammarContext};
+ use crate::reasoning::ReasoningError;
+-use crate::tool::{
+-    StructuralTagBuilder, Tool, ToolCallDelta, ToolParserError, ToolParserEvent, ToolParserOutput,
+-};
++use crate::tool::{Tool, ToolCallDelta, ToolParserError, ToolParserEvent, ToolParserOutput};
+ 
+ /// Result alias for unified parser operations.
+ pub type Result<T> = std::result::Result<T, UnifiedParserError>;
+@@ -240,9 +239,12 @@ pub trait UnifiedParser: Send {
+         false
+     }
+ 
+-    /// Return the xgrammar structural-tag builder used for strict tool calling.
+-    fn structural_tag_builder(&self) -> Option<&dyn StructuralTagBuilder> {
+-        None
++    /// Build the request output grammar after prompt-based initialization.
++    fn build_output_grammar(
++        &self,
++        _ctx: &OutputGrammarContext<'_>,
++    ) -> output_grammar::Result<Option<BuiltOutputGrammar>> {
++        Ok(None)
+     }
+ 
+     /// Return the parser-provided ID for a tool call by index, if the model emitted one.
+diff --git a/rust/src/server/src/grpc/convert.rs b/rust/src/server/src/grpc/convert.rs
+index 538167b41f0d..d5dd1ae64df4 100644
+--- a/rust/src/server/src/grpc/convert.rs
++++ b/rust/src/server/src/grpc/convert.rs
+@@ -137,7 +137,8 @@ pub fn to_text_request(
+         data_parallel_rank: None,
+         session_id,
+         kv_hints,
+-        reasoning_parser_kwargs: None,
++        reasoning_parser_kwargs: Default::default(),
++        reasoning_ended: None,
+         lora_request: None,
+         arrival_time: None,
+     })
+diff --git a/rust/src/server/src/routes/inference/generate/convert.rs b/rust/src/server/src/routes/inference/generate/convert.rs
+index c3ec49dd23f8..4c54619ed4a7 100644
+--- a/rust/src/server/src/routes/inference/generate/convert.rs
++++ b/rust/src/server/src/routes/inference/generate/convert.rs
+@@ -83,7 +83,8 @@ pub(super) fn prepare_generate_request(
+         data_parallel_rank: ctx.data_parallel_rank,
+         session_id: ctx.session_id,
+         kv_hints: None,
+-        reasoning_parser_kwargs: None,
++        reasoning_parser_kwargs: Default::default(),
++        reasoning_ended: None,
+         lora_request: lora_resolution.lora_request.clone(),
+         arrival_time: None,
+     };
+diff --git a/rust/src/server/src/routes/openai/completions/convert.rs b/rust/src/server/src/routes/openai/completions/convert.rs
+index ddace3970e40..53a6ff9906ce 100644
+--- a/rust/src/server/src/routes/openai/completions/convert.rs
++++ b/rust/src/server/src/routes/openai/completions/convert.rs
+@@ -156,7 +156,8 @@ pub(super) fn prepare_completion_request(
+         data_parallel_rank: ctx.data_parallel_rank,
+         session_id,
+         kv_hints: None,
+-        reasoning_parser_kwargs: None,
++        reasoning_parser_kwargs: Default::default(),
++        reasoning_ended: None,
+         lora_request: lora_resolution.lora_request.clone(),
+         arrival_time: None,
+     };
+diff --git a/rust/src/server/src/routes/render.rs b/rust/src/server/src/routes/render.rs
+index 2d38b63f4991..2a6f70ec4b6e 100644
+--- a/rust/src/server/src/routes/render.rs
++++ b/rust/src/server/src/routes/render.rs
+@@ -124,7 +124,7 @@ async fn render_chat(
+     let chat_request = lower_chat_request(body, &model_resolution(&state), request_context)?;
+     let (text_request, _) = state
+         .chat
+-        .prepare(chat_request)
++        .prepare(chat_request, &state.text)
+         .await
+         .map_err(|error| ApiError::invalid_request(error.to_report_string(), None))?;
+     Ok(Json(lower_render_request(
+diff --git a/rust/src/server/src/routes/tokenize/types.rs b/rust/src/server/src/routes/tokenize/types.rs
+index ba27211ebc6d..d907073c87ae 100644
+--- a/rust/src/server/src/routes/tokenize/types.rs
++++ b/rust/src/server/src/routes/tokenize/types.rs
+@@ -55,7 +55,8 @@ impl TokenizeCompletionRequest {
+             data_parallel_rank: None,
+             session_id: None,
+             kv_hints: None,
+-            reasoning_parser_kwargs: None,
++            reasoning_parser_kwargs: Default::default(),
++            reasoning_ended: None,
+             lora_request: None,
+             arrival_time: None,
+         }
+diff --git a/rust/src/text/src/lib.rs b/rust/src/text/src/lib.rs
+index b76c2263f2b8..a6aed592b795 100644
+--- a/rust/src/text/src/lib.rs
++++ b/rust/src/text/src/lib.rs
+@@ -104,6 +104,27 @@ impl TextRequestProcessor {
+         Ok(prompt_token_ids)
+     }
+ 
++    /// Tokenize and truncate the prompt in place, so that later preparation
++    /// reuses the final token IDs instead of tokenizing again.
++    ///
++    /// Frontends that need the final prompt tokens before submission (for
++    /// example, to initialize a prompt-aware output parser) call this first
++    /// and then hand the same request to [`TextLlm::generate`].
++    pub fn tokenize_in_place<'r>(&self, request: &'r mut TextRequest) -> Result<&'r [u32]> {
++        request.validate()?;
++        let prompt_token_ids = self.prepare_prompt_tokens(
++            take(&mut request.prompt),
++            request.add_special_tokens,
++            request.prompt_truncation.take(),
++            request.sampling_params.max_tokens,
++        )?;
++        request.prompt = Prompt::TokenIds(prompt_token_ids);
++        match &request.prompt {
++            Prompt::TokenIds(prompt_token_ids) => Ok(prompt_token_ids),
++            Prompt::Text(_) => unreachable!("prompt was just replaced with token IDs"),
++        }
++    }
++
+     /// Prepare one request's prompt tokens without generation-specific lowering.
+     pub fn tokenize(&self, request: TextRequest) -> Result<Vec<u32>> {
+         request.validate()?;
+diff --git a/rust/src/text/src/lower.rs b/rust/src/text/src/lower.rs
+index d8c639977322..e1357ed7f940 100644
+--- a/rust/src/text/src/lower.rs
++++ b/rust/src/text/src/lower.rs
+@@ -61,7 +61,8 @@ pub fn lower_text_request(
+         data_parallel_rank: request.data_parallel_rank,
+         session_id: request.session_id.clone(),
+         kv_hints: request.kv_hints.clone(),
+-        reasoning_parser_kwargs: request.reasoning_parser_kwargs.clone(),
++        reasoning_parser_kwargs: Some(request.reasoning_parser_kwargs.clone()),
++        reasoning_ended: request.reasoning_ended,
+         lora_request: request.lora_request.clone(),
+         arrival_time: request.arrival_time,
+         trace_headers: None,
+diff --git a/rust/src/text/src/request.rs b/rust/src/text/src/request.rs
+index 7890977ae4f5..2c768f48554a 100644
+--- a/rust/src/text/src/request.rs
++++ b/rust/src/text/src/request.rs
+@@ -215,10 +215,19 @@ pub struct TextRequest {
+     /// Optional orchestrator-originated KV hints.
+     #[serde(default)]
+     pub kv_hints: Option<KvHintsEnvelope>,
+-    /// Optional reasoning-parser kwargs forwarded to engine-side structured
+-    /// output logic.
++    /// Reasoning-parser kwargs forwarded to engine-side structured output
++    /// logic. The engine consults them only when it owns grammar activation;
++    /// see [`Self::reasoning_ended`].
+     #[serde(default)]
+-    pub reasoning_parser_kwargs: Option<ReasoningParserKwargs>,
++    pub reasoning_parser_kwargs: ReasoningParserKwargs,
++    /// Optional engine reasoning-gate override selected by a higher-level frontend.
++    ///
++    /// `Some(true)` means the structured output grammar covers reasoning from
++    /// the first generated token, so the engine masks and advances immediately
++    /// instead of waiting for its reasoning parser. Unset for final-output-only
++    /// grammars and for requests without a grammar.
++    #[serde(default)]
++    pub reasoning_ended: Option<bool>,
+     /// LoRA adapter selected for this request.
+     #[serde(default)]
+     pub lora_request: Option<LoraRequest>,
+@@ -247,7 +256,8 @@ impl TextRequest {
+             data_parallel_rank: None,
+             session_id: None,
+             kv_hints: None,
+-            reasoning_parser_kwargs: None,
++            reasoning_parser_kwargs: Default::default(),
++            reasoning_ended: None,
+             lora_request: None,
+             arrival_time: None,
+         }

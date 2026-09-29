@@ -1,0 +1,2373 @@
+diff --git a/.buildkite/test_areas/distributed.yaml b/.buildkite/test_areas/distributed.yaml
+index 953d9a9f8bc8a039658bb7478419f9bec5092840..1f2d572922161c5985e6bb542881198a8c48ac35 100644
+--- a/.buildkite/test_areas/distributed.yaml
++++ b/.buildkite/test_areas/distributed.yaml
+@@ -387,17 +387,18 @@ steps:
+     - pytest -v -s tests/v1/distributed/test_dbo.py
+     - pytest -v -s tests/distributed/test_mnnvl_alltoall.py
+ 
+-- label: ":nvidia: (B200) Kimi-K3 GEMM-RS/AR"
+-  key: kimi-k3-gemm-rs-ar-2xb200
++- label: ":nvidia: (B200) GEMM-RS/AR"
++  key: gemm-rs-ar-2xb200
+   timeout_in_minutes: 20
+   device: b200-k8s
+   working_dir: "/vllm-workspace/"
+   num_devices: 2
+   source_file_dependencies:
+-    - vllm/models/kimi_k3/nvidia/ops/cute_dsl/gemm_rs_ar.py
+-    - tests/kernels/test_kimi_k3_gemm_rs_ar.py
++    - vllm/model_executor/kernels/linear/cute_dsl/gemm_rs_ar.py
++    - vllm/cute_utils/
++    - tests/kernels/test_gemm_rs_ar.py
+   commands:
+-    - pytest -v -s tests/kernels/test_kimi_k3_gemm_rs_ar.py
++    - pytest -v -s tests/kernels/test_gemm_rs_ar.py
+ 
+ - label: ":nvidia: (L4) Distributed 2-Node"
+   key: 2-node-test-4-gpus
+diff --git a/benchmarks/kernels/benchmark_gemm_rs_ar.py b/benchmarks/kernels/benchmark_gemm_rs_ar.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..3e47f61c74f0f8c402fafd39d32cb5ada6b15a5d
+--- /dev/null
++++ b/benchmarks/kernels/benchmark_gemm_rs_ar.py
+@@ -0,0 +1,407 @@
++# SPDX-License-Identifier: Apache-2.0
++# SPDX-FileCopyrightText: Copyright contributors to the vLLM project
++"""Benchmark the SM100 GEMM-RS/AR kernel against the model's unfused path.
++
++The baseline is what a model runs without the fusion: the projection's own
++linear kernel followed by vLLM's collective (``sp_reduce_scatter`` for RS,
++``tensor_model_parallel_all_reduce`` for AR), with the collective backend
++chosen by vLLM's dispatch exactly as in serving. The same two kernels are also
++timed bare (the GEMM alone, the collective alone on a precomputed partial);
++their max is the floor a perfectly overlapped fused kernel could reach.
++
++All ranks must belong to one NVLink domain. Run a TP8 sweep over the Kimi-K3
++projections with:
++
++    torchrun --nproc-per-node=8 -- benchmarks/kernels/benchmark_gemm_rs_ar.py
++
++or the DeepSeek-V4.1 MXFP8 ``wo_b`` projection at TP4 with:
++
++    torchrun --nproc-per-node=4 -- benchmarks/kernels/benchmark_gemm_rs_ar.py \
++        --model deepseek_v41 --backend flashinfer_cutedsl
++"""
++
++import argparse
++import json
++import os
++import statistics
++from collections.abc import Callable
++
++import torch
++import torch.distributed as dist
++
++from vllm.config import ModelConfig, VllmConfig, set_current_vllm_config
++from vllm.distributed import (
++    cleanup_dist_env_and_memory,
++    tensor_model_parallel_all_reduce,
++)
++from vllm.distributed.parallel_state import (
++    get_tp_group,
++    init_distributed_environment,
++    initialize_model_parallel,
++)
++from vllm.model_executor.kernels.linear.cute_dsl.gemm_rs_ar import GemmRsAr
++from vllm.model_executor.layers.linear import RowParallelLinear
++from vllm.models.common.ops.sequence_parallel import sp_reduce_scatter
++
++# Per model: (hidden size N, global input widths K). Kimi-K3 lists the
++# shared-expert down-proj and attention O-proj; DeepSeek-V4.1 lists the
++# ``wo_b`` output projection (o_groups * o_lora_rank).
++_MODEL_PROJECTIONS = {
++    "kimi_k3": (7168, (6144, 12288)),
++    "deepseek_v41": (5120, (8192,)),
++}
++
++
++def parse_args() -> argparse.Namespace:
++    parser = argparse.ArgumentParser()
++    parser.add_argument(
++        "--mode",
++        choices=("rs", "ar"),
++        default="rs",
++        help="Collective mode to benchmark.",
++    )
++    parser.add_argument(
++        "--m",
++        type=int,
++        nargs="+",
++        default=[128, 512, 2048, 8192, 32768],
++        help="Global token counts to benchmark.",
++    )
++    parser.add_argument(
++        "--model",
++        choices=tuple(_MODEL_PROJECTIONS),
++        default="kimi_k3",
++        help="Model whose projection shapes set the default --n and --k.",
++    )
++    parser.add_argument(
++        "--backend",
++        choices=("bf16", "flashinfer_cutlass", "flashinfer_cutedsl"),
++        default="bf16",
++        help="Weight dtype/layout: BF16 or an online-MXFP8 FlashInfer kernel.",
++    )
++    parser.add_argument(
++        "--k",
++        type=int,
++        nargs="+",
++        help=(
++            "Per-rank input dimensions. By default, derive the selected "
++            "model's projection dimensions from the TP world size."
++        ),
++    )
++    parser.add_argument(
++        "--n",
++        type=int,
++        help="Output width. Defaults to the selected model's hidden size.",
++    )
++    parser.add_argument(
++        "--num-workspaces",
++        type=int,
++        default=10,
++        help="Pointer-distinct inputs and CUDA graphs to rotate.",
++    )
++    parser.add_argument("--warmup-replays", type=int, default=5)
++    parser.add_argument("--samples", type=int, default=20)
++    parser.add_argument("--json", type=str, help="Also write the results here.")
++    return parser.parse_args()
++
++
++def make_projection(
++    gemm_rs_ar: GemmRsAr,
++    weight: torch.Tensor,
++    world_size: int,
++    backend: str,
++) -> RowParallelLinear:
++    """Wrap a BF16 [N, K] weight the way the model would hand it to GEMM-RS.
++
++    For the MXFP8 backends this quantizes online through the FlashInfer
++    kernel's post-load step, so the fused kernel and the unfused baseline see
++    the production weight and scale layouts.
++    """
++    N, K = weight.shape
++    quant_config = None
++    if backend != "bf16":
++        from vllm.config.quantization import QuantizationConfigArgs
++        from vllm.model_executor.layers.quantization.online.base import (
++            OnlineQuantizationConfig,
++        )
++
++        quant_config = OnlineQuantizationConfig(QuantizationConfigArgs(linear="mxfp8"))
++    with torch.device(weight.device):
++        linear = RowParallelLinear(
++            K * world_size,
++            N,
++            bias=False,
++            params_dtype=weight.dtype,
++            quant_config=quant_config,
++            # The baseline reduces the local partial itself, like the models.
++            reduce_results=False,
++            return_bias=False,
++        )
++    # Select the fused path before online quantization replaces the weights.
++    assert gemm_rs_ar.can_run(linear)
++    linear.weight = torch.nn.Parameter(weight, requires_grad=False)
++    linear.quant_method.process_weights_after_loading(linear)
++    return linear
++
++
++def capture_graph(
++    op: Callable[[], torch.Tensor],
++    stream: torch.cuda.Stream,
++    cpu_group: dist.ProcessGroup,
++) -> torch.cuda.CUDAGraph:
++    stream.wait_stream(torch.cuda.current_stream())
++    dist.barrier(group=cpu_group)
++    with torch.cuda.stream(stream):
++        for _ in range(3):
++            op()
++    stream.synchronize()
++    dist.barrier(group=cpu_group)
++
++    graph = torch.cuda.CUDAGraph()
++    with torch.cuda.graph(graph, stream=stream):
++        op()
++    torch.cuda.current_stream().wait_stream(stream)
++    dist.barrier(group=cpu_group)
++    return graph
++
++
++def benchmark_graphs(
++    candidate_graphs: dict[str, list[torch.cuda.CUDAGraph]],
++    warmup_replays: int,
++    samples: int,
++    device_group: dist.ProcessGroup,
++    device_barrier: Callable[[], None],
++) -> dict[str, float]:
++    """Median over samples of the slowest rank's replay time, in us."""
++    names = list(candidate_graphs)
++    for round_index in range(warmup_replays):
++        for offset in range(len(names)):
++            name = names[(round_index + offset) % len(names)]
++            graphs = candidate_graphs[name]
++            device_barrier()
++            graphs[round_index % len(graphs)].replay()
++    torch.accelerator.synchronize()
++
++    timings: dict[str, list[float]] = {name: [] for name in names}
++    start = torch.cuda.Event(enable_timing=True)
++    end = torch.cuda.Event(enable_timing=True)
++    for sample_index in range(samples):
++        for offset in range(len(names)):
++            name = names[(sample_index + offset) % len(names)]
++            graphs = candidate_graphs[name]
++            device_barrier()
++            start.record()
++            graphs[sample_index % len(graphs)].replay()
++            end.record()
++            end.synchronize()
++
++            elapsed = torch.tensor(
++                start.elapsed_time(end) * 1000,
++                dtype=torch.float64,
++                device=torch.accelerator.current_device_index(),
++            )
++            dist.all_reduce(elapsed, op=dist.ReduceOp.MAX, group=device_group)
++            timings[name].append(elapsed.item())
++    return {name: statistics.median(values) for name, values in timings.items()}
++
++
++def benchmark_shape(
++    gemm_rs_ar: GemmRsAr,
++    mode: str,
++    backend: str,
++    M: int,
++    N: int,
++    K: int,
++    num_workspaces: int,
++    warmup_replays: int,
++    samples: int,
++    device_group: dist.ProcessGroup,
++    cpu_group: dist.ProcessGroup,
++    device_barrier: Callable[[], None],
++) -> dict[str, float | int | str]:
++    all_reduce = mode == "ar"
++    world_size = dist.get_world_size(device_group)
++    rank = dist.get_rank(device_group)
++    device = torch.device("cuda", torch.accelerator.current_device_index())
++    local_M = (M + world_size - 1) // world_size
++
++    rng = torch.Generator(device=device)
++    rng.manual_seed(1000 + rank * 10 + M + K)
++    inputs = [
++        torch.randn(M, K, dtype=torch.bfloat16, device=device, generator=rng)
++        for _ in range(num_workspaces)
++    ]
++    projections = [
++        make_projection(
++            gemm_rs_ar,
++            torch.randn(N, K, dtype=torch.bfloat16, device=device, generator=rng),
++            world_size,
++            backend,
++        )
++        for _ in range(num_workspaces)
++    ]
++
++    def collective(partial: torch.Tensor) -> torch.Tensor:
++        if all_reduce:
++            return tensor_model_parallel_all_reduce(partial)
++        return sp_reduce_scatter(partial)
++
++    def gemm(x: torch.Tensor, linear: RowParallelLinear) -> torch.Tensor:
++        return linear(x)
++
++    def unfused(x: torch.Tensor, linear: RowParallelLinear) -> torch.Tensor:
++        return collective(linear(x))
++
++    def fused(x: torch.Tensor, linear: RowParallelLinear) -> torch.Tensor:
++        return gemm_rs_ar.apply(x, linear)
++
++    # The bare collective runs on the GEMM's own output so it sees the same
++    # message size and layout the unfused path hands to the collective.
++    partials = [linear(x) for x, linear in zip(inputs, projections)]
++
++    expected = unfused(inputs[0], projections[0])
++    actual = fused(inputs[0], projections[0])
++    torch.accelerator.synchronize(device)
++    rows = M if all_reduce else min(max(M - rank * local_M, 0), local_M)
++    torch.testing.assert_close(
++        actual[:rows], expected[:rows], rtol=5e-2, atol=4.0, msg=f"M={M}, K={K}"
++    )
++
++    candidates: dict[str, list[Callable[[], torch.Tensor]]] = {
++        "gemm": [lambda x=x, w=w: gemm(x, w) for x, w in zip(inputs, projections)],
++        "collective": [lambda p=p: collective(p) for p in partials],
++        "vllm": [lambda x=x, w=w: unfused(x, w) for x, w in zip(inputs, projections)],
++        "gemm_rs_ar": [
++            lambda x=x, w=w: fused(x, w) for x, w in zip(inputs, projections)
++        ],
++    }
++
++    candidate_graphs = {}
++    keepalive: list[object] = []
++    for name, ops in candidates.items():
++        stream = torch.cuda.Stream()
++        candidate_graphs[name] = [capture_graph(op, stream, cpu_group) for op in ops]
++        keepalive.append(stream)
++
++    times = benchmark_graphs(
++        candidate_graphs, warmup_replays, samples, device_group, device_barrier
++    )
++    floor = max(times["gemm"], times["collective"])
++    return {
++        "mode": mode.upper(),
++        "backend": backend,
++        "M": M,
++        "N": N,
++        "K": K,
++        "gemm_us": times["gemm"],
++        "collective_us": times["collective"],
++        "floor_us": floor,
++        "vllm_us": times["vllm"],
++        "gemm_rs_ar_us": times["gemm_rs_ar"],
++        "latency_change": (times["gemm_rs_ar"] - times["vllm"]) / times["vllm"],
++        "floor_gap": (times["gemm_rs_ar"] - floor) / floor,
++    }
++
++
++def print_results(results: list[dict[str, float | int | str]]) -> None:
++    collective = results[0]["mode"]
++    backend = results[0]["backend"]
++    print(f"### GEMM-{collective} vs vLLM unfused path ({backend} weights)")
++    print(
++        f"| M | N | K | GEMM (us) | {collective} (us) | floor (us) | vLLM (us) | "
++        f"GEMM-{collective} (us) | vs vLLM | vs floor |"
++    )
++    print("|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
++    for r in results:
++        print(
++            f"| {r['M']} | {r['N']} | {r['K']} | {r['gemm_us']:.1f} | "
++            f"{r['collective_us']:.1f} | {r['floor_us']:.1f} | {r['vllm_us']:.1f} | "
++            f"{r['gemm_rs_ar_us']:.1f} | {r['latency_change']:+.1%} | "
++            f"{r['floor_gap']:+.1%} |"
++        )
++
++
++def main() -> None:
++    args = parse_args()
++    default_n, default_k = _MODEL_PROJECTIONS[args.model]
++    if args.n is None:
++        args.n = default_n
++    assert args.m and min(args.m) > 0
++    assert args.n % 128 == 0
++    assert args.num_workspaces > 0
++    assert args.warmup_replays >= 0
++    assert args.samples > 0
++
++    local_rank = int(os.environ["LOCAL_RANK"])
++    torch.accelerator.set_device_index(local_rank)
++    init_distributed_environment()
++    world_size = dist.get_world_size()
++    if args.k is None:
++        assert all(K % world_size == 0 for K in default_k)
++        K_values = [K // world_size for K in default_k]
++    else:
++        K_values = args.k
++    k_alignment = 64 if args.backend == "bf16" else 128
++    assert all(K % k_alignment == 0 for K in K_values)
++
++    config = VllmConfig()
++    config.model_config = ModelConfig(dtype="bfloat16")
++    # Pin the online-MXFP8 kernel the projections quantize through.
++    config.kernel_config.linear_backend = (
++        "auto" if args.backend == "bf16" else args.backend
++    )
++    with set_current_vllm_config(config):
++        # Builds the TP communicator as in serving, so the baseline's
++        # collective is whatever vLLM's dispatch selects (FlashInfer all-reduce
++        # first, then NCCL symmetric memory, custom all-reduce, pynccl).
++        initialize_model_parallel(tensor_model_parallel_size=world_size)
++
++    tp_group = get_tp_group()
++    pynccl_comm = tp_group.device_communicator.pynccl_comm
++    assert pynccl_comm is not None
++    sync_input = torch.zeros(1, device=torch.accelerator.current_device_index())
++    sync_output = torch.empty_like(sync_input)
++
++    def device_barrier() -> None:
++        # Order the timed launch after a device-side rank rendezvous without
++        # including the rendezvous itself in the measured event interval.
++        pynccl_comm.all_reduce(sync_input, sync_output)
++
++    gemm_rs_ar = GemmRsAr(
++        max_M=max(args.m),
++        N=args.n,
++        all_reduce=args.mode == "ar",
++    )
++    with set_current_vllm_config(config):
++        results = [
++            benchmark_shape(
++                gemm_rs_ar,
++                args.mode,
++                args.backend,
++                M,
++                args.n,
++                K,
++                args.num_workspaces,
++                args.warmup_replays,
++                args.samples,
++                tp_group.device_group,
++                tp_group.cpu_group,
++                device_barrier,
++            )
++            for K in K_values
++            for M in args.m
++        ]
++    del gemm_rs_ar
++
++    if tp_group.rank_in_group == 0:
++        print_results(results)
++        if args.json:
++            with open(args.json, "w") as f:
++                json.dump(results, f, indent=2)
++
++    dist.barrier(group=tp_group.cpu_group)
++    cleanup_dist_env_and_memory()
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/benchmarks/kernels/benchmark_kimi_k3_gemm_rs_ar.py b/benchmarks/kernels/benchmark_kimi_k3_gemm_rs_ar.py
+deleted file mode 100644
+index e4daea26bbce2858b87ce9b41c226c5510760990..0000000000000000000000000000000000000000
+--- a/benchmarks/kernels/benchmark_kimi_k3_gemm_rs_ar.py
++++ /dev/null
+@@ -1,469 +0,0 @@
+-# SPDX-License-Identifier: Apache-2.0
+-# SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+-"""Benchmark the SM100 Kimi-K3 GEMM-RS/AR kernel.
+-
+-All ranks must belong to one NVLink domain. For example, run a TP8 sweep with:
+-
+-    torchrun --nproc-per-node=8 \
+-        benchmarks/kernels/benchmark_kimi_k3_gemm_rs_ar.py
+-"""
+-
+-import argparse
+-import os
+-import statistics
+-from collections.abc import Callable
+-from dataclasses import dataclass
+-
+-import pandas as pd
+-import torch
+-import torch.distributed as dist
+-import torch.distributed._symmetric_memory as symm_mem
+-
+-from vllm.config import VllmConfig, set_current_vllm_config
+-from vllm.distributed import cleanup_dist_env_and_memory
+-from vllm.distributed.parallel_state import (
+-    get_tp_group,
+-    init_distributed_environment,
+-    initialize_model_parallel,
+-)
+-from vllm.models.kimi_k3.nvidia.ops.cute_dsl.gemm_rs_ar import GemmRsAr
+-
+-# Shared-expert down-proj and attention O-proj.
+-_KIMI_K3_PROJECTION_K = (6144, 12288)
+-
+-
+-@dataclass
+-class Candidate:
+-    name: str
+-    runs: list[Callable[[], torch.Tensor]]
+-    check_correctness: bool = True
+-
+-
+-def parse_args() -> argparse.Namespace:
+-    parser = argparse.ArgumentParser()
+-    parser.add_argument(
+-        "--mode",
+-        choices=("rs", "ar"),
+-        default="rs",
+-        help="Collective mode to benchmark.",
+-    )
+-    parser.add_argument(
+-        "--m",
+-        type=int,
+-        nargs="+",
+-        default=[128, 512, 2048, 8192, 32768],
+-        help="Global token counts to benchmark.",
+-    )
+-    parser.add_argument(
+-        "--k",
+-        type=int,
+-        nargs="+",
+-        help=(
+-            "Per-rank input dimensions. By default, derive the Kimi-K3 "
+-            "shared-expert down-proj and O-proj dimensions from the TP "
+-            "world size."
+-        ),
+-    )
+-    parser.add_argument("--n", type=int, default=7168)
+-    parser.add_argument(
+-        "--num-workspaces",
+-        type=int,
+-        default=10,
+-        help="Pointer-distinct inputs and CUDA graphs to rotate.",
+-    )
+-    parser.add_argument("--warmup-replays", type=int, default=5)
+-    parser.add_argument("--samples", type=int, default=20)
+-    return parser.parse_args()
+-
+-
+-def capture_graph(
+-    op: Callable[[], torch.Tensor],
+-    stream: torch.cuda.Stream,
+-    cpu_group: dist.ProcessGroup,
+-) -> tuple[torch.cuda.CUDAGraph, list[torch.Tensor | None]]:
+-    result: list[torch.Tensor | None] = [None]
+-    stream.wait_stream(torch.cuda.current_stream())
+-    dist.barrier(group=cpu_group)
+-    with torch.cuda.stream(stream):
+-        for _ in range(3):
+-            result[0] = op()
+-    stream.synchronize()
+-    dist.barrier(group=cpu_group)
+-
+-    graph = torch.cuda.CUDAGraph()
+-    with torch.cuda.graph(graph, stream=stream):
+-        result[0] = op()
+-    torch.cuda.current_stream().wait_stream(stream)
+-    dist.barrier(group=cpu_group)
+-    return graph, result
+-
+-
+-def benchmark_graphs(
+-    candidate_graphs: dict[str, list[torch.cuda.CUDAGraph]],
+-    warmup_replays: int,
+-    samples: int,
+-    device_group: dist.ProcessGroup,
+-    device_barrier: Callable[[], None],
+-) -> dict[str, float]:
+-    candidate_names = list(candidate_graphs)
+-    for round_index in range(warmup_replays):
+-        for candidate_index in range(len(candidate_names)):
+-            candidate_id = (round_index + candidate_index) % len(candidate_names)
+-            name = candidate_names[candidate_id]
+-            graphs = candidate_graphs[name]
+-            device_barrier()
+-            graphs[round_index % len(graphs)].replay()
+-    torch.accelerator.synchronize()
+-
+-    timings: dict[str, list[float]] = {name: [] for name in candidate_names}
+-    start = torch.cuda.Event(enable_timing=True)
+-    end = torch.cuda.Event(enable_timing=True)
+-    for sample_index in range(samples):
+-        for candidate_index in range(len(candidate_names)):
+-            candidate_id = (sample_index + candidate_index) % len(candidate_names)
+-            name = candidate_names[candidate_id]
+-            graphs = candidate_graphs[name]
+-            device_barrier()
+-            start.record()
+-            graphs[sample_index % len(graphs)].replay()
+-            end.record()
+-            end.synchronize()
+-
+-            elapsed = torch.tensor(
+-                start.elapsed_time(end) * 1000,
+-                dtype=torch.float64,
+-                device=torch.accelerator.current_device_index(),
+-            )
+-            dist.all_reduce(elapsed, op=dist.ReduceOp.MAX, group=device_group)
+-            timings[name].append(elapsed.item())
+-    return {name: statistics.median(values) for name, values in timings.items()}
+-
+-
+-def valid_rows(M: int, local_M: int, rank: int) -> int:
+-    return min(max(M - rank * local_M, 0), local_M)
+-
+-
+-def benchmark_shape(
+-    gemm_rs_ar: GemmRsAr,
+-    mode: str,
+-    M: int,
+-    N: int,
+-    K: int,
+-    num_workspaces: int,
+-    warmup_replays: int,
+-    samples: int,
+-    device_group: dist.ProcessGroup,
+-    cpu_group: dist.ProcessGroup,
+-    device_barrier: Callable[[], None],
+-) -> dict[str, float | int | str]:
+-    all_reduce = mode == "ar"
+-    world_size = dist.get_world_size(device_group)
+-    rank = dist.get_rank(device_group)
+-    device = torch.device("cuda", torch.accelerator.current_device_index())
+-    padded_M = (M + world_size - 1) // world_size * world_size
+-    local_M = padded_M // world_size
+-
+-    rng = torch.Generator(device=device)
+-    rng.manual_seed(1000 + rank * 10 + M + K)
+-    inputs = [
+-        torch.randn(M, K, dtype=torch.bfloat16, device=device, generator=rng)
+-        for _ in range(num_workspaces)
+-    ]
+-    weights = [
+-        torch.randn(N, K, dtype=torch.bfloat16, device=device, generator=rng)
+-        for _ in range(num_workspaces)
+-    ]
+-
+-    partial = torch.empty((padded_M, N), dtype=torch.bfloat16, device=device)
+-    symm_partial = symm_mem.empty((padded_M, N), dtype=torch.bfloat16, device=device)
+-    symm_partial_handle = symm_mem.rendezvous(symm_partial, device_group)
+-    collective_inputs = [torch.empty_like(partial) for _ in range(num_workspaces)]
+-    symm_collective_inputs = []
+-    symm_collective_handles = []
+-    for _ in range(num_workspaces):
+-        collective_input = symm_mem.empty(
+-            (padded_M, N),
+-            dtype=torch.bfloat16,
+-            device=device,
+-        )
+-        symm_collective_inputs.append(collective_input)
+-        symm_collective_handles.append(
+-            symm_mem.rendezvous(collective_input, device_group)
+-        )
+-    torch_output = torch.empty((local_M, N), dtype=torch.bfloat16, device=device)
+-    symm_output = torch.empty_like(torch_output)
+-    gemm_output = torch.empty((M, N), dtype=torch.bfloat16, device=device)
+-
+-    if padded_M > M:
+-        partial[M:].zero_()
+-        symm_partial[M:].zero_()
+-
+-    def make_torch_ring_ll_gemm_collective(
+-        x: torch.Tensor, weight: torch.Tensor
+-    ) -> Callable[[], torch.Tensor]:
+-        def run() -> torch.Tensor:
+-            torch.mm(x, weight.T, out=partial[:M])
+-            if all_reduce:
+-                dist.all_reduce(partial, group=device_group)
+-                return partial[:M]
+-            dist.reduce_scatter_single(torch_output, partial, group=device_group)
+-            return torch_output
+-
+-        return run
+-
+-    def make_torch_ldmc_gemm_collective(
+-        x: torch.Tensor, weight: torch.Tensor
+-    ) -> Callable[[], torch.Tensor]:
+-        def run() -> torch.Tensor:
+-            torch.mm(x, weight.T, out=symm_partial[:M])
+-            if all_reduce:
+-                dist.all_reduce(symm_partial, group=device_group)
+-                return symm_partial[:M]
+-            dist.reduce_scatter_single(
+-                symm_output,
+-                symm_partial,
+-                group=device_group,
+-            )
+-            return symm_output
+-
+-        return run
+-
+-    def make_fused_gemm_collective(
+-        x: torch.Tensor, weight: torch.Tensor
+-    ) -> Callable[[], torch.Tensor]:
+-        def run() -> torch.Tensor:
+-            return gemm_rs_ar(x, weight)
+-
+-        return run
+-
+-    def make_torch_gemm(
+-        x: torch.Tensor,
+-        weight: torch.Tensor,
+-    ) -> Callable[[], torch.Tensor]:
+-        def run() -> torch.Tensor:
+-            return torch.mm(x, weight.T, out=gemm_output)
+-
+-        return run
+-
+-    def make_ring_ll_collective(
+-        collective_input: torch.Tensor,
+-    ) -> Callable[[], torch.Tensor]:
+-        def run() -> torch.Tensor:
+-            if all_reduce:
+-                dist.all_reduce(collective_input, group=device_group)
+-                return collective_input
+-            dist.reduce_scatter_single(
+-                torch_output, collective_input, group=device_group
+-            )
+-            return torch_output
+-
+-        return run
+-
+-    def make_ldmc_collective(
+-        collective_input: torch.Tensor,
+-    ) -> Callable[[], torch.Tensor]:
+-        def run() -> torch.Tensor:
+-            if all_reduce:
+-                dist.all_reduce(collective_input, group=device_group)
+-                return collective_input
+-            dist.reduce_scatter_single(
+-                symm_output, collective_input, group=device_group
+-            )
+-            return symm_output
+-
+-        return run
+-
+-    candidates = (
+-        Candidate(
+-            "ring_ll_us",
+-            [make_torch_ring_ll_gemm_collective(x, w) for x, w in zip(inputs, weights)],
+-        ),
+-        Candidate(
+-            "ldmc_us",
+-            [make_torch_ldmc_gemm_collective(x, w) for x, w in zip(inputs, weights)],
+-        ),
+-        Candidate(
+-            "gemm_rs_ar_us",
+-            [make_fused_gemm_collective(x, w) for x, w in zip(inputs, weights)],
+-        ),
+-        Candidate(
+-            "torch_gemm_us",
+-            [make_torch_gemm(x, w) for x, w in zip(inputs, weights)],
+-            check_correctness=False,
+-        ),
+-        Candidate(
+-            "ring_ll_collective_us",
+-            [make_ring_ll_collective(x) for x in collective_inputs],
+-            check_correctness=False,
+-        ),
+-        Candidate(
+-            "ldmc_collective_us",
+-            [make_ldmc_collective(x) for x in symm_collective_inputs],
+-            check_correctness=False,
+-        ),
+-    )
+-
+-    expected = candidates[0].runs[0]()
+-    rows = M if all_reduce else valid_rows(M, local_M, rank)
+-    for candidate in candidates[1:]:
+-        if not candidate.check_correctness:
+-            continue
+-        actual = candidate.runs[0]()
+-        torch.accelerator.synchronize(device)
+-        torch.testing.assert_close(
+-            actual[:rows],
+-            expected[:rows],
+-            rtol=5e-2,
+-            atol=4.0,
+-        )
+-
+-    candidate_graphs = {}
+-    graph_keepalive: list[object] = [symm_partial_handle, *symm_collective_handles]
+-    for candidate in candidates:
+-        stream = torch.cuda.Stream()
+-        bundles = [capture_graph(run, stream, cpu_group) for run in candidate.runs]
+-        candidate_graphs[candidate.name] = [graph for graph, _ in bundles]
+-        graph_keepalive.extend(bundles)
+-        graph_keepalive.append(stream)
+-
+-    times = benchmark_graphs(
+-        candidate_graphs,
+-        warmup_replays,
+-        samples,
+-        device_group,
+-        device_barrier,
+-    )
+-
+-    best_nccl_us = min(times["ring_ll_collective_us"], times["ldmc_collective_us"])
+-    return {
+-        "mode": mode.upper(),
+-        "M": M,
+-        "N": N,
+-        "K": K,
+-        **times,
+-        "best_nccl_us": best_nccl_us,
+-        "speedup_vs_ring_ll": times["ring_ll_us"] / times["gemm_rs_ar_us"],
+-        "speedup_vs_ldmc": times["ldmc_us"] / times["gemm_rs_ar_us"],
+-    }
+-
+-
+-def print_results(results: list[dict[str, float | int | str]]) -> None:
+-    results_df = pd.DataFrame(results)
+-    collective = str(results_df["mode"].iloc[0])
+-    end_to_end = (
+-        results_df[
+-            [
+-                "M",
+-                "N",
+-                "K",
+-                "ring_ll_us",
+-                "ldmc_us",
+-                "gemm_rs_ar_us",
+-                "speedup_vs_ring_ll",
+-                "speedup_vs_ldmc",
+-            ]
+-        ]
+-        .rename(
+-            columns={
+-                "ring_ll_us": f"Torch GEMM + NCCL {collective} (RING_LL) (us)",
+-                "ldmc_us": f"Torch GEMM + NCCL {collective} (LDMC) (us)",
+-                "gemm_rs_ar_us": f"GEMM-{collective} (us)",
+-                "speedup_vs_ring_ll": "Speedup vs RING_LL",
+-                "speedup_vs_ldmc": "Speedup vs LDMC",
+-            }
+-        )
+-        .round(3)
+-    )
+-    components = (
+-        results_df[["M", "N", "K", "torch_gemm_us", "best_nccl_us", "gemm_rs_ar_us"]]
+-        .rename(
+-            columns={
+-                "torch_gemm_us": "Torch GEMM (us)",
+-                "best_nccl_us": f"NCCL {collective} (best) (us)",
+-                "gemm_rs_ar_us": f"GEMM-{collective} (us)",
+-            }
+-        )
+-        .round(2)
+-    )
+-
+-    print(f"### {collective} end-to-end latency")
+-    print(end_to_end.to_markdown(index=False))
+-    print(f"\n### {collective} component latency")
+-    print(components.to_markdown(index=False))
+-    print(
+-        f"\nNCCL {collective} (best) is the faster of RING_LL and LDMC "
+-        "for each shape.\n"
+-    )
+-
+-
+-def main() -> None:
+-    args = parse_args()
+-    assert args.m and min(args.m) > 0
+-    assert args.n % 256 == 0
+-    assert args.num_workspaces > 0
+-    assert args.warmup_replays >= 0
+-    assert args.samples > 0
+-
+-    local_rank = int(os.environ["LOCAL_RANK"])
+-    torch.accelerator.set_device_index(local_rank)
+-    init_distributed_environment()
+-    world_size = dist.get_world_size()
+-    if args.k is None:
+-        assert all(K % world_size == 0 for K in _KIMI_K3_PROJECTION_K)
+-        K_values = [K // world_size for K in _KIMI_K3_PROJECTION_K]
+-    else:
+-        K_values = args.k
+-    assert all(K % 64 == 0 for K in K_values)
+-    # Reserve symmetric memory for the NCCL-managed benchmark allocations.
+-    os.environ["VLLM_ALLREDUCE_USE_SYMM_MEM"] = "0"
+-    # NCCL-managed symmetric allocations select the NVLS/LDMC collective path.
+-    symm_mem.set_backend("NCCL")
+-    with set_current_vllm_config(VllmConfig()):
+-        initialize_model_parallel(tensor_model_parallel_size=world_size)
+-
+-    tp_group = get_tp_group()
+-    group_warmup = torch.zeros(1, device=torch.accelerator.current_device_index())
+-    dist.all_reduce(group_warmup, group=tp_group.device_group)
+-    pynccl_comm = tp_group.device_communicator.pynccl_comm
+-    assert pynccl_comm is not None
+-    sync_input = torch.zeros(1, device=torch.accelerator.current_device_index())
+-    sync_output = torch.empty_like(sync_input)
+-
+-    def device_barrier() -> None:
+-        # Order the timed launch after a device-side rank rendezvous without
+-        # including the rendezvous itself in the measured event interval.
+-        pynccl_comm.all_reduce(sync_input, sync_output)
+-
+-    gemm_rs_ar = GemmRsAr(
+-        max_M=max(args.m),
+-        N=args.n,
+-        all_reduce=args.mode == "ar",
+-    )
+-    results = [
+-        benchmark_shape(
+-            gemm_rs_ar,
+-            args.mode,
+-            M,
+-            args.n,
+-            K,
+-            args.num_workspaces,
+-            args.warmup_replays,
+-            args.samples,
+-            tp_group.device_group,
+-            tp_group.cpu_group,
+-            device_barrier,
+-        )
+-        for K in K_values
+-        for M in args.m
+-    ]
+-    del gemm_rs_ar
+-
+-    if tp_group.rank_in_group == 0:
+-        print_results(results)
+-
+-    dist.barrier(group=tp_group.cpu_group)
+-    cleanup_dist_env_and_memory()
+-
+-
+-if __name__ == "__main__":
+-    main()
+diff --git a/tests/kernels/test_kimi_k3_gemm_rs_ar.py b/tests/kernels/test_gemm_rs_ar.py
+similarity index 63%
+rename from tests/kernels/test_kimi_k3_gemm_rs_ar.py
+rename to tests/kernels/test_gemm_rs_ar.py
+index 7a887c501f1015e81347bb48cc138557216c6703..b1c79af2b9257ce31f7f074a217dfe49cdc3b70d 100644
+--- a/tests/kernels/test_kimi_k3_gemm_rs_ar.py
++++ b/tests/kernels/test_gemm_rs_ar.py
+@@ -6,7 +6,7 @@ import torch
+ import torch.distributed as dist
+ import torch.multiprocessing as mp
+ 
+-from tests.utils import ensure_current_vllm_config
++from vllm.config import ModelConfig, VllmConfig, set_current_vllm_config
+ from vllm.distributed import cleanup_dist_env_and_memory
+ from vllm.distributed.parallel_state import (
+     init_distributed_environment,
+@@ -17,6 +17,7 @@ from vllm.utils.network_utils import get_open_port
+ from vllm.utils.system_utils import update_environment_variables
+ 
+ _SHAPES = (
++    (129, 512),
+     (129, 768),
+     (257, 768),
+     (1023, 4224),
+@@ -29,6 +30,7 @@ _N = 512
+ def _reference(
+     x: torch.Tensor,
+     weight: torch.Tensor,
++    weight_scale: torch.Tensor | None,
+     world_size: int,
+     group: dist.ProcessGroup,
+     all_reduce: bool,
+@@ -40,7 +42,21 @@ def _reference(
+         dtype=x.dtype,
+         device=x.device,
+     )
+-    torch.mm(x, weight.T, out=partial[:M])
++    if weight_scale is None:
++        torch.mm(x, weight.T, out=partial[:M])
++    else:
++        from vllm.model_executor.layers.quantization.utils.mxfp8_utils import (
++            mxfp8_e4m3_quantize,
++        )
++
++        x_q, x_sf = mxfp8_e4m3_quantize(x, is_sf_swizzled_layout=True)
++        partial[:M] = torch._scaled_mm(
++            x_q,
++            weight.T,
++            x_sf.view(torch.float8_e8m0fnu),
++            weight_scale.view(torch.float8_e8m0fnu),
++            out_dtype=x.dtype,
++        )
+     if padded_M > M:
+         partial[M:].zero_()
+ 
+@@ -75,6 +91,10 @@ def _assert_valid_rows_close(
+         rtol=5e-2,
+         atol=4.0,
+     )
++    # Sequence-parallel callers may pass an unpadded M and read the padding
++    # rows back (they flow through per-token kernels before being dropped),
++    # so RS must leave them zero like ``sp_reduce_scatter`` does.
++    assert not actual[valid_rows:].any()
+ 
+ 
+ def _run_mode(
+@@ -85,19 +105,52 @@ def _run_mode(
+     rank: int,
+     world_size: int,
+     weights: dict[int, torch.Tensor],
++    backend: str,
+ ) -> None:
+     # cute_dsl is unavailable off CUDA, so import it only inside the GPU worker.
+-    from vllm.models.kimi_k3.nvidia.ops.cute_dsl.gemm_rs_ar import GemmRsAr
++    from vllm.model_executor.kernels.linear.cute_dsl.gemm_rs_ar import GemmRsAr
+ 
+     gemm_rs_ar = GemmRsAr(
+         max_M=max(M for M, _ in _SHAPES),
+         N=_N,
+         all_reduce=all_reduce,
+     )
++    from vllm.config.quantization import QuantizationConfigArgs
++    from vllm.model_executor.layers.linear import RowParallelLinear
++    from vllm.model_executor.layers.quantization.online.base import (
++        OnlineQuantizationConfig,
++    )
++
++    quant_config = (
++        None
++        if backend == "bf16"
++        else OnlineQuantizationConfig(QuantizationConfigArgs(linear="mxfp8"))
++    )
++    projections = {}
++    operands = {}
++    for K, w in weights.items():
++        with torch.device(device):
++            linear = RowParallelLinear(
++                K * world_size,
++                _N,
++                bias=False,
++                params_dtype=torch.bfloat16,
++                quant_config=quant_config,
++            )
++        # Select the fused path before online quantization replaces meta weights.
++        assert gemm_rs_ar.can_run(linear)
++        linear.weight = torch.nn.Parameter(w.clone(), requires_grad=False)
++        linear.quant_method.process_weights_after_loading(linear)
++        projections[K] = linear
++        weight = linear.weight
++        if backend == "flashinfer_cutedsl":
++            weight = weight.t()
++        operands[K] = (weight, getattr(linear, "weight_scale", None))
++
+     input_generator = torch.Generator(device=device)
+ 
+-    # Alternating shapes exercise producer-flag reuse across different grids,
+-    # CTA-group choices, and both BN=128 and BN=256 dispatches.
++    # Alternating shapes exercise producer-flag reuse across different grids
++    # and CTA-group choices.
+     for M, K in (*_SHAPES, *_SHAPES[::-1]):
+         input_generator.manual_seed(2000 + M + K)
+         x = torch.randn(
+@@ -107,8 +160,8 @@ def _run_mode(
+             device=device,
+             generator=input_generator,
+         )
+-        expected = _reference(x, weights[K], world_size, group, all_reduce)
+-        actual = gemm_rs_ar(x, weights[K])
++        expected = _reference(x, *operands[K], world_size, group, all_reduce)
++        actual = gemm_rs_ar.apply(x, projections[K])
+         torch.accelerator.synchronize(device)
+         _assert_valid_rows_close(actual, expected, M, rank, all_reduce)
+ 
+@@ -123,9 +176,9 @@ def _run_mode(
+             device=device,
+             generator=input_generator,
+         )
+-        first_output = gemm_rs_ar(lifetime_x, weights[lifetime_K])
++        first_output = gemm_rs_ar.apply(lifetime_x, projections[lifetime_K])
+         first_snapshot = first_output.clone()
+-        second_output = gemm_rs_ar(-lifetime_x, weights[lifetime_K])
++        second_output = gemm_rs_ar.apply(-lifetime_x, projections[lifetime_K])
+         torch.accelerator.synchronize(device)
+         assert first_output.data_ptr() != second_output.data_ptr()
+         torch.testing.assert_close(first_output, first_snapshot, rtol=0, atol=0)
+@@ -141,7 +194,7 @@ def _run_mode(
+     )
+     graph_expected = _reference(
+         graph_x,
+-        weights[graph_K],
++        *operands[graph_K],
+         world_size,
+         group,
+         all_reduce,
+@@ -152,13 +205,13 @@ def _run_mode(
+     capture_stream.wait_stream(torch.cuda.current_stream())
+     with torch.cuda.stream(capture_stream):
+         for _ in range(3):
+-            graph_output.copy_(gemm_rs_ar(graph_x, weights[graph_K]))
++            graph_output.copy_(gemm_rs_ar.apply(graph_x, projections[graph_K]))
+     capture_stream.synchronize()
+     dist.barrier(group=group)
+ 
+     graph = torch.cuda.CUDAGraph()
+     with torch.cuda.graph(graph, stream=capture_stream):
+-        graph_output.copy_(gemm_rs_ar(graph_x, weights[graph_K]))
++        graph_output.copy_(gemm_rs_ar.apply(graph_x, projections[graph_K]))
+     torch.cuda.current_stream().wait_stream(capture_stream)
+     dist.barrier(group=group)
+ 
+@@ -177,7 +230,7 @@ def _run_mode(
+     del gemm_rs_ar, capture_stream, graph, graph_output
+ 
+ 
+-def _worker(local_rank: int, world_size: int, master_port: int) -> None:
++def _worker(local_rank: int, world_size: int, master_port: int, backend: str) -> None:
+     # This module pulls in cute_dsl, which is unavailable off CUDA, so importing
+     # it at module level would fail collection. Import it where it is used, as
+     # `kda.py` does.
+@@ -195,7 +248,10 @@ def _worker(local_rank: int, world_size: int, master_port: int) -> None:
+     )
+ 
+     init_distributed_environment()
+-    with ensure_current_vllm_config():
++    config = VllmConfig()
++    config.model_config = ModelConfig(dtype="bfloat16")
++    config.kernel_config.linear_backend = "auto" if backend == "bf16" else backend
++    with set_current_vllm_config(config):
+         initialize_model_parallel(tensor_model_parallel_size=world_size)
+ 
+     group = dist.group.WORLD
+@@ -215,24 +271,29 @@ def _worker(local_rank: int, world_size: int, master_port: int) -> None:
+ 
+     # Production binds one mode per worker; exercise both mode-bound instances
+     # sequentially in this test without implying that both are initialized.
+-    for all_reduce in (False, True):
+-        _run_mode(
+-            all_reduce=all_reduce,
+-            device=device,
+-            group=group,
+-            rank=rank,
+-            world_size=world_size,
+-            weights=weights,
+-        )
++    with set_current_vllm_config(config):
++        for all_reduce in (False, True):
++            _run_mode(
++                all_reduce=all_reduce,
++                device=device,
++                group=group,
++                rank=rank,
++                world_size=world_size,
++                weights=weights,
++                backend=backend,
++            )
+     cleanup_dist_env_and_memory()
+ 
+ 
++@pytest.mark.parametrize(
++    "backend", ["bf16", "flashinfer_cutlass", "flashinfer_cutedsl"]
++)
+ @pytest.mark.distributed(num_gpus=2)
+ @pytest.mark.skipif(
+     not current_platform.is_device_capability_family(100),
+-    reason="Kimi-K3 GEMM-RS/AR requires SM100",
++    reason="GEMM-RS/AR requires SM100",
+ )
+-def test_kimi_k3_gemm_rs_ar(monkeypatch: pytest.MonkeyPatch) -> None:
++def test_gemm_rs_ar(monkeypatch: pytest.MonkeyPatch, backend: str) -> None:
+     world_size = 2
+     if torch.accelerator.device_count() < world_size:
+         pytest.skip("GEMM-RS/AR requires two GPUs")
+@@ -242,7 +303,7 @@ def test_kimi_k3_gemm_rs_ar(monkeypatch: pytest.MonkeyPatch) -> None:
+     try:
+         mp.spawn(
+             _worker,
+-            args=(world_size, get_open_port()),
++            args=(world_size, get_open_port(), backend),
+             nprocs=world_size,
+         )
+     finally:
+diff --git a/vllm/cute_utils/_tcgen05.py b/vllm/cute_utils/_tcgen05.py
+index 325c30498c762f0c951e81c05e2e5ad6e45ac767..4ab75cc0cc3b9b6a74bf15bfc17359477220bcba 100644
+--- a/vllm/cute_utils/_tcgen05.py
++++ b/vllm/cute_utils/_tcgen05.py
+@@ -78,6 +78,10 @@ def make_sdesc_128B_swizzle(LBO: int):
+     return Uint64((LBO >> 4 << 16) | (SBO >> 4 << 32) | (1 << 46) | (2 << 61))
+ 
+ 
++def make_mxfp8_idesc(MMA_M: int, MMA_N: int):
++    return Uint32((MMA_N >> 3 << 17) | (1 << 23) | (MMA_M >> 7 << 27))
++
++
+ @dsl_user_op
+ def mma_f16(
+     d_tmem,
+@@ -130,6 +134,73 @@ def mma_ts_f16(
+         )
+ 
+ 
++@dsl_user_op
++def mma_mxfp8(
++    d_tmem,
++    a_desc,
++    b_desc,
++    idesc,
++    sfa_tmem,
++    sfb_tmem,
++    enable_input_d,
++    cta_group: int = 1,
++    *,
++    loc=None,
++    ip=None,
++) -> None:
++    with cute.arch.elect_one():
++        nvvm.tcgen05_mma_block_scale(
++            nvvm.Tcgen05MMAKind.MXF8F6F4,
++            NVVM_CTA_GROUP_MAP[cta_group],
++            _make_tmem_llvm_ptr(d_tmem, loc=loc, ip=ip),
++            Uint64(a_desc).ir_value(loc=loc, ip=ip),
++            Uint64(b_desc).ir_value(loc=loc, ip=ip),
++            Int32(idesc).ir_value(loc=loc, ip=ip),
++            Boolean(enable_input_d).ir_value(loc=loc, ip=ip),
++            _make_tmem_llvm_ptr(sfa_tmem, loc=loc, ip=ip),
++            _make_tmem_llvm_ptr(sfb_tmem, loc=loc, ip=ip),
++            scale_vec_size=nvvm.Tcgen05MMAScaleVecSize.X1,
++            loc=loc,
++            ip=ip,
++        )
++
++
++@dsl_user_op
++def cp(
++    tmem,
++    sdesc,
++    shape: str,
++    mcast: str,
++    cta_group: int = 1,
++    *,
++    loc=None,
++    ip=None,
++) -> None:
++    SHAPE_MAP = {
++        "128x256b": nvvm.Tcgen05CpShape.SHAPE_128x256b,
++        "4x256b": nvvm.Tcgen05CpShape.SHAPE_4x256b,
++        "128x128b": nvvm.Tcgen05CpShape.SHAPE_128x128b,
++        "64x128b": nvvm.Tcgen05CpShape.SHAPE_64x128b,
++        "32x128b": nvvm.Tcgen05CpShape.SHAPE_32x128b,
++    }
++    MCAST_MAP = {
++        "none": nvvm.Tcgen05CpMulticast.NONE,
++        "warpx2::02_13": nvvm.Tcgen05CpMulticast.WARPX2_02_13,
++        "warpx2::01_23": nvvm.Tcgen05CpMulticast.WARPX2_01_23,
++        "warpx4": nvvm.Tcgen05CpMulticast.WARPX4,
++    }
++    with cute.arch.elect_one():
++        nvvm.tcgen05_cp(
++            SHAPE_MAP[shape],
++            _make_tmem_llvm_ptr(tmem, loc=loc, ip=ip),
++            Uint64(sdesc).ir_value(loc=loc, ip=ip),
++            group=NVVM_CTA_GROUP_MAP[cta_group],
++            multicast=MCAST_MAP[mcast],
++            loc=loc,
++            ip=ip,
++        )
++
++
+ @dsl_user_op
+ def commit(mbar, cta_mask=None, cta_group: int = 1, *, loc=None, ip=None):
+     mbar_llvm = mbar.to_llvm_ptr(loc=loc, ip=ip)
+diff --git a/vllm/envs.py b/vllm/envs.py
+index afe11935646733eb313c8fe566b43f044cdaffa7..30b3de8d64e67f10ea26e0e3289c813fdce93258 100755
+--- a/vllm/envs.py
++++ b/vllm/envs.py
+@@ -213,7 +213,7 @@ if TYPE_CHECKING:
+     VLLM_KIMI_K3_SHARD_SP_SHARED_EXPERT: bool = False
+     VLLM_KIMI_K3_AUX_ATTN_RES_STREAM: bool = False
+     VLLM_KIMI_K3_GEMM_AR: bool = True
+-    VLLM_KIMI_K3_GEMM_RS: bool = False
++    VLLM_ENABLE_GEMM_RS: bool = False
+     VLLM_BLOCKSCALE_FP8_GEMM_FLASHINFER: bool = True
+     VLLM_USE_FLASHINFER_MOE_INT4: bool = False
+     VLLM_FLASHINFER_AUTOTUNE_CACHE_DIR: str | None = None
+@@ -1629,9 +1629,11 @@ environment_variables: dict[str, Callable[[], Any]] = {
+     # Use the SM100 BF16 GEMM-AR kernel for eligible Kimi-K3 row-parallel
+     # attention projections. All TP ranks must belong to one NVLink domain.
+     "VLLM_KIMI_K3_GEMM_AR": lambda: bool(int(os.getenv("VLLM_KIMI_K3_GEMM_AR", "1"))),
+-    # Use the SM100 BF16 GEMM-RS kernel for eligible Kimi-K3 sequence-parallel
+-    # row-parallel projections. All TP ranks must belong to one NVLink domain.
+-    "VLLM_KIMI_K3_GEMM_RS": lambda: bool(int(os.getenv("VLLM_KIMI_K3_GEMM_RS", "0"))),
++    # Fuse eligible sequence-parallel row-parallel projections with their TP
++    # reduce-scatter using the SM100 BF16/MXFP8 GEMM-RS kernel (Kimi-K3
++    # attention/shared-expert projections, DeepSeek-V4.1 ``wo_b``). All TP
++    # ranks must belong to one NVLink domain.
++    "VLLM_ENABLE_GEMM_RS": lambda: bool(int(os.getenv("VLLM_ENABLE_GEMM_RS", "0"))),
+     # Allow use of FlashInfer FP8 block-scale GEMM for linear layers.
+     # This uses TensorRT-LLM kernels and requires SM90+ (Hopper).
+     "VLLM_BLOCKSCALE_FP8_GEMM_FLASHINFER": lambda: bool(
+diff --git a/vllm/models/kimi_k3/nvidia/ops/cute_dsl/gemm_rs_ar.py b/vllm/model_executor/kernels/linear/cute_dsl/gemm_rs_ar.py
+similarity index 70%
+rename from vllm/models/kimi_k3/nvidia/ops/cute_dsl/gemm_rs_ar.py
+rename to vllm/model_executor/kernels/linear/cute_dsl/gemm_rs_ar.py
+index f8a90cc1abceeb3597a6a5a81119a4913e964720..ec40fb056a1338076f19fda121a25f70e6f02a18 100644
+--- a/vllm/models/kimi_k3/nvidia/ops/cute_dsl/gemm_rs_ar.py
++++ b/vllm/model_executor/kernels/linear/cute_dsl/gemm_rs_ar.py
+@@ -1,18 +1,36 @@
+ # SPDX-License-Identifier: Apache-2.0
+ # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+ 
+-"""SM100 BF16 GEMM with fused tensor-parallel reduce-scatter/all-reduce."""
++"""SM100 BF16/MXFP8 GEMM with fused tensor-parallel reduce-scatter/all-reduce.
++
++Model-neutral: any row-parallel projection whose output is reduced across TP
++(Kimi-K3 ``o_proj``/``down_proj``, DeepSeek-V4.1 ``wo_b``) can bind to the
++process-wide workspace through ``maybe_init_gemm_rs_ar`` + ``GemmRsAr.apply``.
++"""
+ 
+ # Based on CUTLASS's Blackwell distributed GEMM-RS example at dcf215a.
+ # See https://github.com/NVIDIA/cutlass/issues/3117 for memory semantics.
++# The MXFP8 path follows the block-scaled SM100 GEMM template from
++# https://github.com/gau-nernst/gn-kernels (sm100_mm_mxfp8.py).
+ 
+ from functools import cache
++from typing import TYPE_CHECKING
+ 
+ import cutlass
+ import torch
+ import torch.distributed._symmetric_memory as symm_mem
+ from cuda.bindings.driver import CUstream
+-from cutlass import BFloat16, Int32, Int64, Uint16, cute, utils
++from cutlass import (
++    BFloat16,
++    Float8E4M3FN,
++    Float8E8M0FNU,
++    Int32,
++    Int64,
++    Uint16,
++    Uint64,
++    cute,
++    utils,
++)
+ from cutlass._mlir import ir
+ from cutlass._mlir.dialects import llvm, nvvm, vector
+ from cutlass.cute.nvgpu import cpasync, tcgen05
+@@ -24,6 +42,10 @@ from vllm.cute_utils import _tcgen05, mbarrier, simple_tma_copy, to_cta0_smem
+ from vllm.distributed import get_tp_group
+ from vllm.logger import init_logger
+ from vllm.model_executor.layers.linear import LinearBase, UnquantizedLinearMethod
++from vllm.platforms import current_platform
++
++if TYPE_CHECKING:
++    from vllm.config import VllmConfig
+ 
+ logger = init_logger(__name__)
+ 
+@@ -88,24 +110,31 @@ def multimem_st_16B(dst: cute.Tensor, value: cute.Tensor, *, loc=None, ip=None)
+     )
+ 
+ 
+-class Sm100GemmRsArBF16:
++class Sm100GemmRsAr:
+     def __init__(
+         self,
+         rank: int,
+         num_ranks: int,
+-        BN: int = 128,
+         cta_group: int = 1,
+         all_reduce: bool = False,
++        dtype: str = "bf16",
+     ) -> None:
++        assert dtype in ("bf16", "mxfp8")
+         self.rank = rank
+         self.num_ranks = num_ranks
+-        BM, BK = 128, 64
++        BM = 128
++        BN = 128
++        BK = {"bf16": 64, "mxfp8": 128}[dtype]  # 128B
+         self.cta_tile = (BM, BN, BK)
+         self.cta_group = cta_group
+         self.all_reduce = all_reduce
++        self.dtype = dtype
+ 
+         smem_bytes = get_smem_capacity_in_bytes()
+-        self.stage_size = (BM + (BN // cta_group)) * BK * 2
++        if dtype == "bf16":
++            self.stage_size = (BM + (BN // cta_group)) * BK * 2
++        elif dtype == "mxfp8":
++            self.stage_size = (BM + (BN // cta_group)) * BK + (BM + BN) * (BK // 32)
+         self.num_stages = smem_bytes // self.stage_size
+ 
+     @cute.jit
+@@ -124,11 +153,36 @@ class Sm100GemmRsArBF16:
+         layout = cute.make_composed_layout(swizzle_128b, 0, layout)
+         return cpasync.make_tiled_tma_atom(tma_op, tensor, layout, (BM, BK))
+ 
++    @cute.jit
++    def prepare_sf_tma(
++        self,
++        SF: cute.Tensor,
++        R: Int32,
++        Ksf: Int32,
++        BR: cutlass.Constexpr,
++        BKsf: cutlass.Constexpr,
++    ) -> cpasync.TmaInfo:
++        tma_group = (
++            tcgen05.CtaGroup.TWO if self.cta_group == 2 else tcgen05.CtaGroup.ONE
++        )
++        tma_op = cpasync.CopyBulkTensorTileG2SOp(cta_group=tma_group)
++        # NVIDIA SF gmem layout: an [R, Ksf] scale grid padded to R % 128 == 0
++        # and permuted as [R/128, Ksf/4, 32, 4, 4]. The trailing [32, 4, 4]
++        # atom is the opaque 512B block tcgen05 expects, so treat it as bytes.
++        # The Int64 recast keeps the TMA boxDim <= 256.
++        g_layout = cute.make_layout((Ksf * 128, cute.ceil_div(R, 128)))
++        SF_i64 = cute.recast_tensor(cute.make_tensor(SF.iterator, g_layout), Int64)
++        tiler = (128 * BKsf // 8, BR // 128)
++        layout = cute.make_layout((*tiler, self.num_stages))
++        return cpasync.make_tiled_tma_atom(tma_op, SF_i64, layout, tiler)
++
+     @cute.jit
+     def __call__(
+         self,
+         A: cute.Tensor,
+         B: cute.Tensor,
++        SFA: cute.Tensor,
++        SFB: cute.Tensor,
+         partial_uc: cute.Tensor,
+         partial_mc_ptr: cute.Pointer,
+         output: cute.Tensor,
+@@ -138,10 +192,17 @@ class Sm100GemmRsArBF16:
+         grid_size: Int32,
+         stream: CUstream,
+     ) -> None:
++        M, K = A.shape
+         N = B.shape[0]
+         BM, BN, BK = self.cta_tile
+         A_tma = self.prepare_tma(A, BM, BK)
+         B_tma = self.prepare_tma(B, BN // self.cta_group, BK)
++        if cutlass.const_expr(self.dtype == "mxfp8"):
++            SFA_tma = self.prepare_sf_tma(SFA, M, K // 32, BM, BK // 32)
++            SFB_tma = self.prepare_sf_tma(SFB, N, K // 32, BN, BK // 32)
++        else:
++            SFA_tma = None
++            SFB_tma = None
+         padded_M = partial_uc.shape[0]
+         partial_mc = cute.make_tensor(
+             partial_mc_ptr,
+@@ -158,6 +219,8 @@ class Sm100GemmRsArBF16:
+         self.kernel(
+             A_tma,
+             B_tma,
++            SFA_tma,
++            SFB_tma,
+             partial_uc,
+             partial_mc,
+             output,
+@@ -171,6 +234,8 @@ class Sm100GemmRsArBF16:
+         self,
+         A_tma: cpasync.TmaInfo,
+         B_tma: cpasync.TmaInfo,
++        SFA_tma: cpasync.TmaInfo,
++        SFB_tma: cpasync.TmaInfo,
+         partial_uc: cute.Tensor,
+         partial_mc: cute.Tensor,
+         output: cute.Tensor,
+@@ -190,25 +255,33 @@ class Sm100GemmRsArBF16:
+ 
+         is_2cta = cta_group == 2
+         cta_rank = raw_bid % self.cta_group
+-        num_tmem_stages = 512 // BN
++
++        # MXFP8 reserves the last 16 tmem columns (496-512) for the A/B scale
++        # factors.
++        num_tmem_stages = (496 if self.dtype == "mxfp8" else 512) // BN
+ 
+         smem = utils.SmemAllocator()
+         sA = smem.allocate_tensor(
+-            BFloat16,
++            A_tma.atom.value_type,
+             A_tma.smem_layout.outer,
+             byte_alignment=128,
+             swizzle=A_tma.smem_layout.inner,
+         )
+         sB = smem.allocate_tensor(
+-            BFloat16,
++            B_tma.atom.value_type,
+             B_tma.smem_layout.outer,
+             byte_alignment=128,
+             swizzle=B_tma.smem_layout.inner,
+         )
++        if cutlass.const_expr(self.dtype == "mxfp8"):
++            sSFA = smem.allocate_tensor(Int64, SFA_tma.smem_layout, byte_alignment=128)
++            sSFB = smem.allocate_tensor(Int64, SFB_tma.smem_layout, byte_alignment=128)
++
+         tma_full_mbar = smem.allocate_array(Int64, num_stages)
+         tma_empty_mbar = smem.allocate_array(Int64, num_stages)
+         tmem_full_mbar = smem.allocate_array(Int64, num_tmem_stages)
+         tmem_empty_mbar = smem.allocate_array(Int64, num_tmem_stages)
++
+         taddr = smem.allocate(Int32, 4)
+ 
+         # Named barriers
+@@ -238,6 +311,9 @@ class Sm100GemmRsArBF16:
+         elif warp_id == 1:
+             cpasync.prefetch_descriptor(A_tma.atom)
+             cpasync.prefetch_descriptor(B_tma.atom)
++            if cutlass.const_expr(self.dtype == "mxfp8"):
++                cpasync.prefetch_descriptor(SFA_tma.atom)
++                cpasync.prefetch_descriptor(SFB_tma.atom)
+ 
+         if cutlass.const_expr(is_2cta):
+             cute.arch.cluster_arrive_relaxed()
+@@ -261,12 +337,22 @@ class Sm100GemmRsArBF16:
+             # [(BM, BK), (M/BM, K/BK)]
+             gA_tiles = cute.zipped_divide(A_tma.tma_tensor, (BM, BK))
+             gB_tiles = cute.zipped_divide(B_tma.tma_tensor, (BN // cta_group, BK))
++            if cutlass.const_expr(self.dtype == "mxfp8"):
++                BKsf = BK // 32
++                gSFA_tiles = cute.zipped_divide(
++                    SFA_tma.tma_tensor, (128 * BKsf // 8, BM // 128)
++                )
++                gSFB_tiles = cute.zipped_divide(
++                    SFB_tma.tma_tensor, (128 * BKsf // 8, BN // 128)
++                )
+ 
+             for bid in range(raw_bid, total_tiles, num_bids):
+                 bid_m = bid % grid_m
+                 bid_n = bid // grid_m
+                 if cutlass.const_expr(cta_group == 2):
+-                    bid_n = bid_n * cta_group + cta_rank
++                    bid_n_b = bid_n * cta_group + cta_rank
++                else:
++                    bid_n_b = bid_n
+ 
+                 for iter_k in cutlass.range(cute.ceil_div(K, BK), unroll=1):
+                     mbar = tma_full_mbar_ + tma_stage
+@@ -282,10 +368,23 @@ class Sm100GemmRsArBF16:
+                     )
+                     simple_tma_copy(
+                         B_tma.atom,
+-                        gB_tiles[None, (bid_n, iter_k)],
++                        gB_tiles[None, (bid_n_b, iter_k)],
+                         sB[None, None, tma_stage],
+                         mbar,
+                     )
++                    if cutlass.const_expr(self.dtype == "mxfp8"):
++                        simple_tma_copy(
++                            SFA_tma.atom,
++                            gSFA_tiles[None, (iter_k, bid_m)],
++                            sSFA[None, None, tma_stage],
++                            mbar,
++                        )
++                        simple_tma_copy(
++                            SFB_tma.atom,
++                            gSFB_tiles[None, (iter_k, bid_n)],
++                            sSFB[None, None, tma_stage],
++                            mbar,
++                        )
+ 
+                     tma_stage = (tma_stage + 1) % num_stages
+                     if tma_stage == 0:
+@@ -303,8 +402,15 @@ class Sm100GemmRsArBF16:
+ 
+                 MMA_M = BM * cta_group
+                 MMA_N = BN
+-                idesc = _tcgen05.make_bf16_idesc(MMA_M, MMA_N)
+                 sdesc = _tcgen05.make_sdesc_128B_swizzle(0)
++                if cutlass.const_expr(self.dtype == "mxfp8"):
++                    # SF smem descriptor: no swizzle, SBO = 8 * 16 bytes.
++                    sdesc_sf = Uint64((8 << 32) | (1 << 46))
++                    sfa_tmem = 496
++                    sfb_tmem = sfa_tmem + 4
++                    idesc = _tcgen05.make_mxfp8_idesc(MMA_M, MMA_N)
++                else:
++                    idesc = _tcgen05.make_bf16_idesc(MMA_M, MMA_N)
+                 multicast_mask = Uint16((1 << self.cta_group) - 1)
+ 
+                 for bid in range(raw_bid, total_tiles, num_bids):
+@@ -319,17 +425,54 @@ class Sm100GemmRsArBF16:
+                         b_addr = sB[None, None, tma_stage].iterator.toint()
+                         a_desc = sdesc | (a_addr >> 4)
+                         b_desc = sdesc | (b_addr >> 4)
++                        if cutlass.const_expr(self.dtype == "mxfp8"):
++                            sfa_desc = sdesc_sf | (
++                                sSFA[None, None, tma_stage].iterator.toint() >> 4
++                            )
++                            sfb_desc = sdesc_sf | (
++                                sSFB[None, None, tma_stage].iterator.toint() >> 4
++                            )
+ 
+                         cute.arch.mbarrier_wait(
+                             tma_full_mbar + tma_stage, tma_full_parity
+                         )
+                         _tcgen05.fence_after_thread_sync()
+ 
+-                        for mma_k in cutlass.range_constexpr(BK // 16):
+-                            enable_d = iter_k > 0 or mma_k > 0
+-                            _tcgen05.mma_f16(
+-                                d_tmem, a_desc, b_desc, idesc, enable_d, cta_group
++                        # load SF from smem->tmem
++                        if cutlass.const_expr(self.dtype == "mxfp8"):
++                            _tcgen05.cp(
++                                sfa_tmem, sfa_desc, "32x128b", "warpx4", cta_group
+                             )
++                            for j in cutlass.range_constexpr(BN // 128):
++                                _tcgen05.cp(
++                                    sfb_tmem + j * 4,
++                                    sfb_desc,
++                                    "32x128b",
++                                    "warpx4",
++                                    cta_group,
++                                )
++                                sfb_desc += (128 * 4) >> 4
++
++                        # 4 = 128B / 32B
++                        for mma_k in cutlass.range_constexpr(4):
++                            enable_d = iter_k > 0 or mma_k > 0
++                            if cutlass.const_expr(self.dtype == "mxfp8"):
++                                # select SF IDs
++                                idesc_k = idesc + ((mma_k << 4) | (mma_k << 29))
++                                _tcgen05.mma_mxfp8(
++                                    d_tmem,
++                                    a_desc,
++                                    b_desc,
++                                    idesc_k,
++                                    sfa_tmem,
++                                    sfb_tmem,
++                                    enable_d,
++                                    cta_group,
++                                )
++                            else:
++                                _tcgen05.mma_f16(
++                                    d_tmem, a_desc, b_desc, idesc, enable_d, cta_group
++                                )
+                             a_desc += 32 >> 4
+                             b_desc += 32 >> 4
+                         _tcgen05.commit(
+@@ -638,9 +781,9 @@ class Sm100GemmRsArBF16:
+     def compile(
+         rank: int,
+         num_ranks: int,
+-        BN: int,
+         cta_group: int,
+         all_reduce: bool = False,
++        dtype: str = "bf16",
+     ):
+         M = cute.sym_int()
+         padded_M = cute.sym_int()
+@@ -649,12 +792,37 @@ class Sm100GemmRsArBF16:
+         local_M = cute.sym_int()
+         num_flags = cute.sym_int()
+ 
++        ab_dtype = Float8E4M3FN if dtype == "mxfp8" else BFloat16
++        # Row stride must keep rows 16B-aligned: 8 BF16 or 16 FP8 elements.
++        row_div = 16 if dtype == "mxfp8" else 8
+         A = make_fake_tensor(
+-            BFloat16, (M, K), (cute.sym_int64(divisibility=8), 1), assumed_align=16
++            ab_dtype,
++            (M, K),
++            (cute.sym_int64(divisibility=row_div), 1),
++            assumed_align=16,
+         )
+         B = make_fake_tensor(
+-            BFloat16, (N, K), (cute.sym_int64(divisibility=8), 1), assumed_align=16
++            ab_dtype,
++            (N, K),
++            (cute.sym_int64(divisibility=row_div), 1),
++            assumed_align=16,
+         )
++        if dtype == "mxfp8":
++            SFA = make_fake_tensor(
++                Float8E8M0FNU,
++                (cute.sym_int(divisibility=512),),
++                (1,),
++                assumed_align=16,
++            )
++            SFB = make_fake_tensor(
++                Float8E8M0FNU,
++                (cute.sym_int(divisibility=512),),
++                (1,),
++                assumed_align=16,
++            )
++        else:
++            SFA = None
++            SFB = None
+         partial = make_fake_tensor(
+             BFloat16,
+             (padded_M, N),
+@@ -677,13 +845,15 @@ class Sm100GemmRsArBF16:
+         peer_flag_ptr = nullptr(Int64, cute.AddressSpace.gmem, assumed_align=8)
+ 
+         stream = make_fake_stream(use_tvm_ffi_env_stream=True)
+-        kernel = Sm100GemmRsArBF16(
+-            rank, num_ranks, BN, cta_group, all_reduce=all_reduce
++        kernel = Sm100GemmRsAr(
++            rank, num_ranks, cta_group, all_reduce=all_reduce, dtype=dtype
+         )
+         return cute.compile(
+             kernel,
+             A,
+             B,
++            SFA,
++            SFB,
+             partial,
+             partial_mc_ptr,
+             output,
+@@ -697,7 +867,7 @@ class Sm100GemmRsArBF16:
+ 
+ 
+ class GemmRsAr:
+-    """Own the symmetric workspace for Kimi-K3 GEMM-RS/AR launches.
++    """Own the symmetric workspace for GEMM-RS/AR launches.
+ 
+     All TP ranks must belong to one NVLink domain for multimem instructions.
+ 
+@@ -727,6 +897,7 @@ class GemmRsAr:
+         self.N = N
+         self.device = device
+         self.all_reduce = all_reduce
++        self.dtypes: set[str] = set()
+ 
+         self.partial = symm_mem.empty((max_M, N), dtype=torch.bfloat16, device=device)
+         self.partial_handle = symm_mem.rendezvous(self.partial, group)
+@@ -766,21 +937,40 @@ class GemmRsAr:
+         tp_group.barrier()
+ 
+     def can_run(self, linear: LinearBase) -> bool:
+-        # Validate projection-invariant requirements once during model init.
+-        # only supports BF16 for now
+-        if not isinstance(linear.quant_method, UnquantizedLinearMethod):
+-            return False
++        from vllm.model_executor.kernels.linear.mxfp8.flashinfer import (
++            FlashInferCutedslMxfp8LinearKernel,
++            FlashInferCutlassMxfp8LinearKernel,
++        )
++
++        # Called before weight loading; online quantization starts on meta.
++        if isinstance(linear.quant_method, UnquantizedLinearMethod):
++            dtype, k_alignment = "bf16", 64
++            if linear.weight.dtype != torch.bfloat16:
++                return False
++        else:
++            method = getattr(linear, "scheme", linear.quant_method)
++            kernel = getattr(method, "kernel", None)
++            if not isinstance(
++                kernel,
++                (
++                    FlashInferCutedslMxfp8LinearKernel,
++                    FlashInferCutlassMxfp8LinearKernel,
++                ),
++            ):
++                return False
++            dtype, k_alignment = "mxfp8", 128
++
+         w = linear.weight
+-        if w.ndim != 2:
++        if (
++            w.ndim != 2
++            or w.shape[0] != self.N
++            or w.shape[1] % k_alignment != 0
++            or (w.device != self.device and not w.is_meta)
++            or not w.is_contiguous()
++        ):
+             return False
+-        K = w.shape[1]
+-        return (
+-            w.shape == (self.N, K)
+-            and K % 64 == 0
+-            and w.dtype == torch.bfloat16
+-            and w.device == self.device
+-            and w.is_contiguous()
+-        )
++        self.dtypes.add(dtype)
++        return True
+ 
+     def warn_incompatible_projection(self) -> None:
+         logger.warning_once(
+@@ -794,18 +984,51 @@ class GemmRsAr:
+         # supported but faster on the existing LL path.
+         return x.shape[0] >= 128
+ 
+-    def __call__(self, x: torch.Tensor, w: torch.Tensor) -> torch.Tensor:
++    def apply(self, x: torch.Tensor, linear: LinearBase) -> torch.Tensor:
++        from vllm.model_executor.kernels.linear.mxfp8.flashinfer import (
++            FlashInferCutedslMxfp8LinearKernel,
++        )
++
++        method = getattr(linear, "scheme", linear.quant_method)
++        w = linear.weight
++        if isinstance(
++            getattr(method, "kernel", None), FlashInferCutedslMxfp8LinearKernel
++        ):
++            # This backend stores a column-major [K, N] view after loading.
++            w = w.t()
++        w_sf = getattr(linear, "weight_scale", None)
++
+         assert x.ndim == 2
+         M, K = x.shape
+         assert 0 < M <= self.max_M
+-        assert w.shape == (self.N, K) and K % 64 == 0
+-        assert w.dtype == torch.bfloat16
+-        assert w.device == self.device
+-        assert w.is_contiguous()
+         assert x.dtype == torch.bfloat16
+         assert x.device == self.device
+         assert x.is_contiguous()
+-        N = w.shape[0]
++        assert w.device == self.device
++        N = self.N
++        dtype = "mxfp8" if w.dtype == torch.float8_e4m3fn else "bf16"
++        x_sf = None
++        if dtype == "mxfp8":
++            from vllm.model_executor.layers.quantization.utils.mxfp8_utils import (
++                mxfp8_e4m3_quantize,
++            )
++
++            assert w_sf is not None
++            assert w_sf.dtype == torch.uint8 and w_sf.device == self.device
++            assert w_sf.ndim == 1 and w_sf.is_contiguous()
++            assert w_sf.numel() == N * (K // 32)
++            assert w.shape == (N, K) and K % 128 == 0
++            assert w.is_contiguous()
++            x, x_sf = mxfp8_e4m3_quantize(x, is_sf_swizzled_layout=True)
++            # The kernel declares the scales as E8M0; the stored/quantized
++            # tensors carry the same bits as uint8.
++            x_sf = x_sf.view(torch.float8_e8m0fnu)
++            w_sf = w_sf.view(torch.float8_e8m0fnu)
++        else:
++            assert w_sf is None
++            assert w.shape == (N, K) and K % 64 == 0
++            assert w.dtype == torch.bfloat16
++            assert w.is_contiguous()
+         padded_M = (M + self.world_size - 1) // self.world_size
+         padded_M *= self.world_size
+         local_M = padded_M // self.world_size
+@@ -814,10 +1037,8 @@ class GemmRsAr:
+         # Avoid padding small odd grids; 2-CTA wins consistently for M >= 1024.
+         cta_group = 2 if M >= 1024 or grid_m % 2 == 0 else 1
+         grid_m = (grid_m + cta_group - 1) // cta_group * cta_group
+-        BN = 256 if M * K >= 24 * 1024 * 1024 else 128
+-        assert N % BN == 0
+ 
+-        num_tiles = grid_m * (N // BN)
++        num_tiles = grid_m * (N // 128)
+         num_ctas = min(num_tiles, self.num_sms)
+         num_ctas = num_ctas // cta_group * cta_group
+         assert self.flags.numel() >= num_tiles + num_ctas
+@@ -825,16 +1046,26 @@ class GemmRsAr:
+         output = None
+         if not self.all_reduce:
+             output = torch.empty((local_M, N), dtype=torch.bfloat16, device=self.device)
+-        compiled = Sm100GemmRsArBF16.compile(
++            # The kernel never touches rows at or beyond M. Callers that hand
++            # in an unpadded M (DeepSeek-V4.1 slices the SP all-gather back to
++            # the real token count) expect the same zero padding rows that
++            # ``sp_reduce_scatter`` produces, so clear them here. This is a
++            # no-op whenever M is already a multiple of the TP size.
++            valid_rows = min(max(M - self.rank * local_M, 0), local_M)
++            if valid_rows < local_M:
++                output[valid_rows:].zero_()
++        compiled = Sm100GemmRsAr.compile(
+             self.rank,
+             self.world_size,
+-            BN,
+             cta_group,
+             self.all_reduce,
++            dtype=dtype,
+         )
+         compiled(
+             x,
+             w,
++            x_sf,
++            w_sf,
+             self.partial[:padded_M],
+             self.partial_mc_ptr,
+             output,
+@@ -871,22 +1102,74 @@ def init_gemm_rs_ar(max_M: int, N: int, *, all_reduce: bool = False) -> None:
+     _gemm_rs_ar = GemmRsAr(max_M=max_M, N=N, all_reduce=all_reduce)
+ 
+ 
++def maybe_init_gemm_rs_ar(
++    vllm_config: "VllmConfig", *, N: int, all_reduce: bool
++) -> bool:
++    """Collectively initialize the mode-bound GEMM-RS/AR state if supported.
++
++    Callers gate on their own feature flag first; this checks the worker
++    topology (SM100-family CUDA, BF16 model dtype, no ubatching, a TP size in
++    2-16 that divides 128) and the NVLink multicast rendezvous. Returns whether
++    projections may bind to the kernel through ``get_gemm_rs_ar().can_run``.
++    """
++    mode = "GEMM-AR" if all_reduce else "GEMM-RS"
++    parallel_config = vllm_config.parallel_config
++    tp_size = parallel_config.tensor_parallel_size
++    if parallel_config.use_ubatching:
++        reason = "ubatching is enabled"
++    elif vllm_config.model_config.dtype != torch.bfloat16:
++        reason = "the model dtype is not BF16"
++    elif not current_platform.is_cuda():
++        reason = "the device is not CUDA"
++    elif not current_platform.is_device_capability_family(100):
++        reason = "the device is not SM100-family"
++    elif not 1 < tp_size <= 16:
++        reason = "TP size is not in the supported range 2-16"
++    elif 128 % tp_size != 0:
++        reason = "TP size does not divide 128"
++    elif N % 128 != 0:
++        reason = f"the output width {N} is not a multiple of 128"
++    else:
++        reason = None
++
++    if reason is not None:
++        logger.warning_once("%s is disabled because %s.", mode, reason)
++        return False
++
++    try:
++        init_gemm_rs_ar(
++            max_M=vllm_config.scheduler_config.max_num_batched_tokens,
++            N=N,
++            all_reduce=all_reduce,
++        )
++    except RuntimeError as e:
++        logger.warning_once(
++            "%s is disabled because initialization failed: %s. This may mean "
++            "the TP ranks do not share one NVLink domain.",
++            mode,
++            e,
++        )
++        return False
++    logger.info_once("%s is enabled.", mode)
++    return True
++
++
+ def warmup_gemm_rs_ar() -> int:
+     """Compile every reachable dispatch for the initialized GEMM-RS/AR mode."""
+     # Initialization can be disabled or fail when multicast is unavailable.
+     if _gemm_rs_ar is None:
+         return 0
+-    # Keep these profiles in sync with the dispatch in GemmRsAr.__call__.
+-    profiles = ((128, 1), (128, 2), (256, 2))
+-    for BN, cta_group in profiles:
+-        Sm100GemmRsArBF16.compile(
+-            _gemm_rs_ar.rank,
+-            _gemm_rs_ar.world_size,
+-            BN,
+-            cta_group,
+-            _gemm_rs_ar.all_reduce,
+-        )
+-    return len(profiles)
++
++    for dtype in sorted(_gemm_rs_ar.dtypes):
++        for cta_group in (1, 2):
++            Sm100GemmRsAr.compile(
++                _gemm_rs_ar.rank,
++                _gemm_rs_ar.world_size,
++                cta_group,
++                _gemm_rs_ar.all_reduce,
++                dtype=dtype,
++            )
++    return 2 * len(_gemm_rs_ar.dtypes)
+ 
+ 
+ def get_gemm_rs_ar() -> GemmRsAr:
+diff --git a/vllm/model_executor/warmup/kernel_warmup.py b/vllm/model_executor/warmup/kernel_warmup.py
+index 81eca7ac50e5194e7ceab56a8e3fea1942788235..33fe7002aa2f49b60238ca3f1fae81d6ccdb2838 100644
+--- a/vllm/model_executor/warmup/kernel_warmup.py
++++ b/vllm/model_executor/warmup/kernel_warmup.py
+@@ -136,16 +136,17 @@ def _warmup_bf16x3_router_gemm(
+     logger.info_once("Warmed up BF16x3 router GEMM configs: %s.", configs)
+ 
+ 
+-def _warmup_kimi_k3_gemm_rs_ar() -> None:
+-    # Kimi-K3 model construction imports this module only when GEMM-RS/AR is
+-    # enabled and initializes its singleton before kernel_warmup runs. Avoid
+-    # importing it here so other models do not compile the RS/AR variants.
+-    module = sys.modules.get("vllm.models.kimi_k3.nvidia.ops.cute_dsl.gemm_rs_ar")
++def _warmup_gemm_rs_ar() -> None:
++    # Model construction (Kimi-K3, DeepSeek-V4.1) imports this module only
++    # when GEMM-RS/AR is enabled and initializes its singleton before
++    # kernel_warmup runs. Avoid importing it here so other models do not
++    # compile the RS/AR variants.
++    module = sys.modules.get("vllm.model_executor.kernels.linear.cute_dsl.gemm_rs_ar")
+     if module is None:
+         return
+     compiled = module.warmup_gemm_rs_ar()
+     if compiled:
+-        logger.info_once("Warmed up %d Kimi-K3 GEMM-RS/AR variants.", compiled)
++        logger.info_once("Warmed up %d GEMM-RS/AR variants.", compiled)
+ 
+ 
+ def _autotune_kimi_k3_kda_qkvg(model: torch.nn.Module) -> None:
+@@ -208,7 +209,7 @@ def kernel_warmup(worker: "Worker", *, process_local_only: bool = False):
+     if current_platform.has_device_capability(90):
+         _warmup_ll_bf16_router_gemm(worker.get_model())
+ 
+-    _warmup_kimi_k3_gemm_rs_ar()
++    _warmup_gemm_rs_ar()
+ 
+     if worker.vllm_config.kernel_config.enable_cutedsl_warmup:
+         # TODO(roberto): Remove after registered CuTeDSL warmups are migrated
+diff --git a/vllm/models/deepseek_v4/nvidia/ops/o_proj.py b/vllm/models/deepseek_v4/nvidia/ops/o_proj.py
+index 72ce43b46cbf048a6c798005ffbe136acb56581b..ec36bf763ebb12812f1bc8e6fc7c30da38b2ce37 100644
+--- a/vllm/models/deepseek_v4/nvidia/ops/o_proj.py
++++ b/vllm/models/deepseek_v4/nvidia/ops/o_proj.py
+@@ -1,5 +1,7 @@
+ # SPDX-License-Identifier: Apache-2.0
+ # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
++from collections.abc import Callable
++
+ import torch
+ import torch.nn as nn
+ 
+@@ -31,7 +33,7 @@ def deep_gemm_fp8_o_proj(
+     positions: torch.Tensor,
+     cos_sin_cache: torch.Tensor,
+     wo_a: nn.Module,
+-    wo_b: nn.Module,
++    wo_b: Callable[[torch.Tensor], torch.Tensor],
+     *,
+     n_groups: int,
+     heads_per_group: int,
+@@ -44,7 +46,9 @@ def deep_gemm_fp8_o_proj(
+     """O projection: inverse RoPE + grouped wo_a + wo_b.
+ 
+     Shared by the FlashMLA and FlashInfer CUDA backends. The attention
+-    layer selects the recipe at initialization.
++    layer selects the recipe at initialization. ``wo_b`` is any callable over
++    the flattened ``z``: the projection module itself, or a wrapper that also
++    reduce-scatters its output (DeepSeek-V4.1 GEMM-RS).
+     """
+     use_fp8 = wo_a.weight.dtype == torch.float8_e4m3fn
+     o_proj_input, o_scale = fused_inv_rope_fp8_quant(
+diff --git a/vllm/models/deepseek_v41/attention.py b/vllm/models/deepseek_v41/attention.py
+index 1e25704dd8b767dcab231846f64429769753c6c3..d0e69fb358716ebc325bd7c5ec7599ce8da5a8be 100644
+--- a/vllm/models/deepseek_v41/attention.py
++++ b/vllm/models/deepseek_v41/attention.py
+@@ -26,6 +26,7 @@ from vllm.model_executor.layers.linear import (
+ from vllm.model_executor.layers.sparse_attn_indexer import SparseAttnIndexer
+ from vllm.model_executor.layers.sparse_mqa_indexer import SparseMQAIndexer
+ from vllm.models.common.ops import fused_q_kv_rmsnorm
++from vllm.models.common.ops.sequence_parallel import sp_reduce_scatter
+ from vllm.models.deepseek_v41.common.ops import (
+     MXFP4_BLOCK_SIZE,
+     fused_indexer_q_rope_quant,
+@@ -33,6 +34,7 @@ from vllm.models.deepseek_v41.common.ops import (
+ )
+ 
+ if TYPE_CHECKING:
++    from vllm.model_executor.kernels.linear.cute_dsl.gemm_rs_ar import GemmRsAr
+     from vllm.v1.attention.backends.mla.sparse_swa import (
+         DeepseekSparseSWAMetadata,
+     )
+@@ -389,6 +391,9 @@ class DeepseekV4Attention(nn.Module, AttentionLayerBase, ABC):
+             return_bias=False,
+             prefix=f"{prefix}.wo_b",
+         )
++        # Set by ``bind_gemm_rs`` when the decoder layer runs sequence
++        # parallel and the fused GEMM + reduce-scatter kernel accepts wo_b.
++        self.gemm_rs: GemmRsAr | None = None
+ 
+         # Initialize rotary embedding before the indexer/compressor consume it.
+         self.rotary_emb = build_deepseek_v4_rope(
+@@ -672,6 +677,41 @@ class DeepseekV4Attention(nn.Module, AttentionLayerBase, ABC):
+         )
+         return self._o_proj(attn_out, positions)
+ 
++    def bind_gemm_rs(self) -> None:
++        """Fuse ``wo_b`` with the sequence-parallel TP reduce-scatter.
++
++        The decoder layer calls this after the model initialized the
++        process-wide GEMM-RS workspace and before weights load: the
++        eligibility check inspects the projection's linear kernel and weight
++        shape, which online quantization may later re-layout.
++        """
++        from vllm.model_executor.kernels.linear.cute_dsl.gemm_rs_ar import (
++            get_gemm_rs_ar,
++        )
++
++        # The layer owns the reduction under sequence parallel.
++        assert not self.wo_b.reduce_results
++        gemm_rs = get_gemm_rs_ar()
++        if gemm_rs.can_run(self.wo_b):
++            self.gemm_rs = gemm_rs
++        else:
++            gemm_rs.warn_incompatible_projection()
++
++    def _wo_b_proj(self, z: torch.Tensor) -> torch.Tensor:
++        """Apply ``wo_b``; with GEMM-RS bound, also reduce-scatter the result.
++
++        Every ``_o_proj`` implementation projects through this so the decoder
++        layer sees one contract: when ``gemm_rs`` is bound the output is
++        already the local sequence-parallel shard, otherwise it is the
++        unreduced TP partial.
++        """
++        if self.gemm_rs is None:
++            return self.wo_b(z)
++        if self.gemm_rs.should_run(z):
++            return self.gemm_rs.apply(z, self.wo_b)
++        # Small batches stay on the unfused path, which is faster there.
++        return sp_reduce_scatter(self.wo_b(z))
++
+     def _alloc_attn_out(
+         self, num_tokens: int, hidden_states: torch.Tensor
+     ) -> "torch.Tensor | QuantizedActivation":
+diff --git a/vllm/models/deepseek_v41/nvidia/dspark.py b/vllm/models/deepseek_v41/nvidia/dspark.py
+index c08de12a12f52c9d78e9eeff0122b634a787430c..a477d1b5ecd84aacc8c50f11abfdf51cef521ee6 100644
+--- a/vllm/models/deepseek_v41/nvidia/dspark.py
++++ b/vllm/models/deepseek_v41/nvidia/dspark.py
+@@ -58,6 +58,7 @@ from .model import (
+     _linear_scale_param_name,
+     _use_sequence_parallel,
+     make_deepseek_v4_expert_params_mapping,
++    maybe_init_gemm_rs,
+     prepare_mega_gate_routing_metadata,
+ )
+ 
+@@ -113,12 +114,18 @@ class DSparkDeepseekV4Model(nn.Module):
+         )
+ 
+         current_vllm_config = get_current_vllm_config()
++        # The target model already holds the GEMM-RS workspace (same hidden
++        # size, same TP group); this only re-checks and binds the draft layers.
++        run_gemm_rs = maybe_init_gemm_rs(
++            current_vllm_config, self.use_sequence_parallel
++        )
+         self.layers = nn.ModuleList(
+             [
+                 DeepseekV4DecoderLayer(
+                     current_vllm_config,
+                     prefix=maybe_prefix(prefix, f"layers.{self.num_hidden_layers + i}"),
+                     topk_indices_buffer=self.topk_indices_buffer,
++                    run_gemm_rs=run_gemm_rs,
+                 )
+                 for i in range(self.num_dspark_layers)
+             ]
+diff --git a/vllm/models/deepseek_v41/nvidia/flash_mla_mega_attn.py b/vllm/models/deepseek_v41/nvidia/flash_mla_mega_attn.py
+index 6f4dc7e96c4af6fecfb4dbd8b346216581331e5c..8efc987739b194f3e1e6e9d5da7c121543c7b59e 100644
+--- a/vllm/models/deepseek_v41/nvidia/flash_mla_mega_attn.py
++++ b/vllm/models/deepseek_v41/nvidia/flash_mla_mega_attn.py
+@@ -225,7 +225,7 @@ class DeepseekV4MegaAttnAttention(DeepseekV4FlashMLAAttention):
+             z,
+             recipe=self._einsum_recipe,
+         )
+-        return self.wo_b(z.flatten(1))
++        return self._wo_b_proj(z.flatten(1))
+ 
+     # ---- weights -----------------------------------------------------------
+ 
+diff --git a/vllm/models/deepseek_v41/nvidia/flashinfer_sparse.py b/vllm/models/deepseek_v41/nvidia/flashinfer_sparse.py
+index 4dcc972e2c3f754db21fed6a3dd375bf20d0f9a0..485cdd9ebd41afd28a7a9d742417badc278ea0d0 100644
+--- a/vllm/models/deepseek_v41/nvidia/flashinfer_sparse.py
++++ b/vllm/models/deepseek_v41/nvidia/flashinfer_sparse.py
+@@ -248,7 +248,7 @@ class DeepseekV4FlashInferMLAAttention(DeepseekV4Attention):
+             positions,
+             self.rotary_emb.cos_sin_cache,
+             self.wo_a,
+-            self.wo_b,
++            self._wo_b_proj,
+             n_groups=self.n_local_groups,
+             heads_per_group=self.n_local_heads // self.n_local_groups,
+             nope_dim=self.nope_head_dim,
+@@ -627,7 +627,7 @@ class DeepseekV4FlashInferSM120Attention(DeepseekV4Attention):
+             positions,
+             self.rotary_emb.cos_sin_cache,
+             self.wo_a,
+-            self.wo_b,
++            self._wo_b_proj,
+             n_groups=self.n_local_groups,
+             heads_per_group=self.n_local_heads // self.n_local_groups,
+             nope_dim=self.nope_head_dim,
+diff --git a/vllm/models/deepseek_v41/nvidia/flashmla.py b/vllm/models/deepseek_v41/nvidia/flashmla.py
+index 870098975b71fdfefb4ae057f4105ab16097d262..96dde36c61d1039919b127691ec9f914e632cbc4 100644
+--- a/vllm/models/deepseek_v41/nvidia/flashmla.py
++++ b/vllm/models/deepseek_v41/nvidia/flashmla.py
+@@ -65,7 +65,7 @@ class DeepseekV4FlashMLAAttention(DeepseekV4Attention):
+             positions,
+             self.rotary_emb.cos_sin_cache,
+             self.wo_a,
+-            self.wo_b,
++            self._wo_b_proj,
+             n_groups=self.n_local_groups,
+             heads_per_group=self.n_local_heads // self.n_local_groups,
+             nope_dim=self.nope_head_dim,
+diff --git a/vllm/models/deepseek_v41/nvidia/model.py b/vllm/models/deepseek_v41/nvidia/model.py
+index d525aff3c707cc23972b8f6c4abe497f13852822..22674bf7054cfb67617a81d7a3c9d2b4f079694e 100644
+--- a/vllm/models/deepseek_v41/nvidia/model.py
++++ b/vllm/models/deepseek_v41/nvidia/model.py
+@@ -193,6 +193,30 @@ def _use_sequence_parallel(vllm_config: VllmConfig) -> bool:
+     )
+ 
+ 
++def maybe_init_gemm_rs(vllm_config: VllmConfig, use_sequence_parallel: bool) -> bool:
++    """Set up the fused ``wo_b`` GEMM + reduce-scatter when opted in.
++
++    Sequence parallel is the only topology where ``wo_b`` ends in a
++    reduce-scatter, so the kernel is bound to RS mode. The workspace is a
++    process-wide singleton shared with any other model code in this worker
++    (the DSpark drafter reuses it), and its NVLink multicast rendezvous is
++    collective, so every TP rank must take the same decision here.
++    """
++    if not (use_sequence_parallel and envs.VLLM_ENABLE_GEMM_RS):
++        return False
++
++    # The kernel module pulls in cute_dsl, so import it only once opted in.
++    from vllm.model_executor.kernels.linear.cute_dsl.gemm_rs_ar import (
++        maybe_init_gemm_rs_ar,
++    )
++
++    hidden_size = vllm_config.model_config.hf_config.hidden_size
++    if not maybe_init_gemm_rs_ar(vllm_config, N=hidden_size, all_reduce=False):
++        return False
++    logger.info_once("To disable DeepSeek-V4.1 GEMM-RS, set VLLM_ENABLE_GEMM_RS=0.")
++    return True
++
++
+ class DeepseekV4DecoderLayer(nn.Module):
+     def __init__(
+         self,
+@@ -202,6 +226,7 @@ class DeepseekV4DecoderLayer(nn.Module):
+         aux_stream_list: list[torch.cuda.Stream] | None = None,
+         candidate_block_buffer: torch.Tensor | None = None,
+         engram_layout: EngramLayout | None = None,
++        run_gemm_rs: bool = False,
+         mhc_stream: torch.cuda.Stream | None = None,
+         fuse_mhc_all_reduce: bool = False,
+     ):
+@@ -236,6 +261,10 @@ class DeepseekV4DecoderLayer(nn.Module):
+         )
+         if self.use_sequence_parallel or fuse_mhc_all_reduce:
+             self.attn.wo_b.reduce_results = False
++            if run_gemm_rs:
++                # Binds only when wo_b's kernel and shape qualify; otherwise
++                # forward keeps the separate reduce-scatter below.
++                self.attn.bind_gemm_rs()
+         self.ffn = DeepseekV4MoE(
+             vllm_config,
+             prefix=f"{prefix}.ffn",
+@@ -492,7 +521,9 @@ class DeepseekV4DecoderLayer(nn.Module):
+             x = sp_all_gather(x)[: positions.shape[0]]
+ 
+         x = self.attn(positions, x, None)
+-        if self.use_sequence_parallel:
++        # With GEMM-RS bound, the attention output is already this rank's
++        # sequence-parallel shard (see DeepseekV4Attention._wo_b_proj).
++        if self.use_sequence_parallel and self.attn.gemm_rs is None:
+             x = sp_reduce_scatter(x)
+ 
+         if mhc_stream is not None:
+@@ -597,6 +628,10 @@ class DeepseekV4Model(nn.Module, EagleModelMixin):
+         ):
+             engram_config.dp_shared_memory = can_share_engram_tables(self.engram_layout)
+ 
++        # GEMM-RS uses NCCL symmetric-memory multicast, which requires all TP
++        # ranks to belong to one NVLink domain. Collective: run before layers.
++        self.run_gemm_rs = maybe_init_gemm_rs(vllm_config, self.use_sequence_parallel)
++
+         self.start_layer, self.end_layer, self.layers = make_layers(
+             config.num_hidden_layers,
+             lambda prefix: DeepseekV4DecoderLayer(
+@@ -606,6 +641,7 @@ class DeepseekV4Model(nn.Module, EagleModelMixin):
+                 aux_stream_list=aux_stream_list,
+                 candidate_block_buffer=self.candidate_block_buffer,
+                 engram_layout=self.engram_layout,
++                run_gemm_rs=self.run_gemm_rs,
+                 mhc_stream=mhc_stream,
+                 fuse_mhc_all_reduce=self.fuse_mhc_all_reduce,
+             ),
+diff --git a/vllm/models/kimi_k3/nvidia/kda.py b/vllm/models/kimi_k3/nvidia/kda.py
+index c920cdbbdfa4b4b0d346b3461cad8f17e77a6b5f..97b402908454ecbd95d71ce2407a2da390c97261 100644
+--- a/vllm/models/kimi_k3/nvidia/kda.py
++++ b/vllm/models/kimi_k3/nvidia/kda.py
+@@ -724,7 +724,7 @@ class KimiK3DeltaAttention(GatedDeltaNetAttention):
+         )
+         self.gemm_rs_ar = None
+         if run_gemm_rs_ar:
+-            from vllm.models.kimi_k3.nvidia.ops.cute_dsl.gemm_rs_ar import (
++            from vllm.model_executor.kernels.linear.cute_dsl.gemm_rs_ar import (
+                 get_gemm_rs_ar,
+             )
+ 
+@@ -809,7 +809,7 @@ class KimiK3DeltaAttention(GatedDeltaNetAttention):
+         )
+         core_attn_out = rearrange(core_attn_out, "1 n h d -> n (h d)")
+         if self.gemm_rs_ar is not None and self.gemm_rs_ar.should_run(core_attn_out):
+-            return self.gemm_rs_ar(core_attn_out, self.o_proj.weight)
++            return self.gemm_rs_ar.apply(core_attn_out, self.o_proj)
+         return self.o_proj(core_attn_out)[0]
+ 
+     @eager_break_during_capture
+diff --git a/vllm/models/kimi_k3/nvidia/mla.py b/vllm/models/kimi_k3/nvidia/mla.py
+index c61024ace82abf6ea8ea2984b652e2b4df126f4d..c13537513f45b9f6a073e48a91aa04f96bbc4dee 100644
+--- a/vllm/models/kimi_k3/nvidia/mla.py
++++ b/vllm/models/kimi_k3/nvidia/mla.py
+@@ -301,7 +301,7 @@ class MultiHeadLatentAttention(nn.Module, AttentionLayerBase):
+         )
+         self.gemm_rs_ar = None
+         if run_gemm_rs_ar:
+-            from vllm.models.kimi_k3.nvidia.ops.cute_dsl.gemm_rs_ar import (
++            from vllm.model_executor.kernels.linear.cute_dsl.gemm_rs_ar import (
+                 get_gemm_rs_ar,
+             )
+ 
+@@ -631,7 +631,7 @@ class MultiHeadLatentAttention(nn.Module, AttentionLayerBase):
+             attn_out = _gate_sigmoid_mul(attn_out, gate)
+ 
+         if self.gemm_rs_ar is not None and self.gemm_rs_ar.should_run(attn_out):
+-            return self.gemm_rs_ar(attn_out, self.o_proj.weight)
++            return self.gemm_rs_ar.apply(attn_out, self.o_proj)
+ 
+         return self.o_proj(attn_out)[0]
+ 
+diff --git a/vllm/models/kimi_k3/nvidia/model.py b/vllm/models/kimi_k3/nvidia/model.py
+index 5dedf44b7c3d6553c05fb7c63e780811caa0ea1f..c1818a444b533c7f7132cafacb0957586f2fc572 100644
+--- a/vllm/models/kimi_k3/nvidia/model.py
++++ b/vllm/models/kimi_k3/nvidia/model.py
+@@ -160,54 +160,23 @@ def maybe_init_gemm_rs_ar(vllm_config: VllmConfig, use_sequence_parallel: bool)
+     # its singleton to exactly one mode.
+     all_reduce = not use_sequence_parallel
+     mode = "GEMM-AR" if all_reduce else "GEMM-RS"
+-    enabled = envs.VLLM_KIMI_K3_GEMM_AR if all_reduce else envs.VLLM_KIMI_K3_GEMM_RS
++    enabled = envs.VLLM_KIMI_K3_GEMM_AR if all_reduce else envs.VLLM_ENABLE_GEMM_RS
+     if not enabled:
+         return False
+ 
+-    parallel_config = vllm_config.parallel_config
+-    tp_size = parallel_config.tensor_parallel_size
+-    if parallel_config.use_ubatching:
+-        reason = "ubatching is enabled"
+-    elif vllm_config.model_config.dtype != torch.bfloat16:
+-        reason = "the model dtype is not BF16"
+-    elif not current_platform.is_cuda():
+-        reason = "the device is not CUDA"
+-    elif not current_platform.is_device_capability_family(100):
+-        reason = "the device is not SM100-family"
+-    elif not 1 < tp_size <= 16:
+-        reason = "TP size is not in the supported range 2-16"
+-    elif 128 % tp_size != 0:
+-        reason = "TP size does not divide 128"
+-    else:
+-        reason = None
+-
+-    if reason is not None:
+-        logger.warning_once("%s is disabled because %s.", mode, reason)
+-        return False
+-
+-    from vllm.models.kimi_k3.nvidia.ops.cute_dsl.gemm_rs_ar import init_gemm_rs_ar
++    # The kernel module pulls in cute_dsl, so import it only once the flag
++    # asks for it.
++    from vllm.model_executor.kernels.linear.cute_dsl.gemm_rs_ar import (
++        maybe_init_gemm_rs_ar as maybe_init_shared_gemm_rs_ar,
++    )
+ 
+     config = vllm_config.model_config.hf_text_config
+-    try:
+-        init_gemm_rs_ar(
+-            max_M=vllm_config.scheduler_config.max_num_batched_tokens,
+-            N=config.hidden_size,
+-            all_reduce=all_reduce,
+-        )
+-    except RuntimeError as e:
+-        logger.warning_once(
+-            "%s is disabled because initialization failed: %s. This may mean "
+-            "the TP ranks do not share one NVLink domain.",
+-            mode,
+-            e,
+-        )
++    if not maybe_init_shared_gemm_rs_ar(
++        vllm_config, N=config.hidden_size, all_reduce=all_reduce
++    ):
+         return False
+-    if all_reduce:
+-        logger.info_once(
+-            "GEMM-AR is enabled. To disable it, set VLLM_KIMI_K3_GEMM_AR=0."
+-        )
+-    else:
+-        logger.info_once("GEMM-RS is enabled.")
++    flag = "VLLM_KIMI_K3_GEMM_AR" if all_reduce else "VLLM_ENABLE_GEMM_RS"
++    logger.info_once("To disable %s, set %s=0.", mode, flag)
+     return True
+ 
+ 
+@@ -276,7 +245,7 @@ class KimiMLP(nn.Module):
+             not use_sequence_parallel and reduce_results
+         )
+         if use_gemm_rs_ar and run_gemm_rs_ar:
+-            from vllm.models.kimi_k3.nvidia.ops.cute_dsl.gemm_rs_ar import (
++            from vllm.model_executor.kernels.linear.cute_dsl.gemm_rs_ar import (
+                 get_gemm_rs_ar,
+             )
+ 
+@@ -309,7 +278,7 @@ class KimiMLP(nn.Module):
+         x = self.act_fn(gate_up)
+ 
+         if self.gemm_rs_ar is not None and self.gemm_rs_ar.should_run(x):
+-            return self.gemm_rs_ar(x, self.down_proj.weight)
++            return self.gemm_rs_ar.apply(x, self.down_proj)
+ 
+         x, _ = self.down_proj(x)
+         if self.shard_sequence_parallel:

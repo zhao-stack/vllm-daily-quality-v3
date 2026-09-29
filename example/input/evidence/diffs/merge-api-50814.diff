@@ -1,0 +1,186 @@
+diff --git a/tests/kernels/quantization/test_mxfp4_kernel_selection.py b/tests/kernels/quantization/test_mxfp4_kernel_selection.py
+index 46bef106e644..46ff139fc76d 100644
+--- a/tests/kernels/quantization/test_mxfp4_kernel_selection.py
++++ b/tests/kernels/quantization/test_mxfp4_kernel_selection.py
+@@ -5,11 +5,12 @@
+ Run `pytest tests/kernels/quantization/test_mxfp4_kernel_selection.py`.
+ """
+ 
+-from unittest.mock import patch
++from unittest.mock import MagicMock, patch
+ 
+ import pytest
+ import torch
+ 
++import vllm.envs as envs
+ from vllm.model_executor.kernels.linear import (
+     AiterMxfp4LinearKernel,
+     EmulationMxfp4LinearKernel,
+@@ -46,6 +47,19 @@
+ _WEIGHT_ONLY_KERNELS = [MarlinMxFp4LinearKernel]
+ 
+ 
++def _make_emulation_layer():
++    layer = torch.nn.Module()
++    layer.register_parameter(
++        "weight",
++        torch.nn.Parameter(torch.ones((2, 2), dtype=torch.uint8), False),
++    )
++    layer.register_parameter(
++        "weight_scale",
++        torch.nn.Parameter(torch.ones((2, 1), dtype=torch.uint8), False),
++    )
++    return layer
++
++
+ def test_can_implement_is_abstract():
+     """Test that can_implement()/is_supported() are properly defined."""
+     assert hasattr(MxFp4LinearKernel, "can_implement")
+@@ -155,6 +169,77 @@ def test_emulation_kernel_derives_quant_dequant_func_from_config(monkeypatch):
+         assert kernel.quant_dequant_func is quant_dequant_mxfp4
+ 
+ 
++@pytest.mark.parametrize("dtype", [torch.bfloat16, torch.float16])
++def test_emulation_kernel_dequantizes_at_load_and_keeps_activation_qdq(
++    dtype, monkeypatch
++):
++    monkeypatch.setattr(
++        "vllm.model_executor.kernels.linear.mxfp4.emulation.has_quark",
++        lambda: True,
++    )
++    kernel = EmulationMxfp4LinearKernel(
++        MxFp4LinearLayerConfig(activation_quant_key=kMxfp4Dynamic)
++    )
++    kernel.quant_dequant_func = MagicMock(side_effect=lambda x: x * 0.5)
++    layer = _make_emulation_layer()
++    dequantized = torch.tensor([[1.0, 2.0], [3.0, 4.0]], dtype=torch.bfloat16)
++    x = torch.tensor([[2.0, 4.0]], dtype=dtype)
++
++    with (
++        patch.object(envs, "VLLM_MXFP4_EMULATION_DEQUANT_AT_LOAD", True),
++        patch(
++            "vllm.model_executor.kernels.linear.mxfp4.emulation.dequant_mxfp4",
++            return_value=dequantized,
++        ) as dequant,
++    ):
++        kernel.process_weights_after_loading(layer)
++        actual = kernel.apply_weights(layer, x)
++
++    expected = torch.nn.functional.linear(x * 0.5, dequantized.to(dtype))
++    torch.testing.assert_close(actual, expected)
++    dequant.assert_called_once()
++    kernel.quant_dequant_func.assert_called_once_with(x)
++    assert layer.weight.dtype == torch.bfloat16
++    assert layer.weight.device == dequantized.device
++    assert not layer.weight.requires_grad
++    assert layer.weight_scale is not None
++    assert not layer.weight_scale.requires_grad
++
++
++def test_emulation_kernel_opt_out_dequantizes_per_invocation(monkeypatch):
++    monkeypatch.setattr(
++        "vllm.model_executor.kernels.linear.mxfp4.emulation.has_quark",
++        lambda: True,
++    )
++    kernel = EmulationMxfp4LinearKernel(
++        MxFp4LinearLayerConfig(activation_quant_key=kMxfp4Dynamic)
++    )
++    kernel.quant_dequant_func = MagicMock(side_effect=lambda x: x * 0.5)
++    layer = _make_emulation_layer()
++    dequantized = torch.tensor([[1.0, 2.0], [3.0, 4.0]], dtype=torch.bfloat16)
++    x = torch.tensor([[2.0, 4.0]], dtype=torch.bfloat16)
++
++    with (
++        patch.object(envs, "VLLM_MXFP4_EMULATION_DEQUANT_AT_LOAD", False),
++        patch(
++            "vllm.model_executor.kernels.linear.mxfp4.emulation.dequant_mxfp4",
++            return_value=dequantized,
++        ) as dequant,
++    ):
++        kernel.process_weights_after_loading(layer)
++        dequant.assert_not_called()
++        first = kernel.apply_weights(layer, x)
++        second = kernel.apply_weights(layer, x)
++
++    expected = torch.nn.functional.linear(x * 0.5, dequantized)
++    torch.testing.assert_close(first, expected)
++    torch.testing.assert_close(second, expected)
++    assert dequant.call_count == 2
++    assert kernel.quant_dequant_func.call_count == 2
++    assert layer.weight.dtype == torch.uint8
++    assert layer.weight_scale is not None
++
++
+ def test_aiter_kernel_is_supported_requires_native_mx_support():
+     """AiterMxfp4LinearKernel must not be selected on platforms without
+     native MX compute, even if AITER itself is importable."""
+diff --git a/vllm/envs.py b/vllm/envs.py
+index fa98db1cf12a..afe119356467 100755
+--- a/vllm/envs.py
++++ b/vllm/envs.py
+@@ -131,6 +131,7 @@
+     VLLM_GDN_DECODE_KERNEL: Literal["cuda", "triton"] = "cuda"
+     VLLM_DISABLE_PYNCCL: bool = False
+     VLLM_USE_OINK_OPS: bool = False
++    VLLM_MXFP4_EMULATION_DEQUANT_AT_LOAD: bool = False
+     VLLM_MXFP8_EMULATION_DEQUANT_AT_LOAD: bool = True
+     VLLM_ROCM_USE_AITER: bool = False
+     VLLM_ROCM_USE_AITER_CUSTOM_AR: bool = True
+@@ -1229,6 +1230,13 @@ def _resolve_rust_cli_path() -> str | None:
+     ),
+     # Disable aiter ops unless specifically enabled.
+     # Acts as a parent switch to enable the rest of the other operations.
++    # Set to 1 to dequantize MXFP4 weights to BF16 once at load time and run as
++    # a BF16 checkpoint (no per-step weight dequant). This improves emulation
++    # latency at the cost of additional device memory. Default off.
++    "VLLM_MXFP4_EMULATION_DEQUANT_AT_LOAD": lambda: (
++        os.getenv("VLLM_MXFP4_EMULATION_DEQUANT_AT_LOAD", "False").lower()
++        in ("true", "1")
++    ),
+     # On hardware without a native MXFP8 kernel (e.g. ROCm gfx942 / MI300), the
+     # MXFP8 emulation path dequantizes weights MXFP8->BF16 once at load time and
+     # runs as a BF16 checkpoint (no per-step dequant). Set to 0 to fall back to
+diff --git a/vllm/model_executor/kernels/linear/mxfp4/emulation.py b/vllm/model_executor/kernels/linear/mxfp4/emulation.py
+index ddd0143c2214..dce664c9a71c 100644
+--- a/vllm/model_executor/kernels/linear/mxfp4/emulation.py
++++ b/vllm/model_executor/kernels/linear/mxfp4/emulation.py
+@@ -8,6 +8,7 @@
+ import torch.nn.functional as F
+ from torch.nn.parameter import Parameter
+ 
++import vllm.envs as envs
+ from vllm.logger import init_logger
+ from vllm.model_executor.layers.quantization.utils.mxfp4_utils import (
+     dequant_mxfp4,
+@@ -97,7 +98,16 @@ def can_implement(cls, config: MxFp4LinearLayerConfig) -> tuple[bool, str | None
+         return True, None
+ 
+     def process_weights_after_loading(self, layer: torch.nn.Module) -> None:
+-        layer.weight_scale = Parameter(layer.weight_scale.data, requires_grad=False)
++        weight_scale = Parameter(layer.weight_scale.data, requires_grad=False)
++
++        # Match the MXFP8 emulation path when explicitly enabled: dequantize
++        # once at load time so inference uses a plain high-precision linear.
++        # Otherwise retain packed weights and dequantize per invocation.
++        if envs.VLLM_MXFP4_EMULATION_DEQUANT_AT_LOAD:
++            weight = dequant_mxfp4(layer.weight, weight_scale, torch.bfloat16)
++            layer.weight = Parameter(weight.contiguous(), requires_grad=False)
++
++        layer.weight_scale = weight_scale
+ 
+     def apply_weights(
+         self,
+@@ -105,6 +115,12 @@ def apply_weights(
+         x: torch.Tensor,
+         bias: torch.Tensor | None = None,
+     ) -> torch.Tensor:
+-        dq_w = dequant_mxfp4(layer.weight, layer.weight_scale, x.dtype)
+         qdq_x = self.quant_dequant_func(x)
++
++        # Packed MXFP4 weights use one byte for two values. A weight with
++        # elements wider than one byte was already dequantized at load time.
++        if layer.weight.element_size() >= 2:
++            return F.linear(qdq_x, layer.weight.to(x.dtype), bias)
++
++        dq_w = dequant_mxfp4(layer.weight, layer.weight_scale, x.dtype)
+         return F.linear(qdq_x, dq_w, bias)

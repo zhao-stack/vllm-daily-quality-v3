@@ -1,0 +1,209 @@
+[
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4035728784",
+    "pull_request_review_id": 5234292509,
+    "id": 4035728784,
+    "node_id": "PRRC_kwDOI7xefs7wjFWQ",
+    "diff_hunk": "@@ -148,6 +149,31 @@ impl DelimitedReasoningParser {\n         self.current_in_reasoning\n     }\n \n+    /// Wrap visible output from the initialized reasoning and framing state.\n+    pub(crate) fn wrap_visible_format(&self, visible: &Format) -> Format {",
+    "path": "rust/src/parser/src/reasoning/delimited.rs",
+    "commit_id": "2891151d044710fcb6bdc588f9aa0197443390c0",
+    "original_commit_id": "b38299c9fa958ac1471a77455969868457153d4b",
+    "user": {
+      "login": "BugenZhao",
+      "id": 25862682,
+      "node_id": "MDQ6VXNlcjI1ODYyNjgy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/25862682?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/BugenZhao",
+      "html_url": "https://github.com/BugenZhao",
+      "followers_url": "https://api.github.com/users/BugenZhao/followers",
+      "following_url": "https://api.github.com/users/BugenZhao/following{/other_user}",
+      "gists_url": "https://api.github.com/users/BugenZhao/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/BugenZhao/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/BugenZhao/subscriptions",
+      "organizations_url": "https://api.github.com/users/BugenZhao/orgs",
+      "repos_url": "https://api.github.com/users/BugenZhao/repos",
+      "events_url": "https://api.github.com/users/BugenZhao/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/BugenZhao/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Core changes in this PR",
+    "created_at": "2026-09-17T10:26:44Z",
+    "updated_at": "2026-09-17T10:31:01Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57340#discussion_r4035728784",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57340",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4035728784"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57340#discussion_r4035728784"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57340"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4035728784/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": 153,
+    "original_line": 153,
+    "side": "RIGHT",
+    "author_association": "MEMBER",
+    "original_position": 13,
+    "position": 13,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4035743082",
+    "pull_request_review_id": 5234292509,
+    "id": 4035743082,
+    "node_id": "PRRC_kwDOI7xefs7wjI1q",
+    "diff_hunk": "@@ -120,6 +122,38 @@ impl ToolParser for MinimaxM2ToolParser {\n         Some(xgrammar_structural_tag::Model::Minimax.builder())\n     }\n \n+    fn build_visible_format(\n+        &self,\n+        ctx: &OutputGrammarContext<'_>,\n+    ) -> output_grammar::Result<Option<Format>> {\n+        let Some(format) =\n+            output_grammar::visible_format_from_builder(self.structural_tag_builder(), ctx)?\n+        else {\n+            return Ok(None);\n+        };\n+\n+        // The MiniMax builder's reasoning=false form retains the empty\n+        // thinking close and separator used by its chat template. Strip that\n+        // fixed prefix so the initialized reasoning parser can supply the\n+        // actual reasoning phase.\n+        let Format::Sequence(sequence) = format else {\n+            return Err(OutputGrammarError::UnexpectedBuilderFormat { builder: \"minimax\" });\n+        };\n+        let [\n+            Format::ConstString(empty_think),\n+            Format::ConstString(separator),\n+            visible,\n+        ] = sequence.elements.as_slice()\n+        else {\n+            return Err(OutputGrammarError::UnexpectedBuilderFormat { builder: \"minimax\" });\n+        };\n+        if empty_think.value != \"\\n</think>\\n\\n\" || separator.value != \"\\n\\n\" {\n+            return Err(OutputGrammarError::UnexpectedBuilderFormat { builder: \"minimax\" });\n+        }",
+    "path": "rust/src/parser/src/tool/minimax_m2.rs",
+    "commit_id": "2891151d044710fcb6bdc588f9aa0197443390c0",
+    "original_commit_id": "b38299c9fa958ac1471a77455969868457153d4b",
+    "user": {
+      "login": "BugenZhao",
+      "id": 25862682,
+      "node_id": "MDQ6VXNlcjI1ODYyNjgy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/25862682?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/BugenZhao",
+      "html_url": "https://github.com/BugenZhao",
+      "followers_url": "https://api.github.com/users/BugenZhao/followers",
+      "following_url": "https://api.github.com/users/BugenZhao/following{/other_user}",
+      "gists_url": "https://api.github.com/users/BugenZhao/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/BugenZhao/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/BugenZhao/subscriptions",
+      "organizations_url": "https://api.github.com/users/BugenZhao/orgs",
+      "repos_url": "https://api.github.com/users/BugenZhao/repos",
+      "events_url": "https://api.github.com/users/BugenZhao/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/BugenZhao/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "A bit hack in order to reuse the format returned by the builder from `xgrammar-structural-tag`",
+    "created_at": "2026-09-17T10:28:06Z",
+    "updated_at": "2026-09-17T10:31:01Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57340#discussion_r4035743082",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57340",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4035743082"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57340#discussion_r4035743082"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57340"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4035743082/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": 135,
+    "original_start_line": 135,
+    "start_side": "RIGHT",
+    "line": 152,
+    "original_line": 152,
+    "side": "RIGHT",
+    "author_association": "MEMBER",
+    "original_position": 44,
+    "position": 44,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4035772196",
+    "pull_request_review_id": 5234292509,
+    "id": 4035772196,
+    "node_id": "PRRC_kwDOI7xefs7wjP8k",
+    "diff_hunk": "@@ -401,4 +466,114 @@ mod tests {\n         parser = CombinedParser::new(None, Some(Box::new(PreserveToolParser)));\n         assert!(parser.preserve_special_tokens());\n     }\n+\n+    #[test]\n+    fn split_parser_wrappers_match_builder_full_formats() {",
+    "path": "rust/src/parser/src/unified/combined.rs",
+    "commit_id": "2891151d044710fcb6bdc588f9aa0197443390c0",
+    "original_commit_id": "b38299c9fa958ac1471a77455969868457153d4b",
+    "user": {
+      "login": "BugenZhao",
+      "id": 25862682,
+      "node_id": "MDQ6VXNlcjI1ODYyNjgy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/25862682?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/BugenZhao",
+      "html_url": "https://github.com/BugenZhao",
+      "followers_url": "https://api.github.com/users/BugenZhao/followers",
+      "following_url": "https://api.github.com/users/BugenZhao/following{/other_user}",
+      "gists_url": "https://api.github.com/users/BugenZhao/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/BugenZhao/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/BugenZhao/subscriptions",
+      "organizations_url": "https://api.github.com/users/BugenZhao/orgs",
+      "repos_url": "https://api.github.com/users/BugenZhao/repos",
+      "events_url": "https://api.github.com/users/BugenZhao/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/BugenZhao/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Showing that\n\n```\nreasoning-wrapped visible tool tag = builder output with reasoning = true\n```\n\nSo it turns out we're not actually doing anything very interesting in this PR, but our interfaces are composable, enabling future integration of \"reasoning-aware, user-specified schema constraints.\"",
+    "created_at": "2026-09-17T10:30:57Z",
+    "updated_at": "2026-09-17T10:31:01Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57340#discussion_r4035772196",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57340",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4035772196"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57340#discussion_r4035772196"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57340"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4035772196/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": 502,
+    "original_line": 471,
+    "side": "RIGHT",
+    "author_association": "MEMBER",
+    "original_position": 93,
+    "position": 124,
+    "subject_type": "line"
+  }
+]

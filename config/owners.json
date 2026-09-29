@@ -1,0 +1,1085 @@
+{
+  "source": "用户在当前任务提供的完整责任人表（两次重复段去重）",
+  "policy": "按主要有效特性/模型确定第一责任人；空白不猜；保留原字形",
+  "entries": [
+    {
+      "domain": "attn arch",
+      "feature": "GQA",
+      "first_owner": "赵可瑞",
+      "original_people": [
+        "赵可瑞",
+        "郭小辉",
+        "陈歆怡"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "attn arch",
+      "feature": "MLA",
+      "first_owner": "袁林风",
+      "original_people": [
+        "袁林风",
+        "毛琦"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "attn arch",
+      "feature": "DSA",
+      "first_owner": "朱意霖",
+      "original_people": [
+        "朱意霖",
+        "温捷",
+        "赵枫霖"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "attn arch",
+      "feature": "SFA",
+      "first_owner": "陈梦龙",
+      "original_people": [
+        "陈梦龙",
+        "毛琦",
+        "李佳航"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "attn arch",
+      "feature": "Mamba",
+      "first_owner": "龙钢",
+      "original_people": [
+        "龙钢",
+        "李少鹏"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "attn feature/长序列",
+      "feature": "prefixcache",
+      "first_owner": "胡聪",
+      "original_people": [
+        "胡聪",
+        "李家琦"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "attn feature/长序列",
+      "feature": "PCP",
+      "first_owner": "魏桂华",
+      "original_people": [
+        "魏桂华",
+        "邱纯硕",
+        "田馥玮",
+        "俞锦祺"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "attn feature/长序列",
+      "feature": "DCP",
+      "first_owner": "魏桂华",
+      "original_people": [
+        "魏桂华",
+        "邱纯硕",
+        "田馥玮",
+        "俞锦祺"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "attn feature/长序列",
+      "feature": "CPP",
+      "first_owner": "魏桂华",
+      "original_people": [
+        "魏桂华",
+        "邱纯硕",
+        "田馥玮"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "KVConnector",
+      "feature": "PD分离",
+      "first_owner": "周学荣",
+      "original_people": [
+        "周学荣",
+        "王啸腾"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "KVConnector",
+      "feature": "池化",
+      "first_owner": "赵鹏博",
+      "original_people": [
+        "赵鹏博",
+        "房建伟"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "KVConnector",
+      "feature": "kv offloading",
+      "first_owner": "周学荣",
+      "original_people": [
+        "周学荣",
+        "王小超"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "KVConnector",
+      "feature": "multi-connector",
+      "first_owner": "赵鹏博",
+      "original_people": [
+        "赵鹏博",
+        "房建伟"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "KVCache",
+      "feature": "kvcache管理",
+      "first_owner": "曾彦嘉",
+      "original_people": [
+        "曾彦嘉",
+        "周学荣"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "graph",
+      "feature": "aclgraph",
+      "first_owner": "刘逸舟",
+      "original_people": [
+        "刘逸舟",
+        "柯展",
+        "付豪",
+        "付南阳"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "graph",
+      "feature": "npugraph_ex",
+      "first_owner": "刘逸舟",
+      "original_people": [
+        "刘逸舟",
+        "柯展",
+        "付豪"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "graph",
+      "feature": "compile/pass",
+      "first_owner": "王笑爽",
+      "original_people": [
+        "王笑爽",
+        "刘逸舟",
+        "付豪"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "spec decode",
+      "feature": "mtp/eagle3",
+      "first_owner": "李泽桐",
+      "original_people": [
+        "李泽桐",
+        "王盈聪",
+        "刘逸舟",
+        "付南阳"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "spec decode",
+      "feature": "ngram",
+      "first_owner": "李泽桐",
+      "original_people": [
+        "李泽桐",
+        "王盈聪",
+        "付南阳"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "spec decode",
+      "feature": "suffix-decoding",
+      "first_owner": "李泽桐",
+      "original_people": [
+        "李泽桐",
+        "王盈聪",
+        "付南阳"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "spec decode",
+      "feature": "d-flash",
+      "first_owner": "李泽桐",
+      "original_people": [
+        "李泽桐",
+        "王盈聪",
+        "刘逸舟",
+        "付南阳"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "spec decode",
+      "feature": "p-eagle",
+      "first_owner": "李泽桐",
+      "original_people": [
+        "李泽桐",
+        "李林斯曼",
+        "王盈聪",
+        "付南阳"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "schedule",
+      "feature": "async scheduling",
+      "first_owner": "田馥玮",
+      "original_people": [
+        "田馥玮",
+        "夏迎庆",
+        "刘荣"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "schedule",
+      "feature": "DPLB",
+      "first_owner": "姜凯强",
+      "original_people": [
+        "姜凯强",
+        "彭晓"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "schedule",
+      "feature": "请求级调度优化",
+      "first_owner": "姜凯强",
+      "original_people": [
+        "姜凯强",
+        "王恒康"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "features",
+      "feature": "multilora",
+      "first_owner": "耿力",
+      "original_people": [
+        "耿力"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "features",
+      "feature": "EPLB",
+      "first_owner": "曾彦嘉",
+      "original_people": [
+        "曾彦嘉",
+        "田馥玮"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "features",
+      "feature": "flashcomm",
+      "first_owner": "刘家旭",
+      "original_people": [
+        "刘家旭",
+        "李家琦",
+        "温捷"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "features",
+      "feature": "O矩阵tp切分",
+      "first_owner": "毛琦",
+      "original_people": [
+        "毛琦",
+        "胡聪"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "features",
+      "feature": "mlp tp切分",
+      "first_owner": "毛琦",
+      "original_people": [
+        "毛琦",
+        "徐驰"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "features",
+      "feature": "olora tp切分",
+      "first_owner": "毛琦",
+      "original_people": [
+        "毛琦",
+        "温捷"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "features",
+      "feature": "Embedding TP/lm head tp切分",
+      "first_owner": "毛琦",
+      "original_people": [
+        "毛琦",
+        "徐驰"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "features",
+      "feature": "multistream_moe",
+      "first_owner": "曾彦嘉",
+      "original_people": [
+        "曾彦嘉",
+        "韩俊"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "features",
+      "feature": "绑核",
+      "first_owner": "邹易达",
+      "original_people": [
+        "邹易达",
+        "陈楚未"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "features",
+      "feature": "权重offload技术",
+      "first_owner": "王小超",
+      "original_people": [
+        "王小超",
+        "王恒康"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "features",
+      "feature": "weight nz",
+      "first_owner": "温捷",
+      "original_people": [
+        "温捷",
+        "魏瑾谦"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "features",
+      "feature": "xlite",
+      "first_owner": "陆丽娜",
+      "original_people": [
+        "陆丽娜"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "quantization",
+      "feature": "量化框架",
+      "first_owner": "王锟鹏",
+      "original_people": [
+        "王锟鹏",
+        "余林峰",
+        "温捷",
+        "赵枫霖"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "quantization",
+      "feature": "linear量化",
+      "first_owner": "王锟鹏",
+      "original_people": [
+        "王锟鹏",
+        "余林峰",
+        "温捷",
+        "赵枫霖"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "quantization",
+      "feature": "fusedmoe量化",
+      "first_owner": "王锟鹏",
+      "original_people": [
+        "王锟鹏",
+        "余林峰",
+        "温捷",
+        "赵枫霖"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "quantization",
+      "feature": "kvcache量化",
+      "first_owner": "王锟鹏",
+      "original_people": [
+        "王锟鹏",
+        "马宇蒙",
+        "温捷",
+        "赵枫霖"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "sampling",
+      "feature": "后采样",
+      "first_owner": "田馥玮",
+      "original_people": [
+        "田馥玮",
+        "邹宗毓"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "sampling",
+      "feature": "拒绝采样",
+      "first_owner": "李一诗",
+      "original_people": [
+        "李一诗",
+        "王恒康",
+        "田馥玮"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "layers",
+      "feature": "rope",
+      "first_owner": "曾彦嘉",
+      "original_people": [
+        "曾彦嘉",
+        "衡建宇"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "layers",
+      "feature": "norm",
+      "first_owner": "曾彦嘉",
+      "original_people": [
+        "曾彦嘉",
+        "衡建宇"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "layers",
+      "feature": "embedding",
+      "first_owner": "王玺源",
+      "original_people": [
+        "王玺源",
+        "徐驰"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "layers",
+      "feature": "linear",
+      "first_owner": "魏谨谦",
+      "original_people": [
+        "魏谨谦",
+        "宗浩鑫"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "layers",
+      "feature": "fused_moe",
+      "first_owner": "魏谨谦",
+      "original_people": [
+        "魏谨谦",
+        "袁林风",
+        "王笑爽"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "分布式",
+      "feature": "TP/EP/DP/PP",
+      "first_owner": "温捷",
+      "original_people": [
+        "温捷",
+        "王子岳"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "分布式",
+      "feature": "通信域管理",
+      "first_owner": "温捷",
+      "original_people": [
+        "温捷",
+        "宗浩鑫",
+        "毛琦"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "算子",
+      "feature": "算子编译",
+      "first_owner": "毛琦",
+      "original_people": [
+        "毛琦",
+        "曾天"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "算子",
+      "feature": "torch binding",
+      "first_owner": "毛琦",
+      "original_people": [
+        "毛琦",
+        "曾天"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "算子",
+      "feature": "ascendC算子",
+      "first_owner": "陈龙",
+      "original_people": [
+        "陈龙",
+        "毛琦",
+        "韩俊"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "算子",
+      "feature": "triton算子",
+      "first_owner": "陈龙",
+      "original_people": [
+        "陈龙",
+        "毛琦",
+        "韩俊"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "算子",
+      "feature": "device_op",
+      "first_owner": "陈龙",
+      "original_people": [
+        "陈龙",
+        "毛琦",
+        "韩俊"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "模型",
+      "feature": "多模态理解",
+      "first_owner": "龙钢",
+      "original_people": [
+        "龙钢",
+        "李少鹏"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "模型",
+      "feature": "语音/全模态",
+      "first_owner": "陈睿龙",
+      "original_people": [
+        "陈睿龙",
+        "连斌"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "模型",
+      "feature": "embedding模型",
+      "first_owner": "郭小辉",
+      "original_people": [
+        "郭小辉"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "边端",
+      "feature": "310p",
+      "first_owner": "程少旭",
+      "original_people": [
+        "程少旭",
+        "王恒康"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "RL",
+      "feature": "sleep mode",
+      "first_owner": "刘荣",
+      "original_people": [
+        "刘荣、魏谨谦、杨锦阳、张逸凡"
+      ],
+      "requires_confirmation": true,
+      "note": "第一格多人；按首个人名暂列，实际任务需结合特性确认"
+    },
+    {
+      "domain": "RL",
+      "feature": "Batch一致性&训推一致",
+      "first_owner": null,
+      "original_people": [],
+      "requires_confirmation": true,
+      "note": "原表未填，不能自动沿用上一行"
+    },
+    {
+      "domain": "RL",
+      "feature": "异步RL的pause/resume",
+      "first_owner": null,
+      "original_people": [],
+      "requires_confirmation": true,
+      "note": "原表未填，不能自动沿用上一行"
+    },
+    {
+      "domain": "RL",
+      "feature": "dp感知router",
+      "first_owner": null,
+      "original_people": [],
+      "requires_confirmation": true,
+      "note": "原表未填，不能自动沿用上一行"
+    },
+    {
+      "domain": "RL",
+      "feature": "token in/token out",
+      "first_owner": null,
+      "original_people": [],
+      "requires_confirmation": true,
+      "note": "原表未填，不能自动沿用上一行"
+    },
+    {
+      "domain": "RL",
+      "feature": "extract hidden states",
+      "first_owner": null,
+      "original_people": [],
+      "requires_confirmation": true,
+      "note": "原表未填，不能自动沿用上一行"
+    },
+    {
+      "domain": "RL",
+      "feature": "HCCL/IPC权重传输",
+      "first_owner": null,
+      "original_people": [],
+      "requires_confirmation": true,
+      "note": "原表未填，不能自动沿用上一行"
+    },
+    {
+      "domain": "RL",
+      "feature": "external launcher",
+      "first_owner": null,
+      "original_people": [],
+      "requires_confirmation": true,
+      "note": "原表未填，不能自动沿用上一行"
+    },
+    {
+      "domain": "RL",
+      "feature": "RL lora权重更新",
+      "first_owner": null,
+      "original_people": [],
+      "requires_confirmation": true,
+      "note": "原表未填，不能自动沿用上一行"
+    },
+    {
+      "domain": "RL",
+      "feature": "tool call",
+      "first_owner": null,
+      "original_people": [],
+      "requires_confirmation": true,
+      "note": "原表未填，不能自动沿用上一行"
+    },
+    {
+      "domain": "公共",
+      "feature": "日志",
+      "first_owner": "胡心仪",
+      "original_people": [
+        "胡心仪",
+        "李忠洋"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "公共",
+      "feature": "权重加载",
+      "first_owner": "徐驰",
+      "original_people": [
+        "徐驰",
+        "韩俊"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "公共",
+      "feature": "warmup",
+      "first_owner": "刘逸舟",
+      "original_people": [
+        "刘逸舟",
+        "柯展"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "公共",
+      "feature": "dummy_run",
+      "first_owner": "刘逸舟",
+      "original_people": [
+        "刘逸舟",
+        "柯展"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "公共",
+      "feature": "prepare inputs",
+      "first_owner": "刘逸舟",
+      "original_people": [
+        "刘逸舟",
+        "柯展"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "公共",
+      "feature": "platform",
+      "first_owner": "王玺源",
+      "original_people": [
+        "王玺源"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "公共",
+      "feature": "patch",
+      "first_owner": "王玺源",
+      "original_people": [
+        "王玺源",
+        "韩俊",
+        "温捷"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "公共",
+      "feature": "reasoning/structured output",
+      "first_owner": "温劲",
+      "original_people": [
+        "温劲",
+        "林炜",
+        "冀元祎"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "公共",
+      "feature": "function call",
+      "first_owner": "冀元祎",
+      "original_people": [
+        "冀元祎"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "公共",
+      "feature": "model_runner_v2",
+      "first_owner": "温捷",
+      "original_people": [
+        "温捷",
+        "邹宗毓",
+        "刘逸舟",
+        "甄文奇",
+        "刘荣"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "公共",
+      "feature": "agent/skills",
+      "first_owner": "毛琦",
+      "original_people": [
+        "毛琦",
+        "曾浩龙"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "对外接口",
+      "feature": "additional_config",
+      "first_owner": "韩俊",
+      "original_people": [
+        "韩俊",
+        "温捷"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "对外接口",
+      "feature": "envs_ascend",
+      "first_owner": "韩俊",
+      "original_people": [
+        "韩俊",
+        "温捷"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "文档",
+      "feature": "quick start/installation",
+      "first_owner": "张新悦",
+      "original_people": [
+        "张新悦",
+        "李倩",
+        "刘国琴"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "文档",
+      "feature": "tutorial",
+      "first_owner": "陈歆怡",
+      "original_people": [
+        "陈歆怡/蓝王力/游致远",
+        "李倩",
+        "刘国琴"
+      ],
+      "requires_confirmation": true,
+      "note": "第一格多人；按首个人名暂列，实际任务需结合特性确认"
+    },
+    {
+      "domain": "文档",
+      "feature": "user guide",
+      "first_owner": "杨健",
+      "original_people": [
+        "杨健",
+        "李倩",
+        "刘国琴"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "文档",
+      "feature": "developer guide",
+      "first_owner": "甄文奇",
+      "original_people": [
+        "甄文奇",
+        "李倩",
+        "刘国琴"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "测试",
+      "feature": "workflows（ci）",
+      "first_owner": "张新悦",
+      "original_people": [
+        "张新悦",
+        "张迪",
+        "何建平"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "测试",
+      "feature": "workflows（nightly/weekly/release）",
+      "first_owner": "吴文俊",
+      "original_people": [
+        "吴文俊",
+        "陈家伟",
+        "崔轩瑜"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "测试",
+      "feature": "ut/e2e",
+      "first_owner": "张新悦",
+      "original_people": [
+        "张新悦",
+        "石强",
+        "何建平",
+        "甄文奇",
+        "纪涛"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "测试",
+      "feature": "dockerfile",
+      "first_owner": "张新悦",
+      "original_people": [
+        "张新悦",
+        "何建平",
+        "冀元祎"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "测试",
+      "feature": "安装部署（setup、requirements）",
+      "first_owner": "邵圣珂",
+      "original_people": [
+        "邵圣珂",
+        "吕刚"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "外部框架对接",
+      "feature": "router",
+      "first_owner": "王洋",
+      "original_people": [
+        "王洋",
+        "王君",
+        "吕有辉",
+        "彭晓"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "外部框架对接",
+      "feature": "mindie-motor",
+      "first_owner": "王洋",
+      "original_people": [
+        "王洋",
+        "王君",
+        "吕有辉",
+        "彭晓"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "外部框架对接",
+      "feature": "vllm-omni",
+      "first_owner": "蓝王力",
+      "original_people": [
+        "蓝王力",
+        "廖维明"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "外部框架对接",
+      "feature": "vime",
+      "first_owner": "陈美含",
+      "original_people": [
+        "陈美含",
+        "刘哲"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    },
+    {
+      "domain": "外部框架对接",
+      "feature": "mooncake",
+      "first_owner": "赵鹏博",
+      "original_people": [
+        "赵鹏博",
+        "房建伟",
+        "谭跃跃"
+      ],
+      "requires_confirmation": false,
+      "note": ""
+    }
+  ]
+}

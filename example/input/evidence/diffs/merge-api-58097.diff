@@ -1,0 +1,506 @@
+diff --git a/.buildkite/image_build/image_build.sh b/.buildkite/image_build/image_build.sh
+index a1134e9a4d9a..6d22acd5b16c 100755
+--- a/.buildkite/image_build/image_build.sh
++++ b/.buildkite/image_build/image_build.sh
+@@ -79,6 +79,54 @@ setup_buildx_builder() {
+     docker buildx ls | grep -E '^\*|^NAME' || docker buildx ls
+ }
+ 
++download_ci_hcl() {
++    # Returns non-zero instead of exiting: the optional export path must be
++    # able to give up without failing a build whose image already exists.
++    echo "--- :arrow_down: Downloading ci.hcl"
++    curl -sSfL -o "${CI_HCL_PATH}" "${CI_HCL_URL}" || return $?
++    echo "Downloaded to ${CI_HCL_PATH}"
++
++    if [[ ! -f "${CI_HCL_PATH}" ]]; then
++        echo "Error: ci.hcl not found at ${CI_HCL_PATH}"
++        return 1
++    fi
++}
++
++export_kernel_symbol_map_from_cache() {
++    # The existing-image path: everything here is best effort. Called as
++    # `... || echo`, so errexit is suspended inside and any failure just
++    # returns; the build keeps the image it already has.
++    local rc=0
++    download_ci_hcl \
++        && setup_buildx_builder \
++        && resolve_parent_commit \
++        && export PARENT_COMMIT \
++        && BUILD_TMP_DIR="$(mktemp -d)" \
++        && export_kernel_symbol_map || rc=$?
++    rm -rf -- "${BUILD_TMP_DIR:-}"
++    return "${rc}"
++}
++
++export_kernel_symbol_map() {
++    # Only when the build asked for it (nightly/post-merge). The map was
++    # produced inside the csrc-build stage during the main bake; this second
++    # bake of the scratch stage is a cache hit that just writes the file out.
++    if [[ "${VLLM_KERNEL_SYMBOL_MAP:-0}" != "1" ]]; then
++        return 0
++    fi
++    echo "--- :world_map: Exporting kernel symbol map"
++    local out_dir="${BUILD_TMP_DIR}/kernel-symbol-map"
++    mkdir -p "${out_dir}"
++    if docker buildx bake -f "${VLLM_BAKE_FILE_PATH}" -f "${CI_HCL_PATH}" --progress plain \
++        --set "kernel-symbol-map.output=type=local,dest=${out_dir}" kernel-symbol-map \
++        && [[ -s "${out_dir}/kernel_symbol_map.json.gz" ]]; then
++        ls -la "${out_dir}"
++        (cd "${out_dir}" && buildkite-agent artifact upload "kernel_symbol_map.json.gz")
++    else
++        echo "kernel symbol map export failed; continuing without it" >&2
++    fi
++}
++
+ annotate_image_tags() {
+     .buildkite/scripts/annotate-image-build.sh \
+         "${IMAGE_TAG:-}" "${IMAGE_TAG_LATEST:-}"
+@@ -90,6 +138,15 @@ check_and_skip_if_image_exists() {
+         if docker manifest inspect "${IMAGE_TAG}" >/dev/null 2>&1; then
+             echo "Image already exists: ${IMAGE_TAG}"
+             echo "Skipping build"
++            if [[ "${VLLM_KERNEL_SYMBOL_MAP:-0}" == "1" ]]; then
++                # The image is reused, but the symbol map is an artifact of
++                # this build. Bake just the export target: its layers come
++                # from the registry cache, and the map step itself reruns
++                # if the cached image was built without the arg. Never
++                # fails the build: the image is already there.
++                export_kernel_symbol_map_from_cache \
++                    || echo "kernel symbol map: export from the cached image failed; continuing" >&2
++            fi
+             annotate_image_tags
+             exit 0
+         fi
+@@ -290,14 +347,7 @@ if [[ ! -f "${VLLM_BAKE_FILE_PATH}" ]]; then
+     exit 1
+ fi
+ 
+-echo "--- :arrow_down: Downloading ci.hcl"
+-curl -sSfL -o "${CI_HCL_PATH}" "${CI_HCL_URL}"
+-echo "Downloaded to ${CI_HCL_PATH}"
+-
+-if [[ ! -f "${CI_HCL_PATH}" ]]; then
+-    echo "Error: ci.hcl not found at ${CI_HCL_PATH}"
+-    exit 1
+-fi
++download_ci_hcl || exit 1
+ 
+ setup_buildx_builder
+ 
+@@ -321,5 +371,6 @@ if [[ "${BUILD_STATUS}" -ne 0 ]]; then
+ fi
+ 
+ echo "--- :white_check_mark: Build complete"
++export_kernel_symbol_map || true
+ 
+ annotate_image_tags
+diff --git a/docker/Dockerfile b/docker/Dockerfile
+index 0628e3f86aad..9661f593dad0 100644
+--- a/docker/Dockerfile
++++ b/docker/Dockerfile
+@@ -477,6 +477,24 @@ RUN --mount=type=cache,target=/root/.cache/ccache \
+ #################### EXTENSIONS BUILD IMAGE ####################
+ # Build DeepEP - runs in PARALLEL with csrc-build
+ # This stage is independent and doesn't affect csrc cache
++# Kernel symbol map for CI test selection: which source file produced each GPU
++# kernel symbol, read from the objects this stage just compiled. Only when
++# VLLM_KERNEL_SYMBOL_MAP=1 (nightly), and placed after the compile layers so
++# their cache is untouched. Never fails the build; an empty map is a signal.
++ARG VLLM_KERNEL_SYMBOL_MAP=""
++ARG buildkite_commit=""
++COPY tools/ci/kernel_symbol_map.py tools/ci/kernel_symbol_map.py
++RUN if [ "${VLLM_KERNEL_SYMBOL_MAP}" = "1" ]; then \
++        mkdir -p dist && python3 tools/ci/kernel_symbol_map.py \
++            --build-root build --source-root . --commit "${buildkite_commit}" \
++            --out dist/kernel_symbol_map.json.gz; \
++    else echo "Skipping kernel symbol map (VLLM_KERNEL_SYMBOL_MAP != 1)"; fi
++
++# Exported on its own by the CI bake target of the same name (ci-infra
++# docker/ci.hcl) with output=type=local, so the map becomes a build artifact.
++FROM scratch AS kernel-symbol-map
++COPY --from=csrc-build /workspace/dist/kernel_symbol_map.json.gz /kernel_symbol_map.json.gz
++
+ FROM base AS extensions-build
+ ARG TARGETARCH
+ ARG CUDA_VERSION
+diff --git a/docs/assets/contributing/dockerfile-stages-dependency.png b/docs/assets/contributing/dockerfile-stages-dependency.png
+index 9eca3ae91357..8ab91038016e 100644
+Binary files a/docs/assets/contributing/dockerfile-stages-dependency.png and b/docs/assets/contributing/dockerfile-stages-dependency.png differ
+diff --git a/tools/ci/kernel_symbol_map.py b/tools/ci/kernel_symbol_map.py
+new file mode 100755
+index 000000000000..2a1e8964d055
+--- /dev/null
++++ b/tools/ci/kernel_symbol_map.py
+@@ -0,0 +1,370 @@
++#!/usr/bin/env python3
++# SPDX-License-Identifier: Apache-2.0
++# SPDX-FileCopyrightText: Copyright contributors to the vLLM project
++"""Which source file produced each GPU kernel symbol in this build.
++
++Runs inside the csrc-build image stage, after the CMake build, and reads the
++objects it left behind. For every compiled object it records the source file,
++the CMake target, the headers the compiler reported it depended on (from
++ninja's dependency log), and, for device objects, the kernel entry symbols
++`cuobjdump` finds in the embedded fatbin. Those mangled names are exactly
++what a CUPTI kernel recorder sees at run time, so CI can join "this step
++launched kernel K" with "K came from csrc/foo.cu" and select tests for a
++kernel change by evidence instead of by image membership.
++
++    kernel_symbol_map.py --build-root build --source-root . \\
++        --out dist/kernel_symbol_map.json.gz
++
++Never fails the image build. If there is nothing to read (a precompiled-wheel
++build, a missing cuobjdump) it writes a map with an empty object list and a
++`reason`, which the consumer treats as "no evidence", not as "no kernels".
++
++Output (gzipped JSON):
++
++    {
++      "version": 1,
++      "commit": "...",              # from --commit or the environment
++      "cuda": "13.0",               # nvcc release when found
++      "generated_at": "2026-09-19T...",
++      "build_dirs": ["build/temp.linux-x86_64-cpython-312"],
++      "incomplete": false,          # true when any object's extraction failed;
++                                    # objects is then [] and reason is set
++      "errors": [],                 # [{"object", "source", "error"}, ...]
++      "objects": [
++        {
++          "source": "csrc/libtorch_stable/fused_qknorm_rope_kernel.cu",
++          "target": "_C",
++          "object": "CMakeFiles/_C.dir/csrc/.../fused_qknorm_rope_kernel.cu.o",
++          "device": true,
++          "symbols": ["_Z21fusedQKNormRopeKernelI...", ...],
++          "deps": ["csrc/libtorch_stable/fused_qknorm_rope_kernel.cu",
++                   "csrc/cuda_compat.h", ...]
++          # "error": "..."          # present when cuobjdump failed on it
++        },
++        ...
++      ],
++      "stats": {...},
++      "reason": "..."               # only when the map is empty
++    }
++
++The consumer's contract is deliberately simple: an empty `objects` list with
++a `reason` means "no evidence for any file", fall back to the static rule.
++A partial map would need every consumer to know which files the unreadable
++objects touched, and one that forgot would drop tests that a kernel change
++can reach. So the producer never publishes a partial map: if any object is
++still unreadable after a retry, `objects` is emptied, `incomplete` is set
++and `errors` names the objects so the failure can be diagnosed.
++
++Paths are relative to --source-root when the file lives inside it, otherwise
++absolute (FetchContent sources under the build directory, CUDA headers).
++"""
++
++from __future__ import annotations
++
++import argparse
++import concurrent.futures
++import datetime as dt
++import gzip
++import json
++import os
++import shutil
++import subprocess
++import sys
++import time
++from pathlib import Path
++
++import regex as re
++
++DEVICE_SUFFIXES = (".cu.o", ".hip.o")
++SOURCE_SUFFIXES = (".cu", ".hip", ".cpp", ".cc", ".cxx", ".c")
++DEPS_HEADER = re.compile(r"^(\S+): #deps (\d+), deps mtime \d+ \((VALID|STALE)\)$")
++# FetchContent sub-builds nest their own CMakeFiles/ under _deps/<name>-build/.
++OBJ_DIR = re.compile(r"(?:^|/)CMakeFiles/([^/]+)\.dir/(.+)\.o$")
++
++
++def log(msg: str) -> None:
++    print(f"kernel_symbol_map: {msg}", flush=True)
++
++
++def find_tool(name: str, *candidates: str) -> str | None:
++    for c in candidates:
++        if c and Path(c).is_file():
++            return c
++    return shutil.which(name)
++
++
++def cuda_release(nvcc: str | None) -> str:
++    if not nvcc:
++        return os.environ.get("CUDA_VERSION", "")
++    try:
++        out = subprocess.run(
++            [nvcc, "--version"], capture_output=True, text=True, timeout=30
++        ).stdout
++        m = re.search(r"release (\d+\.\d+)", out)
++        return m.group(1) if m else os.environ.get("CUDA_VERSION", "")
++    except (OSError, subprocess.SubprocessError):
++        return os.environ.get("CUDA_VERSION", "")
++
++
++def find_build_dirs(build_root: Path) -> list[Path]:
++    """Directories holding a top-level build.ninja (one per CMake build tree)."""
++    return sorted(
++        {
++            p.parent
++            for p in build_root.rglob("build.ninja")
++            if (p.parent / ".ninja_deps").exists() or (p.parent / "CMakeFiles").is_dir()
++        }
++    )
++
++
++def ninja_deps(ninja: str | None, build_dir: Path) -> dict[str, list[str]]:
++    """Object (relative to build_dir) -> paths the compiler reported it read."""
++    if not ninja or not (build_dir / ".ninja_deps").exists():
++        return {}
++    try:
++        out = subprocess.run(
++            [ninja, "-C", str(build_dir), "-t", "deps"],
++            capture_output=True,
++            text=True,
++            timeout=600,
++        ).stdout
++    except (OSError, subprocess.SubprocessError) as e:
++        log(f"ninja -t deps failed in {build_dir}: {e}")
++        return {}
++    deps: dict[str, list[str]] = {}
++    cur: list[str] | None = None
++    for line in out.splitlines():
++        m = DEPS_HEADER.match(line)
++        if m:
++            cur = deps.setdefault(m.group(1), [])
++            continue
++        if cur is not None and line.startswith("    "):
++            cur.append(line.strip())
++        elif not line.strip():
++            cur = None
++    return deps
++
++
++def parse_symbols(text: str) -> list[str]:
++    """Kernel entry points from `cuobjdump -symbols` output.
++
++    Lines look like `STT_FUNC  STB_GLOBAL  STO_ENTRY  _Z21fusedQKNormRope...`.
++    Entry points are what the driver launches, so they are what a recorder
++    sees. If a toolchain prints no STO_ENTRY marker, fall back to every global
++    function symbol; over-attribution is the safe direction.
++    """
++    entries: set[str] = set()
++    globals_: set[str] = set()
++    for line in text.splitlines():
++        parts = line.split()
++        if len(parts) < 4 or parts[0] != "STT_FUNC":
++            continue
++        if parts[2] == "STO_ENTRY":
++            entries.add(parts[3])
++        elif parts[1] == "STB_GLOBAL":
++            globals_.add(parts[3])
++    return sorted(entries or globals_)
++
++
++def device_symbols(cuobjdump: str, obj: Path) -> tuple[list[str], str | None]:
++    """(symbols, error). An error means the object is unknown, not kernel-free."""
++    syms, err = _cuobjdump_symbols(cuobjdump, obj)
++    if err:  # transient failures happen on large fatbins; one retry is cheap
++        syms, err = _cuobjdump_symbols(cuobjdump, obj)
++    return syms, err
++
++
++def _cuobjdump_symbols(cuobjdump: str, obj: Path) -> tuple[list[str], str | None]:
++    try:
++        r = subprocess.run(
++            [cuobjdump, "-symbols", str(obj)],
++            capture_output=True,
++            text=True,
++            timeout=900,
++        )
++    except subprocess.TimeoutExpired:
++        return [], "timeout"
++    except OSError as e:
++        return [], str(e)
++    if r.returncode != 0:
++        msg = (r.stderr or r.stdout).strip().splitlines()
++        return [], (msg[-1] if msg else f"exit {r.returncode}")
++    return parse_symbols(r.stdout), None
++
++
++def relpath(p: str | Path, source_root: Path) -> str:
++    path = Path(p)
++    try:
++        return path.resolve().relative_to(source_root).as_posix()
++    except ValueError:
++        return path.as_posix()
++
++
++def source_of(
++    obj_rel: str, deps: list[str], build_dir: Path, source_root: Path
++) -> tuple[str, str]:
++    """(source path, cmake target) for an object.
++
++    The dependency log lists the source first, which is the reliable answer.
++    Failing that, CMake's object layout `CMakeFiles/<target>.dir/<source>.o`
++    names it, with `__/` segments standing for `..`.
++    """
++    target = ""
++    m = OBJ_DIR.search(obj_rel)  # search: sub-builds nest CMakeFiles/
++    if m:
++        target = m.group(1)
++    for d in deps:
++        if d.endswith(SOURCE_SUFFIXES):
++            return relpath(
++                d if os.path.isabs(d) else build_dir / d, source_root
++            ), target
++    if m:
++        guess = m.group(2).replace("__/", "../")
++        if guess.endswith(SOURCE_SUFFIXES):
++            for base in (source_root, build_dir):
++                cand = base / guess
++                if cand.exists():
++                    return relpath(cand, source_root), target
++            return guess, target
++    return obj_rel, target
++
++
++def main() -> int:
++    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
++    ap.add_argument("--build-root", type=Path, default=Path("build"))
++    ap.add_argument("--source-root", type=Path, default=Path("."))
++    ap.add_argument("--out", type=Path, required=True)
++    ap.add_argument("--jobs", type=int, default=min(8, os.cpu_count() or 2))
++    ap.add_argument("--cuobjdump", default=None)
++    ap.add_argument("--commit", default="", help="commit the build is of")
++    a = ap.parse_args()
++    t0 = time.time()
++    source_root = a.source_root.resolve()
++
++    cuda_home = os.environ.get("CUDA_HOME", "/usr/local/cuda")
++    cuobjdump = a.cuobjdump or find_tool(
++        "cuobjdump", f"{cuda_home}/bin/cuobjdump", "/usr/local/cuda/bin/cuobjdump"
++    )
++    nvcc = find_tool("nvcc", f"{cuda_home}/bin/nvcc", "/usr/local/cuda/bin/nvcc")
++    ninja = shutil.which("ninja")
++
++    result: dict = {
++        "version": 1,
++        "commit": a.commit
++        or os.environ.get("BUILDKITE_COMMIT")
++        or os.environ.get("VLLM_BUILD_COMMIT")
++        or "",
++        "cuda": cuda_release(nvcc),
++        "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
++        "build_dirs": [],
++        "incomplete": False,
++        "errors": [],
++        "objects": [],
++        "stats": {},
++    }
++
++    build_dirs = find_build_dirs(a.build_root) if a.build_root.exists() else []
++    result["build_dirs"] = [relpath(b, source_root) for b in build_dirs]
++    if not build_dirs:
++        result["reason"] = (
++            f"no CMake build tree under {a.build_root} (precompiled wheel build?)"
++        )
++    elif not cuobjdump:
++        result["reason"] = "cuobjdump not found"
++    log(
++        f"build dirs: {result['build_dirs'] or 'none'}; "
++        f"cuobjdump={cuobjdump}; ninja={ninja}"
++    )
++
++    jobs: list[tuple[Path, str, Path]] = []  # (build_dir, obj_rel, obj_path)
++    all_deps: dict[Path, dict[str, list[str]]] = {}
++    if "reason" not in result:
++        for bd in build_dirs:
++            all_deps[bd] = ninja_deps(ninja, bd)
++            for obj in bd.rglob("*.o"):
++                rel = obj.relative_to(bd).as_posix()
++                # CMake's compiler-identification probes are objects too.
++                if "CompilerId" in rel:
++                    continue
++                if "/CMakeFiles/" in f"/{rel}" or rel.startswith("CMakeFiles/"):
++                    jobs.append((bd, rel, obj))
++        n_deps = sum(len(d) for d in all_deps.values())
++        log(f"{len(jobs)} objects, {n_deps} dependency records")
++
++    def work(job):
++        bd, rel, obj = job
++        deps = all_deps.get(bd, {}).get(rel, [])
++        source, target = source_of(rel, deps, bd, source_root)
++        device = rel.endswith(DEVICE_SUFFIXES)
++        syms, err = device_symbols(cuobjdump, obj) if device else ([], None)
++        rel_deps = sorted(
++            {relpath(d if os.path.isabs(d) else bd / d, source_root) for d in deps}
++        )
++        entry = {
++            "source": source,
++            "target": target,
++            "object": rel,
++            "device": device,
++            "symbols": syms,
++            "deps": rel_deps,
++        }
++        if err:
++            entry["error"] = err
++        return entry
++
++    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, a.jobs)) as ex:
++        result["objects"] = sorted(
++            ex.map(work, jobs), key=lambda e: (e["source"], e["target"])
++        )
++
++    # An object cuobjdump could not read is unknown, not kernel-free. Say so
++    # at the top so a consumer never has to scan for it, and name the objects
++    # so it can widen the "unknown" set to every file they touch.
++    result["errors"] = [
++        {"object": e["object"], "source": e["source"], "error": e["error"]}
++        for e in result["objects"]
++        if "error" in e
++    ]
++    result["incomplete"] = bool(result["errors"])
++    for e in result["errors"][:5]:
++        log(f"cuobjdump failed on {e['object']}: {e['error']}")
++    if result["incomplete"]:
++        # Publish nothing rather than something partial: see the docstring.
++        result["objects"] = []
++        result["reason"] = (
++            f"{len(result['errors'])} objects unreadable by cuobjdump, e.g. "
++            f"{result['errors'][0]['object']}: {result['errors'][0]['error']}"
++        )
++
++    result["stats"] = {
++        "objects": len(jobs),
++        "device_objects": sum(1 for e in result["objects"] if e["device"]),
++        "objects_with_symbols": sum(1 for e in result["objects"] if e["symbols"]),
++        "symbols": sum(len(e["symbols"]) for e in result["objects"]),
++        "cuobjdump_errors": len(result["errors"]),
++        "seconds": round(time.time() - t0, 1),
++    }
++
++    a.out.parent.mkdir(parents=True, exist_ok=True)
++    with gzip.open(a.out, "wt", encoding="utf-8") as f:
++        json.dump(result, f, separators=(",", ":"))
++    note = f"; reason: {result['reason']}" if "reason" in result else ""
++    log(f"wrote {a.out} ({a.out.stat().st_size // 1024} KiB): {result['stats']}{note}")
++
++    # One line a human can check in the build log.
++    probe = [
++        e
++        for e in result["objects"]
++        if any("fusedQKNormRopeKernel" in s for s in e["symbols"])
++    ]
++    if probe:
++        log(f"probe: fusedQKNormRopeKernel -> {sorted({e['source'] for e in probe})}")
++    return 0
++
++
++if __name__ == "__main__":
++    try:
++        sys.exit(main())
++    except Exception as e:  # never fail the image build
++        log(f"unexpected error, continuing without a map: {e!r}")
++        sys.exit(0)

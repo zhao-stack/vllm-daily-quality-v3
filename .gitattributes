@@ -1,0 +1,2 @@
+# Integrity manifest covers exact file bytes. Avoid automatic CRLF/LF conversion.
+* -text

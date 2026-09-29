@@ -1,0 +1,48 @@
+diff --git a/tests/v1/structured_output/test_validation.py b/tests/v1/structured_output/test_validation.py
+index a82b3e51177b818d162b08eb9fc9167940bcdbdd..739279280caf29a25a1275fbc6788c9f49d4bf6e 100644
+--- a/tests/v1/structured_output/test_validation.py
++++ b/tests/v1/structured_output/test_validation.py
+@@ -56,13 +56,18 @@ def test_plain_request_allowed_for_diffusion_models():
+     [
+         (StructuredOutputsParams(json_object=False), "json_object must be True"),
+         (StructuredOutputsParams(json=""), "json cannot be an empty string"),
++        (
++            StructuredOutputsParams(structural_tag=""),
++            "structural_tag cannot be an empty string",
++        ),
+     ],
+ )
+ def test_degenerate_structured_outputs_rejected(structured_outputs, match):
+     """json_object=False and an empty json schema pass the `is not None`
+     exclusivity check but resolve to no structured-output key, so they must be
+-    rejected at request validation (-> 400) instead of reaching and crashing
+-    the engine."""
++    rejected at request validation (-> 400). Empty `structural_tag` is rejected
++    for the same reason: `json.loads("")` in `compile_grammar` would otherwise
++    raise JSONDecodeError and surface as a per-request engine error."""
+     params = SamplingParams(structured_outputs=structured_outputs)
+     with pytest.raises(VLLMValidationError, match=match):
+         params._validate_structured_outputs(
+diff --git a/vllm/sampling_params.py b/vllm/sampling_params.py
+index 120dbaddfd8004d3a864ff275701976aa029acc9..b91d47d3dee51e2ecce19aa45d441f44f377dd5e 100644
+--- a/vllm/sampling_params.py
++++ b/vllm/sampling_params.py
+@@ -1144,6 +1144,18 @@ class SamplingParams(
+             raise VLLMValidationError(
+                 "structured_outputs.regex must not contain a NUL character ('\\x00')"
+             )
++        # Note(arpera):
++        # We do NOT check here structured output regex on emptiness because
++        # empty regex is indeed compiles to a valid grammar as well as
++        # whitespace-only regexps, for instance, regex="\n" or regex=" "
++        # are valid patterns and we MUST process them.
++        if (
++            isinstance(self.structured_outputs.structural_tag, str)
++            and self.structured_outputs.structural_tag.strip() == ""
++        ):
++            raise VLLMValidationError(
++                "structured_outputs.structural_tag cannot be an empty string"
++            )
+ 
+         from vllm.v1.structured_output.backend_guidance import (
+             has_guidance_unsupported_json_features,

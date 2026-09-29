@@ -1,0 +1,442 @@
+[
+  {
+    "id": 4618895927,
+    "node_id": "PRR_kwDOI7xefs8AAAABE07CNw",
+    "user": {
+      "login": "claude[bot]",
+      "id": 209825114,
+      "node_id": "BOT_kgDODIGtWg",
+      "avatar_url": "https://avatars.githubusercontent.com/in/1236702?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/claude%5Bbot%5D",
+      "html_url": "https://github.com/apps/claude",
+      "followers_url": "https://api.github.com/users/claude%5Bbot%5D/followers",
+      "following_url": "https://api.github.com/users/claude%5Bbot%5D/following{/other_user}",
+      "gists_url": "https://api.github.com/users/claude%5Bbot%5D/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/claude%5Bbot%5D/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/claude%5Bbot%5D/subscriptions",
+      "organizations_url": "https://api.github.com/users/claude%5Bbot%5D/orgs",
+      "repos_url": "https://api.github.com/users/claude%5Bbot%5D/repos",
+      "events_url": "https://api.github.com/users/claude%5Bbot%5D/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/claude%5Bbot%5D/received_events",
+      "type": "Bot",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "## Claude Code Review\n\nThis pull request is from a fork — automated review is disabled. A repository maintainer can comment `@claude review` to run a one-time review.",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/47450#pullrequestreview-4618895927",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/47450",
+    "author_association": "NONE",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/47450#pullrequestreview-4618895927"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/47450"
+      }
+    },
+    "submitted_at": "2026-07-02T15:18:36Z",
+    "commit_id": null
+  },
+  {
+    "id": 5066541913,
+    "node_id": "PRR_kwDOI7xefs8AAAABLf1LWQ",
+    "user": {
+      "login": "arpera",
+      "id": 263378612,
+      "node_id": "U_kgDOD7LWtA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/263378612?u=c8393f2715cdddda668973f9359ffebdcdf01120&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arpera",
+      "html_url": "https://github.com/arpera",
+      "followers_url": "https://api.github.com/users/arpera/followers",
+      "following_url": "https://api.github.com/users/arpera/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arpera/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arpera/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arpera/subscriptions",
+      "organizations_url": "https://api.github.com/users/arpera/orgs",
+      "repos_url": "https://api.github.com/users/arpera/repos",
+      "events_url": "https://api.github.com/users/arpera/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arpera/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/47450#pullrequestreview-5066541913",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/47450",
+    "author_association": "COLLABORATOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/47450#pullrequestreview-5066541913"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/47450"
+      }
+    },
+    "submitted_at": "2026-09-07T09:47:16Z",
+    "commit_id": "942b598a689a53fd869a8c7f3c36c5b5262a70dc"
+  },
+  {
+    "id": 5275096697,
+    "node_id": "PRR_kwDOI7xefs8AAAABOmuWeQ",
+    "user": {
+      "login": "arpera",
+      "id": 263378612,
+      "node_id": "U_kgDOD7LWtA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/263378612?u=c8393f2715cdddda668973f9359ffebdcdf01120&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arpera",
+      "html_url": "https://github.com/arpera",
+      "followers_url": "https://api.github.com/users/arpera/followers",
+      "following_url": "https://api.github.com/users/arpera/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arpera/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arpera/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arpera/subscriptions",
+      "organizations_url": "https://api.github.com/users/arpera/orgs",
+      "repos_url": "https://api.github.com/users/arpera/repos",
+      "events_url": "https://api.github.com/users/arpera/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arpera/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "CHANGES_REQUESTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/47450#pullrequestreview-5275096697",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/47450",
+    "author_association": "COLLABORATOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/47450#pullrequestreview-5275096697"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/47450"
+      }
+    },
+    "submitted_at": "2026-09-22T07:16:19Z",
+    "commit_id": "83874d9d6219c9fbaf2025a7931d1c97eee68741"
+  },
+  {
+    "id": 5275532012,
+    "node_id": "PRR_kwDOI7xefs8AAAABOnI67A",
+    "user": {
+      "login": "arpera",
+      "id": 263378612,
+      "node_id": "U_kgDOD7LWtA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/263378612?u=c8393f2715cdddda668973f9359ffebdcdf01120&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arpera",
+      "html_url": "https://github.com/arpera",
+      "followers_url": "https://api.github.com/users/arpera/followers",
+      "following_url": "https://api.github.com/users/arpera/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arpera/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arpera/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arpera/subscriptions",
+      "organizations_url": "https://api.github.com/users/arpera/orgs",
+      "repos_url": "https://api.github.com/users/arpera/repos",
+      "events_url": "https://api.github.com/users/arpera/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arpera/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "CHANGES_REQUESTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/47450#pullrequestreview-5275532012",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/47450",
+    "author_association": "COLLABORATOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/47450#pullrequestreview-5275532012"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/47450"
+      }
+    },
+    "submitted_at": "2026-09-22T08:21:46Z",
+    "commit_id": "48c593a03d56e45872578ddd5a1afdf999e96314"
+  },
+  {
+    "id": 5275859901,
+    "node_id": "PRR_kwDOI7xefs8AAAABOnc7vQ",
+    "user": {
+      "login": "arpera",
+      "id": 263378612,
+      "node_id": "U_kgDOD7LWtA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/263378612?u=c8393f2715cdddda668973f9359ffebdcdf01120&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arpera",
+      "html_url": "https://github.com/arpera",
+      "followers_url": "https://api.github.com/users/arpera/followers",
+      "following_url": "https://api.github.com/users/arpera/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arpera/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arpera/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arpera/subscriptions",
+      "organizations_url": "https://api.github.com/users/arpera/orgs",
+      "repos_url": "https://api.github.com/users/arpera/repos",
+      "events_url": "https://api.github.com/users/arpera/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arpera/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/47450#pullrequestreview-5275859901",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/47450",
+    "author_association": "COLLABORATOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/47450#pullrequestreview-5275859901"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/47450"
+      }
+    },
+    "submitted_at": "2026-09-22T08:43:16Z",
+    "commit_id": "48c593a03d56e45872578ddd5a1afdf999e96314"
+  },
+  {
+    "id": 5275870592,
+    "node_id": "PRR_kwDOI7xefs8AAAABOndlgA",
+    "user": {
+      "login": "arpera",
+      "id": 263378612,
+      "node_id": "U_kgDOD7LWtA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/263378612?u=c8393f2715cdddda668973f9359ffebdcdf01120&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arpera",
+      "html_url": "https://github.com/arpera",
+      "followers_url": "https://api.github.com/users/arpera/followers",
+      "following_url": "https://api.github.com/users/arpera/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arpera/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arpera/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arpera/subscriptions",
+      "organizations_url": "https://api.github.com/users/arpera/orgs",
+      "repos_url": "https://api.github.com/users/arpera/repos",
+      "events_url": "https://api.github.com/users/arpera/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arpera/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/47450#pullrequestreview-5275870592",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/47450",
+    "author_association": "COLLABORATOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/47450#pullrequestreview-5275870592"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/47450"
+      }
+    },
+    "submitted_at": "2026-09-22T08:44:12Z",
+    "commit_id": "942b598a689a53fd869a8c7f3c36c5b5262a70dc"
+  },
+  {
+    "id": 5275871826,
+    "node_id": "PRR_kwDOI7xefs8AAAABOndqUg",
+    "user": {
+      "login": "arpera",
+      "id": 263378612,
+      "node_id": "U_kgDOD7LWtA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/263378612?u=c8393f2715cdddda668973f9359ffebdcdf01120&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arpera",
+      "html_url": "https://github.com/arpera",
+      "followers_url": "https://api.github.com/users/arpera/followers",
+      "following_url": "https://api.github.com/users/arpera/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arpera/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arpera/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arpera/subscriptions",
+      "organizations_url": "https://api.github.com/users/arpera/orgs",
+      "repos_url": "https://api.github.com/users/arpera/repos",
+      "events_url": "https://api.github.com/users/arpera/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arpera/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/47450#pullrequestreview-5275871826",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/47450",
+    "author_association": "COLLABORATOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/47450#pullrequestreview-5275871826"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/47450"
+      }
+    },
+    "submitted_at": "2026-09-22T08:44:19Z",
+    "commit_id": "942b598a689a53fd869a8c7f3c36c5b5262a70dc"
+  },
+  {
+    "id": 5275873212,
+    "node_id": "PRR_kwDOI7xefs8AAAABOndvvA",
+    "user": {
+      "login": "arpera",
+      "id": 263378612,
+      "node_id": "U_kgDOD7LWtA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/263378612?u=c8393f2715cdddda668973f9359ffebdcdf01120&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arpera",
+      "html_url": "https://github.com/arpera",
+      "followers_url": "https://api.github.com/users/arpera/followers",
+      "following_url": "https://api.github.com/users/arpera/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arpera/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arpera/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arpera/subscriptions",
+      "organizations_url": "https://api.github.com/users/arpera/orgs",
+      "repos_url": "https://api.github.com/users/arpera/repos",
+      "events_url": "https://api.github.com/users/arpera/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arpera/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/47450#pullrequestreview-5275873212",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/47450",
+    "author_association": "COLLABORATOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/47450#pullrequestreview-5275873212"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/47450"
+      }
+    },
+    "submitted_at": "2026-09-22T08:44:26Z",
+    "commit_id": "83874d9d6219c9fbaf2025a7931d1c97eee68741"
+  },
+  {
+    "id": 5275874488,
+    "node_id": "PRR_kwDOI7xefs8AAAABOnd0uA",
+    "user": {
+      "login": "arpera",
+      "id": 263378612,
+      "node_id": "U_kgDOD7LWtA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/263378612?u=c8393f2715cdddda668973f9359ffebdcdf01120&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arpera",
+      "html_url": "https://github.com/arpera",
+      "followers_url": "https://api.github.com/users/arpera/followers",
+      "following_url": "https://api.github.com/users/arpera/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arpera/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arpera/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arpera/subscriptions",
+      "organizations_url": "https://api.github.com/users/arpera/orgs",
+      "repos_url": "https://api.github.com/users/arpera/repos",
+      "events_url": "https://api.github.com/users/arpera/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arpera/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/47450#pullrequestreview-5275874488",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/47450",
+    "author_association": "COLLABORATOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/47450#pullrequestreview-5275874488"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/47450"
+      }
+    },
+    "submitted_at": "2026-09-22T08:44:34Z",
+    "commit_id": "83874d9d6219c9fbaf2025a7931d1c97eee68741"
+  },
+  {
+    "id": 5277195727,
+    "node_id": "PRR_kwDOI7xefs8AAAABOoudzw",
+    "user": {
+      "login": "arpera",
+      "id": 263378612,
+      "node_id": "U_kgDOD7LWtA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/263378612?u=c8393f2715cdddda668973f9359ffebdcdf01120&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arpera",
+      "html_url": "https://github.com/arpera",
+      "followers_url": "https://api.github.com/users/arpera/followers",
+      "following_url": "https://api.github.com/users/arpera/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arpera/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arpera/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arpera/subscriptions",
+      "organizations_url": "https://api.github.com/users/arpera/orgs",
+      "repos_url": "https://api.github.com/users/arpera/repos",
+      "events_url": "https://api.github.com/users/arpera/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arpera/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/47450#pullrequestreview-5277195727",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/47450",
+    "author_association": "COLLABORATOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/47450#pullrequestreview-5277195727"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/47450"
+      }
+    },
+    "submitted_at": "2026-09-22T11:12:17Z",
+    "commit_id": "48c593a03d56e45872578ddd5a1afdf999e96314"
+  },
+  {
+    "id": 5278485564,
+    "node_id": "PRR_kwDOI7xefs8AAAABOp9MPA",
+    "user": {
+      "login": "arpera",
+      "id": 263378612,
+      "node_id": "U_kgDOD7LWtA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/263378612?u=c8393f2715cdddda668973f9359ffebdcdf01120&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arpera",
+      "html_url": "https://github.com/arpera",
+      "followers_url": "https://api.github.com/users/arpera/followers",
+      "following_url": "https://api.github.com/users/arpera/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arpera/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arpera/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arpera/subscriptions",
+      "organizations_url": "https://api.github.com/users/arpera/orgs",
+      "repos_url": "https://api.github.com/users/arpera/repos",
+      "events_url": "https://api.github.com/users/arpera/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arpera/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "LGTM",
+    "state": "APPROVED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/47450#pullrequestreview-5278485564",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/47450",
+    "author_association": "COLLABORATOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/47450#pullrequestreview-5278485564"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/47450"
+      }
+    },
+    "submitted_at": "2026-09-22T13:08:58Z",
+    "commit_id": "4d7a2c39731c607004d54160eb8eef698e562f19"
+  }
+]

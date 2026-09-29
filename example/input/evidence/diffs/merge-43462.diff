@@ -1,0 +1,33 @@
+diff --git a/csrc/libtorch_stable/quantization/hadamard/hadacore/hadamard_transform_cuda.cu b/csrc/libtorch_stable/quantization/hadamard/hadacore/hadamard_transform_cuda.cu
+index 665585caa46c27f54d1eab85df64611d5f1c2aa3..a5d199db27376b5125b8784d442328c55a414d6a 100644
+--- a/csrc/libtorch_stable/quantization/hadamard/hadacore/hadamard_transform_cuda.cu
++++ b/csrc/libtorch_stable/quantization/hadamard/hadacore/hadamard_transform_cuda.cu
+@@ -796,7 +796,7 @@ torch::stable::Tensor hadacore_transform(torch::stable::Tensor& x, bool inplace)
+ 
+     VLLM_STABLE_DISPATCH_HALF_TYPES(x.scalar_type(), "hadacore_transform_runfht", [&] {
+       auto constexpr SCALAR_TYPE = torch::headeronly::CppTypeToScalarType<scalar_t>::value;
+-      hadacore::run_fht<SCALAR_TYPE>(x.data_ptr(), x.data_ptr(), x.numel(), had_size, stream);
++      hadacore::run_fht<SCALAR_TYPE>(x.data_ptr(), out.data_ptr(), x.numel(), had_size, stream);
+     });
+ 
+     if (numel % 256 != 0) {
+diff --git a/vllm/model_executor/layers/quantization/compressed_tensors/transform/module.py b/vllm/model_executor/layers/quantization/compressed_tensors/transform/module.py
+index ae8f143a61f2d2ea509771d8b3f6d3a1e901ce82..8552eeb652509a63c6a5f16a4aac29fa361e95d4 100644
+--- a/vllm/model_executor/layers/quantization/compressed_tensors/transform/module.py
++++ b/vllm/model_executor/layers/quantization/compressed_tensors/transform/module.py
+@@ -95,13 +95,13 @@ class HadamardTransform(torch.nn.Module):
+             if self.transforms[part_id].scheme.head_dim is not None:
+                 weight_size = self.transforms[part_id].scheme.head_dim
+                 value = value.unflatten(-1, (-1, weight_size))
+-                value = ops.hadacore_transform(value)
++                value = ops.hadacore_transform(value, inplace=False)
+                 value = value.flatten(-2, -1)
+ 
+                 return value
+ 
+             # sylvester transforms are symmetric, inv => transpose => original
+-            return ops.hadacore_transform(value)
++            return ops.hadacore_transform(value, inplace=False)
+ 
+         # fall back to dense
+         else:

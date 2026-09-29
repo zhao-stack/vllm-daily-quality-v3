@@ -1,0 +1,122 @@
+[
+  {
+    "id": 4934124332,
+    "node_id": "PRR_kwDOI7xefs8AAAABJhjDLA",
+    "user": {
+      "login": "claude[bot]",
+      "id": 209825114,
+      "node_id": "BOT_kgDODIGtWg",
+      "avatar_url": "https://avatars.githubusercontent.com/in/1236702?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/claude%5Bbot%5D",
+      "html_url": "https://github.com/apps/claude",
+      "followers_url": "https://api.github.com/users/claude%5Bbot%5D/followers",
+      "following_url": "https://api.github.com/users/claude%5Bbot%5D/following{/other_user}",
+      "gists_url": "https://api.github.com/users/claude%5Bbot%5D/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/claude%5Bbot%5D/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/claude%5Bbot%5D/subscriptions",
+      "organizations_url": "https://api.github.com/users/claude%5Bbot%5D/orgs",
+      "repos_url": "https://api.github.com/users/claude%5Bbot%5D/repos",
+      "events_url": "https://api.github.com/users/claude%5Bbot%5D/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/claude%5Bbot%5D/received_events",
+      "type": "Bot",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "## Claude Code Review\n\nThis pull request is from a fork — automated review is disabled. A repository maintainer can comment `@claude review` to run a one-time review.",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/49685#pullrequestreview-4934124332",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/49685",
+    "author_association": "NONE",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/49685#pullrequestreview-4934124332"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/49685"
+      }
+    },
+    "submitted_at": "2026-08-14T04:59:06Z",
+    "commit_id": null
+  },
+  {
+    "id": 4935471489,
+    "node_id": "PRR_kwDOI7xefs8AAAABJi1RgQ",
+    "user": {
+      "login": "mayuyuace",
+      "id": 71209967,
+      "node_id": "MDQ6VXNlcjcxMjA5OTY3",
+      "avatar_url": "https://avatars.githubusercontent.com/u/71209967?u=5d01f301a1bc6d7df9324be426ebfe122e601886&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/mayuyuace",
+      "html_url": "https://github.com/mayuyuace",
+      "followers_url": "https://api.github.com/users/mayuyuace/followers",
+      "following_url": "https://api.github.com/users/mayuyuace/following{/other_user}",
+      "gists_url": "https://api.github.com/users/mayuyuace/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/mayuyuace/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/mayuyuace/subscriptions",
+      "organizations_url": "https://api.github.com/users/mayuyuace/orgs",
+      "repos_url": "https://api.github.com/users/mayuyuace/repos",
+      "events_url": "https://api.github.com/users/mayuyuace/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/mayuyuace/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "APPROVED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/49685#pullrequestreview-4935471489",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/49685",
+    "author_association": "CONTRIBUTOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/49685#pullrequestreview-4935471489"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/49685"
+      }
+    },
+    "submitted_at": "2026-08-14T08:39:02Z",
+    "commit_id": null
+  },
+  {
+    "id": 5219844954,
+    "node_id": "PRR_kwDOI7xefs8AAAABNyCDWg",
+    "user": {
+      "login": "jikunshang",
+      "id": 50897707,
+      "node_id": "MDQ6VXNlcjUwODk3NzA3",
+      "avatar_url": "https://avatars.githubusercontent.com/u/50897707?u=7cc283edcca3bf1b845367fd15f4e6b5694ecc7c&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/jikunshang",
+      "html_url": "https://github.com/jikunshang",
+      "followers_url": "https://api.github.com/users/jikunshang/followers",
+      "following_url": "https://api.github.com/users/jikunshang/following{/other_user}",
+      "gists_url": "https://api.github.com/users/jikunshang/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/jikunshang/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/jikunshang/subscriptions",
+      "organizations_url": "https://api.github.com/users/jikunshang/orgs",
+      "repos_url": "https://api.github.com/users/jikunshang/repos",
+      "events_url": "https://api.github.com/users/jikunshang/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/jikunshang/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "APPROVED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/49685#pullrequestreview-5219844954",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/49685",
+    "author_association": "MEMBER",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/49685#pullrequestreview-5219844954"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/49685"
+      }
+    },
+    "submitted_at": "2026-09-16T07:42:15Z",
+    "commit_id": null
+  }
+]

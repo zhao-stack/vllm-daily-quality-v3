@@ -1,0 +1,362 @@
+[
+  {
+    "id": 5244412565,
+    "node_id": "PRR_kwDOI7xefs8AAAABOJdilQ",
+    "user": {
+      "login": "claude[bot]",
+      "id": 209825114,
+      "node_id": "BOT_kgDODIGtWg",
+      "avatar_url": "https://avatars.githubusercontent.com/in/1236702?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/claude%5Bbot%5D",
+      "html_url": "https://github.com/apps/claude",
+      "followers_url": "https://api.github.com/users/claude%5Bbot%5D/followers",
+      "following_url": "https://api.github.com/users/claude%5Bbot%5D/following{/other_user}",
+      "gists_url": "https://api.github.com/users/claude%5Bbot%5D/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/claude%5Bbot%5D/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/claude%5Bbot%5D/subscriptions",
+      "organizations_url": "https://api.github.com/users/claude%5Bbot%5D/orgs",
+      "repos_url": "https://api.github.com/users/claude%5Bbot%5D/repos",
+      "events_url": "https://api.github.com/users/claude%5Bbot%5D/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/claude%5Bbot%5D/received_events",
+      "type": "Bot",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "## Claude Code Review\n\nThis pull request is from a fork — automated review is disabled. A repository maintainer can comment `@claude review` to run a one-time review.",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57428#pullrequestreview-5244412565",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57428",
+    "author_association": "NONE",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57428#pullrequestreview-5244412565"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57428"
+      }
+    },
+    "submitted_at": "2026-09-18T05:00:24Z",
+    "commit_id": "21e53f3b269dc3a14661951a2c46f461541fa229"
+  },
+  {
+    "id": 5247350820,
+    "node_id": "PRR_kwDOI7xefs8AAAABOMQ4JA",
+    "user": {
+      "login": "gau-nernst",
+      "id": 26946864,
+      "node_id": "MDQ6VXNlcjI2OTQ2ODY0",
+      "avatar_url": "https://avatars.githubusercontent.com/u/26946864?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/gau-nernst",
+      "html_url": "https://github.com/gau-nernst",
+      "followers_url": "https://api.github.com/users/gau-nernst/followers",
+      "following_url": "https://api.github.com/users/gau-nernst/following{/other_user}",
+      "gists_url": "https://api.github.com/users/gau-nernst/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/gau-nernst/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/gau-nernst/subscriptions",
+      "organizations_url": "https://api.github.com/users/gau-nernst/orgs",
+      "repos_url": "https://api.github.com/users/gau-nernst/repos",
+      "events_url": "https://api.github.com/users/gau-nernst/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/gau-nernst/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Overall LGTM. I wonder if you can help me clean up the benchmark script a bit, for example only keep vLLM baseline instead of having multiple candidates, use flashinfer all-reduce etc...",
+    "state": "APPROVED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57428#pullrequestreview-5247350820",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57428",
+    "author_association": "CONTRIBUTOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57428#pullrequestreview-5247350820"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57428"
+      }
+    },
+    "submitted_at": "2026-09-18T11:39:37Z",
+    "commit_id": "88a50cc45950c6107e5bc9b239d391846b04b9b5"
+  },
+  {
+    "id": 5264034117,
+    "node_id": "PRR_kwDOI7xefs8AAAABOcLJRQ",
+    "user": {
+      "login": "jeejeelee",
+      "id": 19733142,
+      "node_id": "MDQ6VXNlcjE5NzMzMTQy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/19733142?u=d1d0046883b0992b48d6065a3c5203e7a1d7446e&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/jeejeelee",
+      "html_url": "https://github.com/jeejeelee",
+      "followers_url": "https://api.github.com/users/jeejeelee/followers",
+      "following_url": "https://api.github.com/users/jeejeelee/following{/other_user}",
+      "gists_url": "https://api.github.com/users/jeejeelee/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/jeejeelee/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/jeejeelee/subscriptions",
+      "organizations_url": "https://api.github.com/users/jeejeelee/orgs",
+      "repos_url": "https://api.github.com/users/jeejeelee/repos",
+      "events_url": "https://api.github.com/users/jeejeelee/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/jeejeelee/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57428#pullrequestreview-5264034117",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57428",
+    "author_association": "MEMBER",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57428#pullrequestreview-5264034117"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57428"
+      }
+    },
+    "submitted_at": "2026-09-21T07:29:46Z",
+    "commit_id": "8f272b25bf20da5f9360ffba8acda100bd50a784"
+  },
+  {
+    "id": 5264091395,
+    "node_id": "PRR_kwDOI7xefs8AAAABOcOpAw",
+    "user": {
+      "login": "ywang96",
+      "id": 136131678,
+      "node_id": "U_kgDOCB00Xg",
+      "avatar_url": "https://avatars.githubusercontent.com/u/136131678?u=07655938d06b9931ab783662b913efb6e15fec97&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/ywang96",
+      "html_url": "https://github.com/ywang96",
+      "followers_url": "https://api.github.com/users/ywang96/followers",
+      "following_url": "https://api.github.com/users/ywang96/following{/other_user}",
+      "gists_url": "https://api.github.com/users/ywang96/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/ywang96/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/ywang96/subscriptions",
+      "organizations_url": "https://api.github.com/users/ywang96/orgs",
+      "repos_url": "https://api.github.com/users/ywang96/repos",
+      "events_url": "https://api.github.com/users/ywang96/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/ywang96/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57428#pullrequestreview-5264091395",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57428",
+    "author_association": "MEMBER",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57428#pullrequestreview-5264091395"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57428"
+      }
+    },
+    "submitted_at": "2026-09-21T07:37:32Z",
+    "commit_id": "8f272b25bf20da5f9360ffba8acda100bd50a784"
+  },
+  {
+    "id": 5264145959,
+    "node_id": "PRR_kwDOI7xefs8AAAABOcR-Jw",
+    "user": {
+      "login": "jeejeelee",
+      "id": 19733142,
+      "node_id": "MDQ6VXNlcjE5NzMzMTQy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/19733142?u=d1d0046883b0992b48d6065a3c5203e7a1d7446e&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/jeejeelee",
+      "html_url": "https://github.com/jeejeelee",
+      "followers_url": "https://api.github.com/users/jeejeelee/followers",
+      "following_url": "https://api.github.com/users/jeejeelee/following{/other_user}",
+      "gists_url": "https://api.github.com/users/jeejeelee/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/jeejeelee/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/jeejeelee/subscriptions",
+      "organizations_url": "https://api.github.com/users/jeejeelee/orgs",
+      "repos_url": "https://api.github.com/users/jeejeelee/repos",
+      "events_url": "https://api.github.com/users/jeejeelee/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/jeejeelee/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57428#pullrequestreview-5264145959",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57428",
+    "author_association": "MEMBER",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57428#pullrequestreview-5264145959"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57428"
+      }
+    },
+    "submitted_at": "2026-09-21T07:45:11Z",
+    "commit_id": "8f272b25bf20da5f9360ffba8acda100bd50a784"
+  },
+  {
+    "id": 5264267008,
+    "node_id": "PRR_kwDOI7xefs8AAAABOcZXAA",
+    "user": {
+      "login": "gcanlin",
+      "id": 105424474,
+      "node_id": "U_kgDOBkimWg",
+      "avatar_url": "https://avatars.githubusercontent.com/u/105424474?u=9d3475a7704d5ffeb116af603b7808c926d01c18&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/gcanlin",
+      "html_url": "https://github.com/gcanlin",
+      "followers_url": "https://api.github.com/users/gcanlin/followers",
+      "following_url": "https://api.github.com/users/gcanlin/following{/other_user}",
+      "gists_url": "https://api.github.com/users/gcanlin/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/gcanlin/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/gcanlin/subscriptions",
+      "organizations_url": "https://api.github.com/users/gcanlin/orgs",
+      "repos_url": "https://api.github.com/users/gcanlin/repos",
+      "events_url": "https://api.github.com/users/gcanlin/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/gcanlin/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57428#pullrequestreview-5264267008",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57428",
+    "author_association": "CONTRIBUTOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57428#pullrequestreview-5264267008"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57428"
+      }
+    },
+    "submitted_at": "2026-09-21T08:00:45Z",
+    "commit_id": "8f272b25bf20da5f9360ffba8acda100bd50a784"
+  },
+  {
+    "id": 5264564170,
+    "node_id": "PRR_kwDOI7xefs8AAAABOcrfyg",
+    "user": {
+      "login": "jeejeelee",
+      "id": 19733142,
+      "node_id": "MDQ6VXNlcjE5NzMzMTQy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/19733142?u=d1d0046883b0992b48d6065a3c5203e7a1d7446e&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/jeejeelee",
+      "html_url": "https://github.com/jeejeelee",
+      "followers_url": "https://api.github.com/users/jeejeelee/followers",
+      "following_url": "https://api.github.com/users/jeejeelee/following{/other_user}",
+      "gists_url": "https://api.github.com/users/jeejeelee/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/jeejeelee/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/jeejeelee/subscriptions",
+      "organizations_url": "https://api.github.com/users/jeejeelee/orgs",
+      "repos_url": "https://api.github.com/users/jeejeelee/repos",
+      "events_url": "https://api.github.com/users/jeejeelee/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/jeejeelee/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57428#pullrequestreview-5264564170",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57428",
+    "author_association": "MEMBER",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57428#pullrequestreview-5264564170"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57428"
+      }
+    },
+    "submitted_at": "2026-09-21T08:39:10Z",
+    "commit_id": "8f272b25bf20da5f9360ffba8acda100bd50a784"
+  },
+  {
+    "id": 5264663731,
+    "node_id": "PRR_kwDOI7xefs8AAAABOcxksw",
+    "user": {
+      "login": "gcanlin",
+      "id": 105424474,
+      "node_id": "U_kgDOBkimWg",
+      "avatar_url": "https://avatars.githubusercontent.com/u/105424474?u=9d3475a7704d5ffeb116af603b7808c926d01c18&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/gcanlin",
+      "html_url": "https://github.com/gcanlin",
+      "followers_url": "https://api.github.com/users/gcanlin/followers",
+      "following_url": "https://api.github.com/users/gcanlin/following{/other_user}",
+      "gists_url": "https://api.github.com/users/gcanlin/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/gcanlin/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/gcanlin/subscriptions",
+      "organizations_url": "https://api.github.com/users/gcanlin/orgs",
+      "repos_url": "https://api.github.com/users/gcanlin/repos",
+      "events_url": "https://api.github.com/users/gcanlin/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/gcanlin/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57428#pullrequestreview-5264663731",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57428",
+    "author_association": "CONTRIBUTOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57428#pullrequestreview-5264663731"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57428"
+      }
+    },
+    "submitted_at": "2026-09-21T08:51:32Z",
+    "commit_id": "8f272b25bf20da5f9360ffba8acda100bd50a784"
+  },
+  {
+    "id": 5273189292,
+    "node_id": "PRR_kwDOI7xefs8AAAABOk57rA",
+    "user": {
+      "login": "jeejeelee",
+      "id": 19733142,
+      "node_id": "MDQ6VXNlcjE5NzMzMTQy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/19733142?u=d1d0046883b0992b48d6065a3c5203e7a1d7446e&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/jeejeelee",
+      "html_url": "https://github.com/jeejeelee",
+      "followers_url": "https://api.github.com/users/jeejeelee/followers",
+      "following_url": "https://api.github.com/users/jeejeelee/following{/other_user}",
+      "gists_url": "https://api.github.com/users/jeejeelee/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/jeejeelee/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/jeejeelee/subscriptions",
+      "organizations_url": "https://api.github.com/users/jeejeelee/orgs",
+      "repos_url": "https://api.github.com/users/jeejeelee/repos",
+      "events_url": "https://api.github.com/users/jeejeelee/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/jeejeelee/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "APPROVED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57428#pullrequestreview-5273189292",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57428",
+    "author_association": "MEMBER",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57428#pullrequestreview-5273189292"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57428"
+      }
+    },
+    "submitted_at": "2026-09-22T00:41:40Z",
+    "commit_id": "b95aff62d62499cdc5a0e9993fc0e1dfa56280e9"
+  }
+]

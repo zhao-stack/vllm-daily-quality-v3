@@ -1,0 +1,242 @@
+[
+  {
+    "id": 5142536302,
+    "node_id": "PRR_kwDOI7xefs8AAAABMoTgbg",
+    "user": {
+      "login": "claude[bot]",
+      "id": 209825114,
+      "node_id": "BOT_kgDODIGtWg",
+      "avatar_url": "https://avatars.githubusercontent.com/in/1236702?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/claude%5Bbot%5D",
+      "html_url": "https://github.com/apps/claude",
+      "followers_url": "https://api.github.com/users/claude%5Bbot%5D/followers",
+      "following_url": "https://api.github.com/users/claude%5Bbot%5D/following{/other_user}",
+      "gists_url": "https://api.github.com/users/claude%5Bbot%5D/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/claude%5Bbot%5D/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/claude%5Bbot%5D/subscriptions",
+      "organizations_url": "https://api.github.com/users/claude%5Bbot%5D/orgs",
+      "repos_url": "https://api.github.com/users/claude%5Bbot%5D/repos",
+      "events_url": "https://api.github.com/users/claude%5Bbot%5D/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/claude%5Bbot%5D/received_events",
+      "type": "Bot",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "## Claude Code Review\n\nThis pull request is from a fork — automated review is disabled. A repository maintainer can comment `@claude review` to run a one-time review.",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/55385#pullrequestreview-5142536302",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/55385",
+    "author_association": "NONE",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/55385#pullrequestreview-5142536302"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/55385"
+      }
+    },
+    "submitted_at": "2026-09-08T13:46:25Z",
+    "commit_id": null
+  },
+  {
+    "id": 5142608079,
+    "node_id": "PRR_kwDOI7xefs8AAAABMoX4zw",
+    "user": {
+      "login": "copilot-pull-request-reviewer[bot]",
+      "id": 175728472,
+      "node_id": "BOT_kgDOCnlnWA",
+      "avatar_url": "https://avatars.githubusercontent.com/in/946600?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/copilot-pull-request-reviewer%5Bbot%5D",
+      "html_url": "https://github.com/apps/copilot-pull-request-reviewer",
+      "followers_url": "https://api.github.com/users/copilot-pull-request-reviewer%5Bbot%5D/followers",
+      "following_url": "https://api.github.com/users/copilot-pull-request-reviewer%5Bbot%5D/following{/other_user}",
+      "gists_url": "https://api.github.com/users/copilot-pull-request-reviewer%5Bbot%5D/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/copilot-pull-request-reviewer%5Bbot%5D/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/copilot-pull-request-reviewer%5Bbot%5D/subscriptions",
+      "organizations_url": "https://api.github.com/users/copilot-pull-request-reviewer%5Bbot%5D/orgs",
+      "repos_url": "https://api.github.com/users/copilot-pull-request-reviewer%5Bbot%5D/repos",
+      "events_url": "https://api.github.com/users/copilot-pull-request-reviewer%5Bbot%5D/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/copilot-pull-request-reviewer%5Bbot%5D/received_events",
+      "type": "Bot",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "### 🟡 Changes recommended\n\nThere is a correctness risk in the FlashMLA sparse tuple-input path (`actual_num_heads` handling) and the newly introduced `head_size=512` NoPE behavior needs targeted test coverage to prevent regressions.\n\n*Once you've addressed the issues Copilot identified, you can request another Copilot review.*\n\n<details>\n<summary>Pull request overview</summary>\n\nThis PR extends vLLM’s sparse-MLA attention backend support for SM90 to cover GLM5Next “NoPE” geometry, and updates pinned external dependencies to pick up newer FlashAttention/FlashMLA implementations.\n\n**Changes:**\n- Add GLM5Next NoPE MLA dimension support to the FlashAttention prefill backend selector.\n- Extend FlashMLA sparse backend to advertise `head_size=512`, reject quantized KV-cache formats for that geometry, and handle `rope_dim==0` (NoPE) query concatenation.\n- Bump pinned commits for `vllm-project/flash-attention` and `vllm-project/FlashMLA`.\n</details>\n\n<details>\n<summary>File summaries</summary>\n\n| File | Description |\r\n| ---- | ----------- |\r\n| vllm/v1/attention/backends/mla/prefill/flash_attn.py | Adds GLM5Next NoPE MLA dimensions to FlashAttn prefill backend support list. |\r\n| vllm/v1/attention/backends/mla/flashmla_sparse.py | Adds `head_size=512` support and NoPE handling in FlashMLA sparse forward path plus a guard for quantized KV-cache formats. |\r\n| cmake/external_projects/vllm_flash_attn.cmake | Updates the pinned FlashAttention commit used by the build. |\r\n| cmake/external_projects/flashmla.cmake | Updates the pinned FlashMLA commit used by the build. |\n</details>\n\n<details>\n<summary>Review details</summary>\n\n- **Files reviewed:** 4/4 changed files\n- **Comments generated:** 2\n- **Review effort level:** Lite\n</details>\n\n---\n\n💡 <a href=\"/vllm-project/vllm/new/main?filename=.github/skills/code-review/SKILL.md\" class=\"Link--inTextBlock\" target=\"_blank\" rel=\"noopener noreferrer\">Add a `code-review` agent skill</a> or configure MCP servers for context-aware, tailored reviews. <a href=\"https://docs.github.com/copilot/how-tos/use-copilot-agents/request-a-code-review/use-code-review?tool=webui#mcp-servers-and-agent-skills\" class=\"Link--inTextBlock\" target=\"_blank\" rel=\"noopener noreferrer\">Learn more in the docs.</a>",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/55385#pullrequestreview-5142608079",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/55385",
+    "author_association": "CONTRIBUTOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/55385#pullrequestreview-5142608079"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/55385"
+      }
+    },
+    "submitted_at": "2026-09-08T13:52:53Z",
+    "commit_id": null
+  },
+  {
+    "id": 5157556644,
+    "node_id": "PRR_kwDOI7xefs8AAAABM2oRpA",
+    "user": {
+      "login": "simon-veitner-redhat",
+      "id": 298638342,
+      "node_id": "U_kgDOEczcBg",
+      "avatar_url": "https://avatars.githubusercontent.com/u/298638342?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/simon-veitner-redhat",
+      "html_url": "https://github.com/simon-veitner-redhat",
+      "followers_url": "https://api.github.com/users/simon-veitner-redhat/followers",
+      "following_url": "https://api.github.com/users/simon-veitner-redhat/following{/other_user}",
+      "gists_url": "https://api.github.com/users/simon-veitner-redhat/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/simon-veitner-redhat/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/simon-veitner-redhat/subscriptions",
+      "organizations_url": "https://api.github.com/users/simon-veitner-redhat/orgs",
+      "repos_url": "https://api.github.com/users/simon-veitner-redhat/repos",
+      "events_url": "https://api.github.com/users/simon-veitner-redhat/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/simon-veitner-redhat/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/55385#pullrequestreview-5157556644",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/55385",
+    "author_association": "CONTRIBUTOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/55385#pullrequestreview-5157556644"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/55385"
+      }
+    },
+    "submitted_at": "2026-09-09T17:10:15Z",
+    "commit_id": null
+  },
+  {
+    "id": 5246018356,
+    "node_id": "PRR_kwDOI7xefs8AAAABOK_jNA",
+    "user": {
+      "login": "JaredforReal",
+      "id": 142211841,
+      "node_id": "U_kgDOCHn7AQ",
+      "avatar_url": "https://avatars.githubusercontent.com/u/142211841?u=9acbd6ade37883fe2adf5df92160b4b0754cbc76&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/JaredforReal",
+      "html_url": "https://github.com/JaredforReal",
+      "followers_url": "https://api.github.com/users/JaredforReal/followers",
+      "following_url": "https://api.github.com/users/JaredforReal/following{/other_user}",
+      "gists_url": "https://api.github.com/users/JaredforReal/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/JaredforReal/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/JaredforReal/subscriptions",
+      "organizations_url": "https://api.github.com/users/JaredforReal/orgs",
+      "repos_url": "https://api.github.com/users/JaredforReal/repos",
+      "events_url": "https://api.github.com/users/JaredforReal/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/JaredforReal/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/55385#pullrequestreview-5246018356",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/55385",
+    "author_association": "CONTRIBUTOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/55385#pullrequestreview-5246018356"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/55385"
+      }
+    },
+    "submitted_at": "2026-09-18T08:56:59Z",
+    "commit_id": null
+  },
+  {
+    "id": 5259499104,
+    "node_id": "PRR_kwDOI7xefs8AAAABOX2WYA",
+    "user": {
+      "login": "JaredforReal",
+      "id": 142211841,
+      "node_id": "U_kgDOCHn7AQ",
+      "avatar_url": "https://avatars.githubusercontent.com/u/142211841?u=9acbd6ade37883fe2adf5df92160b4b0754cbc76&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/JaredforReal",
+      "html_url": "https://github.com/JaredforReal",
+      "followers_url": "https://api.github.com/users/JaredforReal/followers",
+      "following_url": "https://api.github.com/users/JaredforReal/following{/other_user}",
+      "gists_url": "https://api.github.com/users/JaredforReal/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/JaredforReal/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/JaredforReal/subscriptions",
+      "organizations_url": "https://api.github.com/users/JaredforReal/orgs",
+      "repos_url": "https://api.github.com/users/JaredforReal/repos",
+      "events_url": "https://api.github.com/users/JaredforReal/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/JaredforReal/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/55385#pullrequestreview-5259499104",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/55385",
+    "author_association": "CONTRIBUTOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/55385#pullrequestreview-5259499104"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/55385"
+      }
+    },
+    "submitted_at": "2026-09-20T04:17:58Z",
+    "commit_id": null
+  },
+  {
+    "id": 5267719813,
+    "node_id": "PRR_kwDOI7xefs8AAAABOfsGhQ",
+    "user": {
+      "login": "LucasWilkinson",
+      "id": 8854186,
+      "node_id": "MDQ6VXNlcjg4NTQxODY=",
+      "avatar_url": "https://avatars.githubusercontent.com/u/8854186?u=ea09464ea9d1523f09aa799c293fb42455410c54&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/LucasWilkinson",
+      "html_url": "https://github.com/LucasWilkinson",
+      "followers_url": "https://api.github.com/users/LucasWilkinson/followers",
+      "following_url": "https://api.github.com/users/LucasWilkinson/following{/other_user}",
+      "gists_url": "https://api.github.com/users/LucasWilkinson/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/LucasWilkinson/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/LucasWilkinson/subscriptions",
+      "organizations_url": "https://api.github.com/users/LucasWilkinson/orgs",
+      "repos_url": "https://api.github.com/users/LucasWilkinson/repos",
+      "events_url": "https://api.github.com/users/LucasWilkinson/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/LucasWilkinson/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "LGTM thanks!",
+    "state": "APPROVED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/55385#pullrequestreview-5267719813",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/55385",
+    "author_association": "COLLABORATOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/55385#pullrequestreview-5267719813"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/55385"
+      }
+    },
+    "submitted_at": "2026-09-21T14:19:43Z",
+    "commit_id": "60f34ea3c4df6a89b9ded7c48066a3b0e15eb31b"
+  }
+]

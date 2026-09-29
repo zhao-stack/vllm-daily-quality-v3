@@ -1,0 +1,21 @@
+{
+  "valid": true,
+  "stage_order": [
+    "AI独立语义分析",
+    "main-lys V3工作流归类",
+    "pinned源码关系复核与main2main门控"
+  ],
+  "counts": {
+    "ai_raw": 18,
+    "main_lys_v3": 18,
+    "main2main_review": 18
+  },
+  "five_category": {
+    "平台差异可借鉴": 9,
+    "收益不明确待验证": 5,
+    "直接继承": 2,
+    "收益明确待适配": 2
+  },
+  "main2main_scenario": "direct-source-review",
+  "main2main_profile": "pinned-static-no-npu"
+}

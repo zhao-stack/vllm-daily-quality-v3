@@ -1,0 +1,281 @@
+[
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3970854243",
+    "pull_request_review_id": 5157246410,
+    "id": 3970854243,
+    "node_id": "PRRC_kwDOI7xefs7srm1j",
+    "diff_hunk": "@@ -2057,27 +2057,45 @@ def widest_group_bytes(page_size_layers: dict[int, list[str]], n: int) -> int:\n         vllm_config,\n         kv_cache_spec,\n         groups,\n-        use_deepseek_v4_fallback=_is_deepseek_v4_eagle(vllm_config),\n+        use_trailing_layer_fallback=_uses_trailing_mtp_layers(vllm_config),\n     )\n     _warn_if_unannotated_eagle_mamba(vllm_config, groups)\n     return groups\n \n \n-def _is_deepseek_v4_eagle(vllm_config: VllmConfig) -> bool:\n+def _uses_trailing_mtp_layers(vllm_config: VllmConfig) -> bool:\n+    \"\"\"Whether the drafter's KV layers can be located positionally.\n+\n+    MTP drafters (DeepseekV4, Qwen3.5/Qwen3-Next, ...) reuse the target's own\n+    decoder-layer architecture, so their specs carry no draft marker, but they\n+    always register their KV layers after every target layer. That makes the\n+    trailing-layer rule applicable wherever the groups partition the layers of\n+    ``kv_cache_spec`` exactly (checked separately by the annotator).\n+    \"\"\"\n     spec_config = vllm_config.speculative_config\n     if spec_config is None or not spec_config.use_eagle():\n         return False\n-    model_config = vllm_config.model_config\n-    return (\n-        model_config is not None and model_config.hf_config.model_type == \"deepseek_v4\"\n-    )\n+    return spec_config.method == \"mtp\"",
+    "path": "vllm/v1/core/kv_cache_utils.py",
+    "commit_id": "28bc017bbe359f4c17793ee8a103c5d623c8f75f",
+    "original_commit_id": "28bc017bbe359f4c17793ee8a103c5d623c8f75f",
+    "user": {
+      "login": "okorzh-amd",
+      "id": 270792019,
+      "node_id": "U_kgDOECP1Uw",
+      "avatar_url": "https://avatars.githubusercontent.com/u/270792019?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/okorzh-amd",
+      "html_url": "https://github.com/okorzh-amd",
+      "followers_url": "https://api.github.com/users/okorzh-amd/followers",
+      "following_url": "https://api.github.com/users/okorzh-amd/following{/other_user}",
+      "gists_url": "https://api.github.com/users/okorzh-amd/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/okorzh-amd/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/okorzh-amd/subscriptions",
+      "organizations_url": "https://api.github.com/users/okorzh-amd/orgs",
+      "repos_url": "https://api.github.com/users/okorzh-amd/repos",
+      "events_url": "https://api.github.com/users/okorzh-amd/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/okorzh-amd/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Please run e2e DSv4 test to ensure this change works for it as expected. ",
+    "created_at": "2026-09-09T16:39:08Z",
+    "updated_at": "2026-09-09T16:39:08Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/55390#discussion_r3970854243",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/55390",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3970854243"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/55390#discussion_r3970854243"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/55390"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3970854243/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 2078,
+    "side": "RIGHT",
+    "author_association": "CONTRIBUTOR",
+    "original_position": 28,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3972516479",
+    "pull_request_review_id": 5159285094,
+    "id": 3972516479,
+    "node_id": "PRRC_kwDOI7xefs7sx8p_",
+    "diff_hunk": "@@ -2057,27 +2057,45 @@ def widest_group_bytes(page_size_layers: dict[int, list[str]], n: int) -> int:\n         vllm_config,\n         kv_cache_spec,\n         groups,\n-        use_deepseek_v4_fallback=_is_deepseek_v4_eagle(vllm_config),\n+        use_trailing_layer_fallback=_uses_trailing_mtp_layers(vllm_config),\n     )\n     _warn_if_unannotated_eagle_mamba(vllm_config, groups)\n     return groups\n \n \n-def _is_deepseek_v4_eagle(vllm_config: VllmConfig) -> bool:\n+def _uses_trailing_mtp_layers(vllm_config: VllmConfig) -> bool:\n+    \"\"\"Whether the drafter's KV layers can be located positionally.\n+\n+    MTP drafters (DeepseekV4, Qwen3.5/Qwen3-Next, ...) reuse the target's own\n+    decoder-layer architecture, so their specs carry no draft marker, but they\n+    always register their KV layers after every target layer. That makes the\n+    trailing-layer rule applicable wherever the groups partition the layers of\n+    ``kv_cache_spec`` exactly (checked separately by the annotator).\n+    \"\"\"\n     spec_config = vllm_config.speculative_config\n     if spec_config is None or not spec_config.use_eagle():\n         return False\n-    model_config = vllm_config.model_config\n-    return (\n-        model_config is not None and model_config.hf_config.model_type == \"deepseek_v4\"\n-    )\n+    return spec_config.method == \"mtp\"",
+    "path": "vllm/v1/core/kv_cache_utils.py",
+    "commit_id": "28bc017bbe359f4c17793ee8a103c5d623c8f75f",
+    "original_commit_id": "28bc017bbe359f4c17793ee8a103c5d623c8f75f",
+    "user": {
+      "login": "okorzh-amd",
+      "id": 270792019,
+      "node_id": "U_kgDOECP1Uw",
+      "avatar_url": "https://avatars.githubusercontent.com/u/270792019?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/okorzh-amd",
+      "html_url": "https://github.com/okorzh-amd",
+      "followers_url": "https://api.github.com/users/okorzh-amd/followers",
+      "following_url": "https://api.github.com/users/okorzh-amd/following{/other_user}",
+      "gists_url": "https://api.github.com/users/okorzh-amd/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/okorzh-amd/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/okorzh-amd/subscriptions",
+      "organizations_url": "https://api.github.com/users/okorzh-amd/orgs",
+      "repos_url": "https://api.github.com/users/okorzh-amd/repos",
+      "events_url": "https://api.github.com/users/okorzh-amd/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/okorzh-amd/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "I think for DSV4 this will be  method == \"dspark\", not method == \"mtp\". So this PR is going to break existing fix for DSV4",
+    "created_at": "2026-09-09T20:02:49Z",
+    "updated_at": "2026-09-09T20:02:49Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/55390#discussion_r3972516479",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/55390",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3972516479"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/55390#discussion_r3972516479"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/55390"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3972516479/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 2078,
+    "side": "RIGHT",
+    "in_reply_to_id": 3970854243,
+    "author_association": "CONTRIBUTOR",
+    "original_position": 28,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3974880549",
+    "pull_request_review_id": 5161974879,
+    "id": 3974880549,
+    "node_id": "PRRC_kwDOI7xefs7s690l",
+    "diff_hunk": "@@ -2057,27 +2057,45 @@ def widest_group_bytes(page_size_layers: dict[int, list[str]], n: int) -> int:\n         vllm_config,\n         kv_cache_spec,\n         groups,\n-        use_deepseek_v4_fallback=_is_deepseek_v4_eagle(vllm_config),\n+        use_trailing_layer_fallback=_uses_trailing_mtp_layers(vllm_config),\n     )\n     _warn_if_unannotated_eagle_mamba(vllm_config, groups)\n     return groups\n \n \n-def _is_deepseek_v4_eagle(vllm_config: VllmConfig) -> bool:\n+def _uses_trailing_mtp_layers(vllm_config: VllmConfig) -> bool:\n+    \"\"\"Whether the drafter's KV layers can be located positionally.\n+\n+    MTP drafters (DeepseekV4, Qwen3.5/Qwen3-Next, ...) reuse the target's own\n+    decoder-layer architecture, so their specs carry no draft marker, but they\n+    always register their KV layers after every target layer. That makes the\n+    trailing-layer rule applicable wherever the groups partition the layers of\n+    ``kv_cache_spec`` exactly (checked separately by the annotator).\n+    \"\"\"\n     spec_config = vllm_config.speculative_config\n     if spec_config is None or not spec_config.use_eagle():\n         return False\n-    model_config = vllm_config.model_config\n-    return (\n-        model_config is not None and model_config.hf_config.model_type == \"deepseek_v4\"\n-    )\n+    return spec_config.method == \"mtp\"",
+    "path": "vllm/v1/core/kv_cache_utils.py",
+    "commit_id": "28bc017bbe359f4c17793ee8a103c5d623c8f75f",
+    "original_commit_id": "28bc017bbe359f4c17793ee8a103c5d623c8f75f",
+    "user": {
+      "login": "dllehr-amd",
+      "id": 91553416,
+      "node_id": "U_kgDOBXT-iA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/91553416?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/dllehr-amd",
+      "html_url": "https://github.com/dllehr-amd",
+      "followers_url": "https://api.github.com/users/dllehr-amd/followers",
+      "following_url": "https://api.github.com/users/dllehr-amd/following{/other_user}",
+      "gists_url": "https://api.github.com/users/dllehr-amd/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/dllehr-amd/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/dllehr-amd/subscriptions",
+      "organizations_url": "https://api.github.com/users/dllehr-amd/orgs",
+      "repos_url": "https://api.github.com/users/dllehr-amd/repos",
+      "events_url": "https://api.github.com/users/dllehr-amd/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/dllehr-amd/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "something like this maybe @Navjot10 @benchislett \n```-    return spec_config.method == \"mtp\"\n+    if spec_config.method == \"mtp\":\n+        return True\n+    model_config = vllm_config.model_config\n+    return (\n+        model_config is not None and model_config.hf_config.model_type == \"deepseek_v4\"\n+    )\n```",
+    "created_at": "2026-09-10T02:19:12Z",
+    "updated_at": "2026-09-10T02:19:12Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/55390#discussion_r3974880549",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/55390",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3974880549"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/55390#discussion_r3974880549"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/55390"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3974880549/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 2078,
+    "side": "RIGHT",
+    "in_reply_to_id": 3970854243,
+    "author_association": "COLLABORATOR",
+    "original_position": 28,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4051206336",
+    "pull_request_review_id": 5253221214,
+    "id": 4051206336,
+    "node_id": "PRRC_kwDOI7xefs7xeIDA",
+    "diff_hunk": "@@ -2057,27 +2057,45 @@ def widest_group_bytes(page_size_layers: dict[int, list[str]], n: int) -> int:\n         vllm_config,\n         kv_cache_spec,\n         groups,\n-        use_deepseek_v4_fallback=_is_deepseek_v4_eagle(vllm_config),\n+        use_trailing_layer_fallback=_uses_trailing_mtp_layers(vllm_config),\n     )\n     _warn_if_unannotated_eagle_mamba(vllm_config, groups)\n     return groups\n \n \n-def _is_deepseek_v4_eagle(vllm_config: VllmConfig) -> bool:\n+def _uses_trailing_mtp_layers(vllm_config: VllmConfig) -> bool:\n+    \"\"\"Whether the drafter's KV layers can be located positionally.\n+\n+    MTP drafters (DeepseekV4, Qwen3.5/Qwen3-Next, ...) reuse the target's own\n+    decoder-layer architecture, so their specs carry no draft marker, but they\n+    always register their KV layers after every target layer. That makes the\n+    trailing-layer rule applicable wherever the groups partition the layers of\n+    ``kv_cache_spec`` exactly (checked separately by the annotator).\n+    \"\"\"\n     spec_config = vllm_config.speculative_config\n     if spec_config is None or not spec_config.use_eagle():\n         return False\n-    model_config = vllm_config.model_config\n-    return (\n-        model_config is not None and model_config.hf_config.model_type == \"deepseek_v4\"\n-    )\n+    return spec_config.method == \"mtp\"",
+    "path": "vllm/v1/core/kv_cache_utils.py",
+    "commit_id": "28bc017bbe359f4c17793ee8a103c5d623c8f75f",
+    "original_commit_id": "28bc017bbe359f4c17793ee8a103c5d623c8f75f",
+    "user": {
+      "login": "Navjot10",
+      "id": 83138142,
+      "node_id": "MDQ6VXNlcjgzMTM4MTQy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/83138142?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/Navjot10",
+      "html_url": "https://github.com/Navjot10",
+      "followers_url": "https://api.github.com/users/Navjot10/followers",
+      "following_url": "https://api.github.com/users/Navjot10/following{/other_user}",
+      "gists_url": "https://api.github.com/users/Navjot10/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/Navjot10/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/Navjot10/subscriptions",
+      "organizations_url": "https://api.github.com/users/Navjot10/orgs",
+      "repos_url": "https://api.github.com/users/Navjot10/repos",
+      "events_url": "https://api.github.com/users/Navjot10/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/Navjot10/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "@okorzh-amd @dllehr-amd The requested DeepSeek V4 DSpark end-to-end validation passed for `bcd8d7384103691eb00bc4f542de50fb69fc37c3` on **4×NVIDIA B300**.\n\n- Full five-shot GSM8K evaluation: **95.07%** across **1,319 questions**, with an invalid-answer rate of **0.000**. This passes the upstream effective minimum of 84% (`0.92 - 0.08` tolerance).\n- Mean acceptance length: **3.980**, above the upstream minimum of **1.2**. This is `1 + accepted draft tokens / verification steps`, as computed by the upstream test.\n- CUDA KV-cache suite: **125 passed**, no failures or skips. End-to-end JUnit: **1 passed**, no failures or skips.\n\nUsed upstream `tests/evals/gsm8k/configs/DeepSeek-V4-Flash-DSpark-confidence-TEP4.yaml` with TP4 + expert parallelism and its evaluation settings unchanged. The only config additions pin the model/tokenizer/code/draft revision to `62af8fffb2f7030cac4de2f0169f5b8d1101b646`. Runtime: the exact `49e0427ca` vLLM wheel with this PR's Python change overlaid, Torch 2.13.0, CUDA 13.0. The patch and loaded-module hashes were checked against the pushed commit.\n\n```text\nGSM8K Results for deepseek-ai/DeepSeek-V4-Flash-DSpark:\n  Measured metric: 0.9507\n  Expected metric: 0.9200\n  Tolerance: 0.0800\n  Questions: 1319\n  Invalid rate: 0.000\n  Latency: 75.4s\n  QPS: 17.5\n  Mean acceptance length: 3.980\n  Minimum acceptance length: 1.200\n```\n\nThe DeepSeek V4/V4.1 model fallback is preserved alongside the MTP method gate, and all required GitHub checks pass. Could you take another look at the updated change?\n",
+    "created_at": "2026-09-18T22:38:47Z",
+    "updated_at": "2026-09-18T22:38:47Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/55390#discussion_r4051206336",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/55390",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4051206336"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/55390#discussion_r4051206336"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/55390"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4051206336/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 2078,
+    "side": "RIGHT",
+    "in_reply_to_id": 3970854243,
+    "author_association": "CONTRIBUTOR",
+    "original_position": 28,
+    "position": 1,
+    "subject_type": "line"
+  }
+]

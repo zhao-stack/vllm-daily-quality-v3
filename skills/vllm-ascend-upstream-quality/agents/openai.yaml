@@ -1,0 +1,4 @@
+interface:
+  display_name: "vLLM Ascend 上游质量分析"
+  short_description: "分析自定义区间内的 vLLM Bugfix、优化收益及 Ascend 适配结论"
+  default_prompt: "使用 $vllm-ascend-upstream-quality 分析自定义时间范围内的 vLLM 上游 PR 与 vllm-ascend 基线，生成 Bugfix 和优化收益管理表。"

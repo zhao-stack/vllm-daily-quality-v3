@@ -1,0 +1,349 @@
+[
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3958615171",
+    "pull_request_review_id": 5142608079,
+    "id": 3958615171,
+    "node_id": "PRRC_kwDOI7xefs7r86yD",
+    "diff_hunk": "@@ -996,7 +1002,12 @@ def forward_mqa(\n         if isinstance(q, tuple):\n             ql_nope, q_pe = q\n             q = self.q_concat_buffer[: ql_nope.shape[0]]\n-            ops.concat_mla_q(ql_nope, q_pe, q)\n+            if q_pe.size(-1) == 0:\n+                # NoPE (GLM5Next): concat_mla_q requires rope_dim == 64,\n+                # copy directly into the head-padded buffer instead.\n+                q[:, : ql_nope.shape[1]].copy_(ql_nope)\n+            else:\n+                ops.concat_mla_q(ql_nope, q_pe, q)\n         else:\n             actual_num_heads = q.shape[1]",
+    "path": "vllm/v1/attention/backends/mla/flashmla_sparse.py",
+    "commit_id": "db053be313a4ce53250c3d412f0e76e124889e72",
+    "original_commit_id": "db053be313a4ce53250c3d412f0e76e124889e72",
+    "user": {
+      "login": "Copilot",
+      "id": 175728472,
+      "node_id": "BOT_kgDOCnlnWA",
+      "avatar_url": "https://avatars.githubusercontent.com/in/946600?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/Copilot",
+      "html_url": "https://github.com/apps/copilot-pull-request-reviewer",
+      "followers_url": "https://api.github.com/users/Copilot/followers",
+      "following_url": "https://api.github.com/users/Copilot/following{/other_user}",
+      "gists_url": "https://api.github.com/users/Copilot/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/Copilot/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/Copilot/subscriptions",
+      "organizations_url": "https://api.github.com/users/Copilot/orgs",
+      "repos_url": "https://api.github.com/users/Copilot/repos",
+      "events_url": "https://api.github.com/users/Copilot/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/Copilot/received_events",
+      "type": "Bot",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "In the tuple-input path, `actual_num_heads` remains `self.num_heads`. Under DCP or any scenario where the tuple has a different head count than `self.num_heads`, this can pass the wrong `actual_num_heads` into `_forward_bf16_kv` and lead to incorrect output slicing/padding behavior. Set `actual_num_heads` from `ql_nope.shape[1]` (consistent with the non-tuple path), and use that value in the NoPE fast-path copy as well.",
+    "created_at": "2026-09-08T13:52:53Z",
+    "updated_at": "2026-09-08T13:52:53Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/55385#discussion_r3958615171",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/55385",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3958615171"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/55385#discussion_r3958615171"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/55385"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3958615171/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": 1359,
+    "original_start_line": 1001,
+    "start_side": "RIGHT",
+    "line": 1373,
+    "original_line": 1012,
+    "side": "RIGHT",
+    "author_association": "CONTRIBUTOR",
+    "original_position": 36,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3958615217",
+    "pull_request_review_id": 5142608079,
+    "id": 3958615217,
+    "node_id": "PRRC_kwDOI7xefs7r86yx",
+    "diff_hunk": "@@ -135,8 +135,8 @@ def get_impl_cls() -> type[\"FlashMLASparseImpl\"]:\n \n     @classmethod\n     def get_supported_head_sizes(cls) -> list[int]:\n-        # DeepSeek V3.2 layout: 512 NoPE + 64 RoPE = 576.\n-        return [576]\n+        # DeepSeek V3.2: 512 NoPE + 64 RoPE = 576; GLM5Next NoPE: 512.\n+        return [576, 512]",
+    "path": "vllm/v1/attention/backends/mla/flashmla_sparse.py",
+    "commit_id": "60f34ea3c4df6a89b9ded7c48066a3b0e15eb31b",
+    "original_commit_id": "db053be313a4ce53250c3d412f0e76e124889e72",
+    "user": {
+      "login": "Copilot",
+      "id": 175728472,
+      "node_id": "BOT_kgDOCnlnWA",
+      "avatar_url": "https://avatars.githubusercontent.com/in/946600?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/Copilot",
+      "html_url": "https://github.com/apps/copilot-pull-request-reviewer",
+      "followers_url": "https://api.github.com/users/Copilot/followers",
+      "following_url": "https://api.github.com/users/Copilot/following{/other_user}",
+      "gists_url": "https://api.github.com/users/Copilot/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/Copilot/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/Copilot/subscriptions",
+      "organizations_url": "https://api.github.com/users/Copilot/orgs",
+      "repos_url": "https://api.github.com/users/Copilot/repos",
+      "events_url": "https://api.github.com/users/Copilot/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/Copilot/received_events",
+      "type": "Bot",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "`head_size=512` support (and the new NoPE path/quantized-cache rejection for that head size) is introduced here, but the existing sparse-MLA backend tests appear to only exercise the 576/rope=64 configurations. Adding a targeted unit test for FlashMLASparseBackend with `qk_rope_head_dim=0` (so `head_size=kv_lora_rank=512`) would help prevent regressions in backend selection and the `forward_mqa` concat/copy logic.",
+    "created_at": "2026-09-08T13:52:53Z",
+    "updated_at": "2026-09-08T13:52:54Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/55385#discussion_r3958615217",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/55385",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3958615217"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/55385#discussion_r3958615217"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/55385"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3958615217/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": 158,
+    "original_start_line": 137,
+    "start_side": "RIGHT",
+    "line": 160,
+    "original_line": 139,
+    "side": "RIGHT",
+    "author_association": "CONTRIBUTOR",
+    "original_position": 7,
+    "position": 7,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3971106093",
+    "pull_request_review_id": 5157556644,
+    "id": 3971106093,
+    "node_id": "PRRC_kwDOI7xefs7sskUt",
+    "diff_hunk": "@@ -135,8 +135,8 @@ def get_impl_cls() -> type[\"FlashMLASparseImpl\"]:\n \n     @classmethod\n     def get_supported_head_sizes(cls) -> list[int]:\n-        # DeepSeek V3.2 layout: 512 NoPE + 64 RoPE = 576.\n-        return [576]\n+        # DeepSeek V3.2: 512 NoPE + 64 RoPE = 576; GLM5Next NoPE: 512.\n+        return [576, 512]",
+    "path": "vllm/v1/attention/backends/mla/flashmla_sparse.py",
+    "commit_id": "60f34ea3c4df6a89b9ded7c48066a3b0e15eb31b",
+    "original_commit_id": "db053be313a4ce53250c3d412f0e76e124889e72",
+    "user": {
+      "login": "simon-veitner-redhat",
+      "id": 298638342,
+      "node_id": "U_kgDOEczcBg",
+      "avatar_url": "https://avatars.githubusercontent.com/u/298638342?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/simon-veitner-redhat",
+      "html_url": "https://github.com/simon-veitner-redhat",
+      "followers_url": "https://api.github.com/users/simon-veitner-redhat/followers",
+      "following_url": "https://api.github.com/users/simon-veitner-redhat/following{/other_user}",
+      "gists_url": "https://api.github.com/users/simon-veitner-redhat/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/simon-veitner-redhat/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/simon-veitner-redhat/subscriptions",
+      "organizations_url": "https://api.github.com/users/simon-veitner-redhat/orgs",
+      "repos_url": "https://api.github.com/users/simon-veitner-redhat/repos",
+      "events_url": "https://api.github.com/users/simon-veitner-redhat/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/simon-veitner-redhat/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "this is unconditionally done and doesn't guard on compute capability.\ni think it may reorder priority for `sm_100` backend as follows:\n\ncapability | heads/rank | before PR | after PR\n-- | -- | -- | --\nsm100 | 16 (TP=4) | FLASHINFER_MLA_SPARSE | FLASHINFER_MLA_SPARSE\nsm100 | 32 (TP=2) | FLASHINFER_MLA_SPARSE | FLASHMLA_SPARSE\nsm100 | 64 (TP=1) | FLASHINFER_MLA_SPARSE | FLASHMLA_SPARSE\nsm90 | any | FLASHINFER_MLA_SPARSE_SM90 | FLASHINFER_MLA_SPARSE_SM90\n\nis this intended?",
+    "created_at": "2026-09-09T17:10:15Z",
+    "updated_at": "2026-09-09T17:10:15Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/55385#discussion_r3971106093",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/55385",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3971106093"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/55385#discussion_r3971106093"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/55385"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3971106093/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": 160,
+    "original_line": 139,
+    "side": "RIGHT",
+    "author_association": "CONTRIBUTOR",
+    "original_position": 7,
+    "position": 7,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4045277837",
+    "pull_request_review_id": 5246018356,
+    "id": 4045277837,
+    "node_id": "PRRC_kwDOI7xefs7xHgqN",
+    "diff_hunk": "@@ -135,8 +135,8 @@ def get_impl_cls() -> type[\"FlashMLASparseImpl\"]:\n \n     @classmethod\n     def get_supported_head_sizes(cls) -> list[int]:\n-        # DeepSeek V3.2 layout: 512 NoPE + 64 RoPE = 576.\n-        return [576]\n+        # DeepSeek V3.2: 512 NoPE + 64 RoPE = 576; GLM5Next NoPE: 512.\n+        return [576, 512]",
+    "path": "vllm/v1/attention/backends/mla/flashmla_sparse.py",
+    "commit_id": "60f34ea3c4df6a89b9ded7c48066a3b0e15eb31b",
+    "original_commit_id": "db053be313a4ce53250c3d412f0e76e124889e72",
+    "user": {
+      "login": "JaredforReal",
+      "id": 142211841,
+      "node_id": "U_kgDOCHn7AQ",
+      "avatar_url": "https://avatars.githubusercontent.com/u/142211841?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/JaredforReal",
+      "html_url": "https://github.com/JaredforReal",
+      "followers_url": "https://api.github.com/users/JaredforReal/followers",
+      "following_url": "https://api.github.com/users/JaredforReal/following{/other_user}",
+      "gists_url": "https://api.github.com/users/JaredforReal/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/JaredforReal/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/JaredforReal/subscriptions",
+      "organizations_url": "https://api.github.com/users/JaredforReal/orgs",
+      "repos_url": "https://api.github.com/users/JaredforReal/repos",
+      "events_url": "https://api.github.com/users/JaredforReal/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/JaredforReal/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "updated pr description",
+    "created_at": "2026-09-18T08:56:59Z",
+    "updated_at": "2026-09-18T08:56:59Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/55385#discussion_r4045277837",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/55385",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4045277837"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/55385#discussion_r4045277837"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/55385"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4045277837/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": 160,
+    "original_line": 139,
+    "side": "RIGHT",
+    "in_reply_to_id": 3971106093,
+    "author_association": "CONTRIBUTOR",
+    "original_position": 7,
+    "position": 7,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4056091408",
+    "pull_request_review_id": 5259499104,
+    "id": 4056091408,
+    "node_id": "PRRC_kwDOI7xefs7xwwsQ",
+    "diff_hunk": "@@ -135,8 +135,8 @@ def get_impl_cls() -> type[\"FlashMLASparseImpl\"]:\n \n     @classmethod\n     def get_supported_head_sizes(cls) -> list[int]:\n-        # DeepSeek V3.2 layout: 512 NoPE + 64 RoPE = 576.\n-        return [576]\n+        # DeepSeek V3.2: 512 NoPE + 64 RoPE = 576; GLM5Next NoPE: 512.\n+        return [576, 512]",
+    "path": "vllm/v1/attention/backends/mla/flashmla_sparse.py",
+    "commit_id": "60f34ea3c4df6a89b9ded7c48066a3b0e15eb31b",
+    "original_commit_id": "db053be313a4ce53250c3d412f0e76e124889e72",
+    "user": {
+      "login": "JaredforReal",
+      "id": 142211841,
+      "node_id": "U_kgDOCHn7AQ",
+      "avatar_url": "https://avatars.githubusercontent.com/u/142211841?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/JaredforReal",
+      "html_url": "https://github.com/JaredforReal",
+      "followers_url": "https://api.github.com/users/JaredforReal/followers",
+      "following_url": "https://api.github.com/users/JaredforReal/following{/other_user}",
+      "gists_url": "https://api.github.com/users/JaredforReal/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/JaredforReal/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/JaredforReal/subscriptions",
+      "organizations_url": "https://api.github.com/users/JaredforReal/orgs",
+      "repos_url": "https://api.github.com/users/JaredforReal/repos",
+      "events_url": "https://api.github.com/users/JaredforReal/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/JaredforReal/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "perf gain is real but small, and there's also one open correctness-adjacent issue: the FA backend deterministically hits an IMA in the `generic _compute_slot_mappings_kernel` with `--no-enable-prefix-caching` on this hybrid model (generic infra, fires only on FA's builder flags). \r\nSo I'd rather land the backends opt-in now and flip the default later once that's fixed and the paths have mileage — a one-line change in `_get_backend_priorities`",
+    "created_at": "2026-09-20T04:17:58Z",
+    "updated_at": "2026-09-20T04:17:58Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/55385#discussion_r4056091408",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/55385",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4056091408"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/55385#discussion_r4056091408"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/55385"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4056091408/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": 160,
+    "original_line": 139,
+    "side": "RIGHT",
+    "in_reply_to_id": 3971106093,
+    "author_association": "CONTRIBUTOR",
+    "original_position": 7,
+    "position": 7,
+    "subject_type": "line"
+  }
+]

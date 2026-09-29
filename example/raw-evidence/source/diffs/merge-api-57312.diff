@@ -1,0 +1,1149 @@
+diff --git a/tests/model_executor/model_loader/test_weight_cache.py b/tests/model_executor/model_loader/test_weight_cache.py
+index 1195b8b09d1c..eb672bc35b2c 100644
+--- a/tests/model_executor/model_loader/test_weight_cache.py
++++ b/tests/model_executor/model_loader/test_weight_cache.py
+@@ -30,10 +30,19 @@
+ class WeightCacheDaemon:
+     """Context manager running the real weight cache daemon as a subprocess."""
+ 
+-    def __init__(self, model: str, tp_size: int, extra_args: list[str] | None = None):
++    def __init__(
++        self,
++        model: str,
++        tp_size: int,
++        extra_args: list[str] | None = None,
++        num_groups: int = 1,
++    ):
+         # Short base path: Unix socket paths are limited to ~107 characters.
+         self.socket_dir = tempfile.mkdtemp(prefix="vllm_ipc_")
+         self.tp_size = tp_size
++        # Each daemon group (target plus cached drafts) binds one socket per
++        # local rank.
++        self.num_sockets = tp_size * num_groups
+         self._cmd = [
+             sys.executable,
+             "-m",
+@@ -87,7 +96,7 @@ def _wait_ready(self, timeout_s: float) -> None:
+                     f"Weight cache daemon exited with {self._proc.returncode}:\n"
+                     f"{self._logs()}"
+                 )
+-            if len(glob.glob(pattern)) >= self.tp_size:
++            if len(glob.glob(pattern)) >= self.num_sockets:
+                 return
+             time.sleep(1.0)
+         raise TimeoutError(
+@@ -112,6 +121,9 @@ class ModelCase:
+     images: list | None = None
+     llm_kwargs: dict[str, Any] = field(default_factory=dict)
+     daemon_args: list[str] = field(default_factory=list)
++    # Daemon groups the launcher starts; 2 when a cached draft group joins the
++    # target group (MTP/EAGLE speculative decoding).
++    daemon_groups: int = 1
+ 
+ 
+ def generate(
+@@ -172,14 +184,41 @@ def generate(
+     daemon_args=["--trust-remote-code"],
+ )
+ 
++# Qwen3.5-0.8B ships one MTP layer in the target checkpoint, so method="mtp"
++# loads the draft from the same model. The daemon must cache it in its draft
++# group for the warm runs (fallback=False) to succeed.
++QWEN_MTP_CASE = ModelCase(
++    model="Qwen/Qwen3.5-0.8B",
++    prompts=[
++        "Hello, my name is",
++        "The capital of France is",
++    ],
++    llm_kwargs=dict(
++        gpu_memory_utilization=0.3,
++        enforce_eager=True,
++        enable_chunked_prefill=True,
++        speculative_config={"method": "mtp", "num_speculative_tokens": 1},
++    ),
++    daemon_args=[
++        "--speculative-config",
++        '{"method": "mtp", "num_speculative_tokens": 1}',
++    ],
++    daemon_groups=2,
++)
+ 
+-@pytest.mark.parametrize("case", [QWEN_CASE, K3_CASE], ids=["qwen3.5", "kimi-k3"])
++
++@pytest.mark.parametrize(
++    "case",
++    [QWEN_CASE, K3_CASE, QWEN_MTP_CASE],
++    ids=["qwen3.5", "kimi-k3", "qwen3.5-mtp"],
++)
+ def test_ipc_cache_cold_start_and_warm_restart(vllm_runner, case: ModelCase):
+     """Cold start falls back to disk; warm restarts load weights via CUDA IPC.
+ 
+     All runs must produce outputs identical to a default-loader baseline. The
+     warm runs disable the disk fallback, so they only pass if the weights
+-    really came from the daemon.
++    really came from the daemon — for the MTP case, both the target's and the
++    draft's daemon groups.
+     """
+     if not current_platform.is_cuda_alike():
+         pytest.skip("Weight cache IPC sharing requires CUDA or ROCm")
+@@ -199,7 +238,12 @@ def test_ipc_cache_cold_start_and_warm_restart(vllm_runner, case: ModelCase):
+     with tempfile.TemporaryDirectory(prefix="vllm_ipc_empty_") as empty_socket_dir:
+         cold_outputs = generate(vllm_runner, case, empty_socket_dir, fallback=True)
+ 
+-    with WeightCacheDaemon(case.model, tp_size=1, extra_args=case.daemon_args) as d:
++    with WeightCacheDaemon(
++        case.model,
++        tp_size=1,
++        extra_args=case.daemon_args,
++        num_groups=case.daemon_groups,
++    ) as d:
+         warm_outputs = generate(vllm_runner, case, d.socket_dir, fallback=False)
+         # Warm restart: a second engine lifetime against the same daemon.
+         restart_outputs = generate(vllm_runner, case, d.socket_dir, fallback=False)
+diff --git a/tests/model_executor/test_qwen3_omni.py b/tests/model_executor/test_qwen3_omni.py
+index cf3df85caa58..71c74863e996 100644
+--- a/tests/model_executor/test_qwen3_omni.py
++++ b/tests/model_executor/test_qwen3_omni.py
+@@ -369,11 +369,12 @@ def test_dspark_shares_target_embedding_with_smaller_draft_vocabulary():
+             draft_parallel_config=SimpleNamespace(tensor_parallel_size=1),
+             attention_backend=None,
+             kv_cache_dtype=None,
++            draft_load_config=None,
+         ),
+         parallel_config=ParallelConfig(),
+         attention_config=SimpleNamespace(backend=None),
+         cache_config=SimpleNamespace(),
+-        load_config=SimpleNamespace(),
++        load_config=SimpleNamespace(load_format="auto"),
+         model_config=SimpleNamespace(get_vocab_size=Mock(return_value=100)),
+     )
+ 
+diff --git a/tests/v1/spec_decode/test_draft_attention_backend_override.py b/tests/v1/spec_decode/test_draft_attention_backend_override.py
+index 410afe8d61d3..26bcd68fea8f 100644
+--- a/tests/v1/spec_decode/test_draft_attention_backend_override.py
++++ b/tests/v1/spec_decode/test_draft_attention_backend_override.py
+@@ -12,7 +12,7 @@
+ 
+ import pytest
+ 
+-from vllm.config import LoadConfig
++from vllm.config import LoadConfig, SpeculativeConfig
+ from vllm.v1.worker.gpu.spec_decode.eagle.utils import load_eagle_model
+ 
+ 
+@@ -37,6 +37,9 @@ class _SpeculativeConfig:
+     moe_backend: str | None = None
+     kv_cache_dtype: str | None = None
+     draft_model_config: object = None
++    draft_load_config: object = None
++
++    apply_draft_overrides = SpeculativeConfig.apply_draft_overrides
+ 
+ 
+ @dataclass
+diff --git a/tests/v1/spec_decode/test_draft_moe_backend_override.py b/tests/v1/spec_decode/test_draft_moe_backend_override.py
+index 5a4522e5b301..a0cc26c16df4 100644
+--- a/tests/v1/spec_decode/test_draft_moe_backend_override.py
++++ b/tests/v1/spec_decode/test_draft_moe_backend_override.py
+@@ -14,7 +14,7 @@
+ 
+ import pytest
+ 
+-from vllm.config import LoadConfig
++from vllm.config import LoadConfig, SpeculativeConfig
+ from vllm.v1.worker.gpu.spec_decode.eagle.utils import load_eagle_model
+ 
+ 
+@@ -34,6 +34,9 @@ class _SpeculativeConfig:
+     moe_backend: str | None = None
+     kv_cache_dtype: str | None = None
+     draft_model_config: object = None
++    draft_load_config: object = None
++
++    apply_draft_overrides = SpeculativeConfig.apply_draft_overrides
+ 
+ 
+ @dataclass
+diff --git a/vllm/config/speculative.py b/vllm/config/speculative.py
+index ef9a16f903a5..eb9d54813703 100644
+--- a/vllm/config/speculative.py
++++ b/vllm/config/speculative.py
+@@ -14,7 +14,7 @@
+ from vllm.config.kernel import MoEBackend
+ from vllm.config.model import HfOverrides, ModelConfig
+ from vllm.config.parallel import ParallelConfig
+-from vllm.config.utils import config
++from vllm.config.utils import config, replace
+ from vllm.logger import init_logger
+ from vllm.transformers_utils.config import get_hf_text_config
+ from vllm.utils.hashing import safe_hash
+@@ -25,8 +25,10 @@
+     from transformers import PretrainedConfig
+ 
+     import vllm.model_executor.layers.quantization as me_quant
++    from vllm.config.vllm import VllmConfig
+ else:
+     PretrainedConfig = Any
++    VllmConfig = Any
+ 
+     me_quant = LazyLoader(
+         "model_executor", globals(), "vllm.model_executor.layers.quantization"
+@@ -371,6 +373,17 @@ def _validate_qwen3_omni_dspark(
+         )
+ 
+ 
++# (SpeculativeConfig field, VllmConfig sub-config, overridden field)
++_DRAFT_VLLM_CONFIG_OVERRIDES = (
++    # Otherwise the draft inherits the target's --moe-backend, which fails
++    # when the draft is unquantized and that backend is not.
++    ("moe_backend", "kernel_config", "moe_backend"),
++    # Only when set, so the draft keeps a KV cache layout the target shares.
++    ("attention_backend", "attention_config", "backend"),
++    ("kv_cache_dtype", "cache_config", "cache_dtype"),
++)
++
++
+ @config
+ class SpeculativeConfig:
+     """Configuration for speculative decoding."""
+@@ -1771,6 +1784,18 @@ def create_draft_parallel_config(
+ 
+         return draft_parallel_config
+ 
++    def apply_draft_overrides(self, vllm_config: VllmConfig) -> VllmConfig:
++        """Overlay this config's kernel overrides onto a target VllmConfig.
++
++        Only non-None fields override, so an unset field keeps whatever the
++        target resolved.
++        """
++        for src, config_name, dst in _DRAFT_VLLM_CONFIG_OVERRIDES:
++            if (value := getattr(self, src)) is not None:
++                sub_config = replace(getattr(vllm_config, config_name), **{dst: value})
++                vllm_config = replace(vllm_config, **{config_name: sub_config})
++        return vllm_config
++
+     @field_validator("attention_backend", mode="before")
+     @classmethod
+     def _parse_attention_backend(cls, value: Any) -> Any:
+diff --git a/vllm/model_executor/model_loader/utils.py b/vllm/model_executor/model_loader/utils.py
+index d80b7d17027d..465703f75983 100644
+--- a/vllm/model_executor/model_loader/utils.py
++++ b/vllm/model_executor/model_loader/utils.py
+@@ -12,7 +12,13 @@
+ from typing_extensions import assert_never
+ 
+ import vllm.envs as envs
+-from vllm.config import ModelConfig, VllmConfig, set_current_vllm_config
++from vllm.config import (
++    LoadConfig,
++    ModelConfig,
++    VllmConfig,
++    replace,
++    set_current_vllm_config,
++)
+ from vllm.logger import init_logger
+ from vllm.model_executor.layers.attention import is_deferred_attention_layer
+ from vllm.model_executor.layers.quantization.base_config import (
+@@ -23,6 +29,9 @@
+     record_metadata_for_reloading,
+     set_torchao_reload_attrs,
+ )
++from vllm.model_executor.model_loader.weight_cache.utils import (
++    is_draft_model_cacheable,
++)
+ from vllm.model_executor.model_loader.weight_tying import maybe_retie_word_embeddings
+ from vllm.model_executor.models.interfaces import SupportsQuant
+ from vllm.model_executor.utils import is_weights_pre_processed
+@@ -34,6 +43,33 @@
+ logger = init_logger(__name__)
+ 
+ 
++def get_draft_load_config(vllm_config: VllmConfig) -> LoadConfig:
++    """Get load config for the speculative draft model."""
++    speculative_config = vllm_config.speculative_config
++    if (
++        speculative_config is not None
++        and speculative_config.draft_load_config is not None
++    ):
++        return speculative_config.draft_load_config
++    load_config = vllm_config.load_config
++    if load_config is not None and load_config.load_format != "ipc_cache":
++        return load_config
++    kwargs = (
++        # Route the draft to the daemon's draft group.
++        {
++            "model_loader_extra_config": {
++                **load_config.model_loader_extra_config,
++                "is_draft": True,
++            }
++        }
++        if is_draft_model_cacheable(speculative_config)
++        # No daemon draft group for this method; load from disk instead of
++        # hitting the target daemon with a mismatching fingerprint.
++        else {"load_format": "auto", "model_loader_extra_config": {}}
++    )
++    return replace(load_config, **kwargs)
++
++
+ @instrument(span_name="Initialize model")
+ def initialize_model(
+     vllm_config: VllmConfig,
+diff --git a/vllm/model_executor/model_loader/weight_cache/__init__.py b/vllm/model_executor/model_loader/weight_cache/__init__.py
+index f9dbe9bb32a1..6655f8913623 100644
+--- a/vllm/model_executor/model_loader/weight_cache/__init__.py
++++ b/vllm/model_executor/model_loader/weight_cache/__init__.py
+@@ -1,26 +1,3 @@
+ # SPDX-License-Identifier: Apache-2.0
+ # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+ 
+-from vllm.model_executor.model_loader.weight_cache.ipc_loader import IpcModelLoader
+-from vllm.model_executor.model_loader.weight_cache.protocol import (
+-    CacheConfigMismatchError,
+-    TensorEntry,
+-    UnsupportedPlatformForIPCError,
+-    UnsupportedQuantForIPCError,
+-    WeightCacheKey,
+-    WeightCacheUnavailableError,
+-    check_ipc_platform_support,
+-    check_ipc_quant_support,
+-)
+-
+-__all__ = [
+-    "CacheConfigMismatchError",
+-    "IpcModelLoader",
+-    "TensorEntry",
+-    "UnsupportedPlatformForIPCError",
+-    "UnsupportedQuantForIPCError",
+-    "WeightCacheKey",
+-    "WeightCacheUnavailableError",
+-    "check_ipc_platform_support",
+-    "check_ipc_quant_support",
+-]
+diff --git a/vllm/model_executor/model_loader/weight_cache/daemon.py b/vllm/model_executor/model_loader/weight_cache/daemon.py
+index c009cc6ffa29..1eeff81f65dc 100644
+--- a/vllm/model_executor/model_loader/weight_cache/daemon.py
++++ b/vllm/model_executor/model_loader/weight_cache/daemon.py
+@@ -41,6 +41,13 @@
+ ``r * (tp_size // nnodes) + i``, matching vLLM's contiguous per-node rank
+ assignment, so each engine worker maps its shard from the daemon on its own
+ node.
++
++With MTP, EAGLE or EAGLE3 speculative decoding the launcher additionally
++starts a draft daemon group that caches the draft model. It uses its own cache
++key, Unix sockets (``*_draft.sock``) and rendezvous port
++(``--weight-cache-draft-master-port``, default ``--weight-cache-master-port +
++1``), so each process serves exactly one model role. Other draft types are not
++cached and keep loading from disk in the engine.
+ """
+ 
+ import contextlib
+@@ -52,10 +59,15 @@
+ import socket
+ import sys
+ from collections.abc import Callable
++from itertools import product
+ 
+ import torch
+ 
+-from vllm.config import ParallelConfig, VllmConfig, set_current_vllm_config
++from vllm.config import (
++    ParallelConfig,
++    VllmConfig,
++    set_current_vllm_config,
++)
+ from vllm.distributed import (
+     ensure_model_parallel_initialized,
+     init_distributed_environment,
+@@ -77,6 +89,11 @@
+     send_msg,
+     verify_peer_is_owner,
+ )
++from vllm.model_executor.model_loader.weight_cache.utils import (
++    export_model_attrs,
++    format_daemon_role,
++    is_draft_model_cacheable,
++)
+ from vllm.platforms import current_platform
+ from vllm.utils.argparse_utils import FlexibleArgumentParser
+ from vllm.utils.network_utils import get_distributed_init_method, get_open_port
+@@ -130,30 +147,6 @@ def _add(name: str, tensor: torch.Tensor, kind: str) -> None:
+     return entries, aliases
+ 
+ 
+-def get_daemon_model(vllm_config: VllmConfig) -> torch.nn.Module:
+-    """Load the daemon's model, composed from the configured loader.
+-
+-    Runs the quantization check after model creation but before the slow
+-    weight load, so an unsupported method fails fast. Online quantization
+-    always fails the check, so load_model's finalize step for it is
+-    unnecessary here.
+-    """
+-    model_config = vllm_config.model_config
+-    load_config = vllm_config.load_config
+-    loader = get_model_loader(load_config)
+-    device_config = vllm_config.device_config
+-    target_device = torch.device(
+-        device_config.device if load_config.device is None else load_config.device
+-    )
+-    with set_default_torch_dtype(model_config.dtype):
+-        with target_device:
+-            model = loader.create_model(vllm_config, model_config)
+-        check_ipc_quant_support(model)
+-        loader.load_weights(model, model_config)
+-        process_weights_after_loading(model, model_config, target_device)
+-    return model.eval()
+-
+-
+ class WeightCacheDaemon:
+     """Per-GPU process that loads one TP shard and serves CUDA IPC handles."""
+ 
+@@ -164,19 +157,31 @@ def __init__(
+         local_rank: int,
+         distributed_init_method: str,
+         socket_dir: str | None = None,
++        is_draft: bool = False,
+     ):
+         self.vllm_config = vllm_config
++        # A draft daemon builds the draft with the target's VllmConfig, like
++        # the engine does; only the ModelConfig differs.
++        if is_draft:
++            spec = vllm_config.speculative_config
++            assert spec is not None and spec.draft_model_config is not None
++            self.model_config = spec.draft_model_config
++        else:
++            self.model_config = vllm_config.model_config
+         self.tp_rank = tp_rank
+         self.local_rank = local_rank
+         self.distributed_init_method = distributed_init_method
+         self.socket_dir = socket_dir
++        self.is_draft = is_draft
++        self.role = format_daemon_role(is_draft)
+         self.model: torch.nn.Module | None = None
+         # Fingerprint before loading: process_weights_after_loading may
+         # mutate hf_config.quantization_config.
+         self.cache_config = WeightCacheKey.from_model_config(
+-            vllm_config.model_config,
++            self.model_config,
+             tp_size=vllm_config.parallel_config.tensor_parallel_size,
+             tp_rank=tp_rank,
++            is_draft=is_draft,
+         )
+ 
+     def load_model(self) -> None:
+@@ -191,12 +196,37 @@ def load_model(self) -> None:
+         )
+         with set_current_vllm_config(self.vllm_config):
+             ensure_model_parallel_initialized(tp_size, 1)
+-            self.model = get_daemon_model(self.vllm_config)
++            self.model = self.get_model()
+         logger.info(
+-            "Weight cache daemon rank %d loaded model",
++            "Weight cache %s daemon rank %d loaded model",
++            self.role,
+             self.tp_rank,
+         )
+ 
++    def get_model(self) -> torch.nn.Module:
++        """Load the daemon's model, composed from the configured loader.
++
++        Runs the quantization check after model creation but before the slow
++        weight load, so an unsupported method fails fast. Online quantization
++        always fails the check, so load_model's finalize step for it is
++        unnecessary here.
++        """
++        vllm_config = self.vllm_config
++        model_config = self.model_config
++        load_config = vllm_config.load_config
++        loader = get_model_loader(load_config)
++        device_config = vllm_config.device_config
++        target_device = torch.device(
++            device_config.device if load_config.device is None else load_config.device
++        )
++        with set_default_torch_dtype(model_config.dtype):
++            with target_device:
++                model = loader.create_model(vllm_config, model_config)
++            check_ipc_quant_support(model)
++            loader.load_weights(model, model_config)
++            process_weights_after_loading(model, model_config, target_device)
++        return model.eval()
++
+     def serve_forever(self, ready_callback: Callable[[], None] | None = None) -> None:
+         """Serve requests until terminated.
+ 
+@@ -223,7 +253,10 @@ def serve_forever(self, ready_callback: Callable[[], None] | None = None) -> Non
+         os.chmod(socket_path, 0o600)
+         server.listen()
+         logger.info(
+-            "Weight cache daemon rank %d serving on %s", self.tp_rank, socket_path
++            "Weight cache %s daemon rank %d serving on %s",
++            self.role,
++            self.tp_rank,
++            socket_path,
+         )
+         if ready_callback is not None:
+             ready_callback()
+@@ -270,7 +303,11 @@ def _acquire_gpu_lock(self, socket_path: str) -> int:
+ 
+     @property
+     def _socket_path(self) -> str:
+-        return get_socket_path(get_current_device_uuid(), self.socket_dir)
++        return get_socket_path(
++            get_current_device_uuid(),
++            self.socket_dir,
++            is_draft=self.is_draft,
++        )
+ 
+     def _handle_connection(self, conn: socket.socket) -> None:
+         request = recv_msg(conn)
+@@ -303,11 +340,13 @@ def _handle_get_state(self, conn: socket.socket, request: dict) -> None:
+                 "status": "ok",
+                 "entries": entries,
+                 "aliases": aliases,
++                "attrs": export_model_attrs(self.model),
+                 "gpu_uuid": gpu_uuid,
+             },
+         )
+         logger.info_once(
+-            "Weight cache daemon rank %d sent %d tensors (+%d aliases) to engine",
++            "Weight cache %s daemon rank %d sent %d tensors (+%d aliases) to engine",
++            self.role,
+             self.tp_rank,
+             len(entries),
+             len(aliases),
+@@ -316,7 +355,11 @@ def _handle_get_state(self, conn: socket.socket, request: dict) -> None:
+     def _handle_release(self, conn: socket.socket) -> None:
+         self.model = None
+         torch.accelerator.empty_cache()
+-        logger.info("Weight cache daemon rank %d released cached weights", self.tp_rank)
++        logger.info(
++            "Weight cache %s daemon rank %d released cached weights",
++            self.role,
++            self.tp_rank,
++        )
+         send_msg(conn, {"status": "ok"})
+ 
+ 
+@@ -326,13 +369,27 @@ def _run_daemon(
+     vllm_config: VllmConfig,
+     distributed_init_method: str,
+     socket_dir: str | None,
+-    ready_queue: "multiprocessing.Queue[int]",
++    ready_queue: "multiprocessing.Queue[tuple[str, int]]",
++    is_draft: bool = False,
+ ) -> None:
+     daemon = WeightCacheDaemon(
+-        vllm_config, tp_rank, local_rank, distributed_init_method, socket_dir
++        vllm_config,
++        tp_rank,
++        local_rank,
++        distributed_init_method,
++        socket_dir,
++        is_draft,
+     )
+     daemon.load_model()
+-    daemon.serve_forever(ready_callback=lambda: ready_queue.put(tp_rank))
++    daemon.serve_forever(ready_callback=lambda: ready_queue.put((daemon.role, tp_rank)))
++
++
++def get_draft_daemon_config(vllm_config: VllmConfig) -> VllmConfig | None:
++    """VllmConfig for the draft daemon group"""
++    if not is_draft_model_cacheable(vllm_config.speculative_config):
++        return None
++    assert vllm_config.speculative_config is not None
++    return vllm_config.speculative_config.apply_draft_overrides(vllm_config)
+ 
+ 
+ def _reject_unsupported_parallelism(parallel_config: ParallelConfig) -> None:
+@@ -369,6 +426,14 @@ def main() -> None:
+         "serving) and match across nodes. Required when --nnodes > 1; defaults "
+         "to a free port for single-node.",
+     )
++    parser.add_argument(
++        "--weight-cache-draft-master-port",
++        type=int,
++        default=None,
++        help="Rendezvous port for the MTP draft daemon group. Defaults to "
++        "--weight-cache-master-port + 1 for multi-node, or a free port for "
++        "single-node.",
++    )
+     args = parser.parse_args()
+     engine_args = EngineArgs.from_cli_args(args)
+     vllm_config = engine_args.create_engine_config()
+@@ -398,27 +463,56 @@ def main() -> None:
+     master_port = args.weight_cache_master_port or get_open_port()
+     distributed_init_method = get_distributed_init_method(master_addr, master_port)
+ 
++    # (is_draft, vllm_config, rendezvous) per daemon group.
++    groups: list[tuple[bool, VllmConfig, str]] = [
++        (False, vllm_config, distributed_init_method)
++    ]
++    draft_vllm_config = get_draft_daemon_config(vllm_config)
++    if draft_vllm_config is not None:
++        draft_master_port = args.weight_cache_draft_master_port or (
++            master_port + 1 if nnodes > 1 else get_open_port()
++        )
++        if draft_master_port == master_port:
++            raise ValueError(
++                "--weight-cache-draft-master-port must differ from "
++                "--weight-cache-master-port"
++            )
++        groups.append(
++            (
++                True,
++                draft_vllm_config,
++                get_distributed_init_method(master_addr, draft_master_port),
++            )
++        )
++
+     ctx = multiprocessing.get_context("spawn")
+-    ready_queue: multiprocessing.Queue[int] = ctx.Queue()
++    ready_queue: multiprocessing.Queue[tuple[str, int]] = ctx.Queue()
+     # Global TP rank of local GPU i on this node; local index == device index.
+     global_ranks = [
+         node_rank * local_world_size + local_rank
+         for local_rank in range(local_world_size)
+     ]
++    expected_ready = {
++        (format_daemon_role(is_draft), global_rank)
++        for (is_draft, _, _), global_rank in product(groups, global_ranks)
++    }
+     procs = [
+         ctx.Process(
+             target=_run_daemon,
+             args=(
+                 global_rank,
+                 local_rank,
+-                vllm_config,
+-                distributed_init_method,
++                config,
++                init_method,
+                 args.weight_cache_socket_dir,
+                 ready_queue,
++                is_draft,
+             ),
+-            name=f"vllm-weight-cache-daemon-{global_rank}",
++            name=f"vllm-weight-cache-{format_daemon_role(is_draft)}-{global_rank}",
++        )
++        for (is_draft, config, init_method), (local_rank, global_rank) in product(
++            groups, enumerate(global_ranks)
+         )
+-        for local_rank, global_rank in enumerate(global_ranks)
+     ]
+     for proc in procs:
+         proc.start()
+@@ -430,10 +524,10 @@ def _shutdown(signum, frame):
+     signal.signal(signal.SIGINT, _shutdown)
+     signal.signal(signal.SIGTERM, _shutdown)
+ 
+-    ready_ranks: set[int] = set()
+-    while len(ready_ranks) < local_world_size:
++    ready: set[tuple[str, int]] = set()
++    while len(ready) < len(expected_ready):
+         try:
+-            ready_ranks.add(ready_queue.get(timeout=1.0))
++            ready.add(ready_queue.get(timeout=1.0))
+         except queue.Empty:
+             dead = [p for p in procs if p.exitcode is not None]
+             if dead:
+@@ -450,10 +544,11 @@ def _shutdown(signum, frame):
+     socket_dir_msg = args.weight_cache_socket_dir or "the default socket dir"
+     logger.info_once(
+         "===== Weight cache daemon READY: node %d/%d serving %d local rank(s) "
+-        "in %s =====",
++        "x %d role(s) in %s =====",
+         node_rank,
+         nnodes,
+         local_world_size,
++        len(groups),
+         socket_dir_msg,
+     )
+ 
+diff --git a/vllm/model_executor/model_loader/weight_cache/ipc_loader.py b/vllm/model_executor/model_loader/weight_cache/ipc_loader.py
+index 6c3fb742cdf7..e22fc2b0296f 100644
+--- a/vllm/model_executor/model_loader/weight_cache/ipc_loader.py
++++ b/vllm/model_executor/model_loader/weight_cache/ipc_loader.py
+@@ -25,9 +25,9 @@
+ )
+ from vllm.model_executor.model_loader.weight_cache.protocol import (
+     CacheConfigMismatchError,
+-    TensorEntry,
+     UnsupportedQuantForIPCError,
+     WeightCacheKey,
++    WeightCacheState,
+     WeightCacheUnavailableError,
+     check_ipc_platform_support,
+     check_ipc_quant_support,
+@@ -60,7 +60,7 @@ class IpcModelLoader(BaseModelLoader):
+     Extra config keys (via --model-loader-extra-config):
+ 
+     - socket_path: explicit daemon socket path. Defaults to a per-GPU path
+-      derived from the physical GPU uuid.
++      derived from the physical GPU uuid and the cache role (target/draft).
+     - socket_dir: directory containing the daemon sockets.
+     - mode: "zero_copy" (default) or "copy".
+     - fallback: fall back to disk loading when the daemon is unavailable or
+@@ -78,6 +78,15 @@ def __init__(self, load_config: LoadConfig):
+         extra_config = copy(load_config.model_loader_extra_config or {})
+         self.socket_path: str | None = extra_config.pop("socket_path", None)
+         self.socket_dir: str | None = extra_config.pop("socket_dir", None)
++        # Internal: set by the engine when routing a speculative draft to the
++        # daemon's draft group.
++        self.is_draft = bool(extra_config.pop("is_draft", False))
++        if self.is_draft and self.socket_path is not None:
++            raise ValueError(
++                "socket_path cannot be combined with the draft weight cache role; "
++                "use socket_dir so the target and draft sockets are derived "
++                "independently"
++            )
+         self.mode: str = extra_config.pop("mode", "zero_copy")
+         self.fallback: bool = extra_config.pop("fallback", True)
+         self.connect_timeout_s: float = float(
+@@ -108,7 +117,7 @@ def load_weights(self, model: nn.Module, model_config: ModelConfig) -> None:
+         loaded through this loader).
+         """
+         device_index = torch.accelerator.current_device_index()
+-        entries, _ = self._fetch_entries(model_config)
++        entries = self._fetch_entries(model_config).entries
+         params = dict(model.named_parameters())
+         buffers = dict(model.named_buffers())
+         for name, entry in entries.items():
+@@ -128,11 +137,22 @@ def load_model(
+         check_ipc_platform_support()
+         state_fetched = False
+         try:
+-            entries, aliases = self._fetch_entries(model_config)
++            # Cross-check the routing flag against the identity of the model
++            # being loaded: a draft load that lost its flag (or a target load
++            # that got one) would hit the wrong daemon group and
++            # fingerprint-mismatch.
++            spec = vllm_config.speculative_config
++            inferred = spec is not None and model_config is spec.draft_model_config
++            if inferred != self.is_draft:
++                raise CacheConfigMismatchError(
++                    f"Weight cache role mismatch: loading "
++                    f"{'draft' if inferred else 'target'} model but the loader "
++                    f"was configured for the "
++                    f"{'draft' if self.is_draft else 'target'} group"
++                )
++            state = self._fetch_entries(model_config)
+             state_fetched = True
+-            return self._build_model(
+-                vllm_config, model_config, prefix, entries, aliases
+-            )
++            return self._build_model(vllm_config, model_config, prefix, state)
+         except (WeightCacheUnavailableError, CacheConfigMismatchError) as e:
+             if not self.fallback:
+                 raise
+@@ -163,8 +183,7 @@ def _build_model(
+         vllm_config: VllmConfig,
+         model_config: ModelConfig,
+         prefix: str,
+-        entries: dict[str, TensorEntry],
+-        aliases: dict[str, str],
++        state: WeightCacheState,
+     ) -> nn.Module:
+         device_config = vllm_config.device_config
+         load_device = (
+@@ -186,7 +205,11 @@ def _build_model(
+                     prefix=prefix,
+                 )
+             check_ipc_quant_support(model)
+-            self._apply_entries(model, entries, aliases, device_index)
++            self._apply_entries(model, state, device_index)
++            # Flags that load_weights would have set (e.g. EAGLE ownership of
++            # embed_tokens / lm_head); the daemon ran it, this process did not.
++            for name, value in state.attrs.items():
++                setattr(model, name, value)
+             # The daemon exports tensors that already went through
+             # process_weights_after_loading; re-run it in pre-processed mode
+             # so quant methods only rebuild Python-side state (e.g. the MoE
+@@ -202,7 +225,7 @@ def _build_model(
+             self._send_release()
+         logger.info(
+             "Mapped %d tensors from the weight cache daemon (%s mode)",
+-            len(entries),
++            len(state.entries),
+             self.mode,
+         )
+         return model.eval()
+@@ -210,8 +233,7 @@ def _build_model(
+     def _apply_entries(
+         self,
+         model: nn.Module,
+-        entries: dict[str, TensorEntry],
+-        aliases: dict[str, str],
++        state: WeightCacheState,
+         device_index: int,
+     ) -> None:
+         # remove_duplicate=False keeps tied module aliases reachable by name:
+@@ -242,7 +264,7 @@ def _register(name: str, tensor: torch.Tensor, is_param: bool) -> None:
+                 module.register_buffer(leaf, obj)
+             registered[name] = obj
+ 
+-        for name, entry in entries.items():
++        for name, entry in state.entries.items():
+             tensor = entry.rebuild(device_index)
+             if self.mode == "copy":
+                 tensor = tensor.clone()
+@@ -251,7 +273,7 @@ def _register(name: str, tensor: torch.Tensor, is_param: bool) -> None:
+         # Re-establish tied-weight aliases by registering the *same* object the
+         # canonical name resolved to, so parameter identity (and the tie) is
+         # preserved instead of allocating uninitialized memory.
+-        for alias_name, canonical_name in aliases.items():
++        for alias_name, canonical_name in state.aliases.items():
+             obj = registered.get(canonical_name)
+             if obj is None:
+                 logger.warning(
+@@ -262,19 +284,16 @@ def _register(name: str, tensor: torch.Tensor, is_param: bool) -> None:
+                 continue
+             _register(alias_name, obj, isinstance(obj, nn.Parameter))
+ 
+-    def _fetch_entries(
+-        self, model_config: ModelConfig
+-    ) -> tuple[dict[str, TensorEntry], dict[str, str]]:
++    def _fetch_entries(self, model_config: ModelConfig) -> WeightCacheState:
+         cache_config = WeightCacheKey.from_model_config(
+             model_config,
+             tp_size=get_tensor_model_parallel_world_size(),
+             tp_rank=get_tensor_model_parallel_rank(),
++            is_draft=self.is_draft,
+         )
+         return self._request_state(cache_config)
+ 
+-    def _request_state(
+-        self, cache_config: WeightCacheKey
+-    ) -> tuple[dict[str, TensorEntry], dict[str, str]]:
++    def _request_state(self, cache_config: WeightCacheKey) -> WeightCacheState:
+         with self._connect(self.state_timeout_s) as conn:
+             send_msg(conn, {"cmd": "get_state", "cache_config": cache_config})
+             response = recv_msg(conn)
+@@ -288,7 +307,11 @@ def _request_state(
+                 f"Weight cache daemon error: {response.get('message')}"
+             )
+         self._check_gpu_uuid(response.get("gpu_uuid"))
+-        return response["entries"], response.get("aliases", {})
++        return WeightCacheState(
++            entries=response["entries"],
++            aliases=response.get("aliases", {}),
++            attrs=response.get("attrs", {}),
++        )
+ 
+     def _connect(self, timeout: float) -> socket.socket:
+         socket_path = self._resolve_socket_path()
+@@ -316,7 +339,11 @@ def _connect(self, timeout: float) -> socket.socket:
+     def _resolve_socket_path(self) -> str:
+         if self.socket_path is not None:
+             return self.socket_path
+-        return get_socket_path(get_current_device_uuid(), self.socket_dir)
++        return get_socket_path(
++            get_current_device_uuid(),
++            self.socket_dir,
++            is_draft=self.is_draft,
++        )
+ 
+     def _check_gpu_uuid(self, daemon_uuid: str | None) -> None:
+         if daemon_uuid is None:
+@@ -340,7 +367,9 @@ def _fallback_load_config(self) -> LoadConfig:
+         # DefaultModelLoader must not see load_format="ipc_cache" or the ipc
+         # extra config keys.
+         return dataclasses.replace(
+-            self.load_config, load_format="auto", model_loader_extra_config={}
++            self.load_config,
++            load_format="auto",
++            model_loader_extra_config={},
+         )
+ 
+     def _fallback_load(
+diff --git a/vllm/model_executor/model_loader/weight_cache/protocol.py b/vllm/model_executor/model_loader/weight_cache/protocol.py
+index 852856b139f1..3803030cd440 100644
+--- a/vllm/model_executor/model_loader/weight_cache/protocol.py
++++ b/vllm/model_executor/model_loader/weight_cache/protocol.py
+@@ -20,7 +20,7 @@
+ import struct
+ import tempfile
+ from dataclasses import dataclass, fields
+-from typing import Any
++from typing import Any, NamedTuple
+ 
+ import torch
+ from torch.multiprocessing.reductions import rebuild_cuda_tensor, reduce_tensor
+@@ -29,13 +29,16 @@
+ import vllm.version
+ from vllm.config import ModelConfig
+ from vllm.model_executor.layers.quantization.base_config import QuantizeMethodBase
++from vllm.model_executor.model_loader.weight_cache.utils import (
++    format_socket_role_suffix,
++)
+ from vllm.model_executor.model_loader.weight_utils import (
+     filter_duplicate_safetensors_files,
+ )
+ from vllm.platforms import current_platform
+ from vllm.utils.hashing import safe_hash
+ 
+-SOCKET_NAME_TEMPLATE = "vllm_weight_cache_{gpu_uuid}.sock"
++SOCKET_NAME_TEMPLATE = "vllm_weight_cache_{gpu_uuid}{role}.sock"
+ SOCKET_DIR_TEMPLATE = "vllm_weight_cache_{uid}"
+ 
+ _LEN_STRUCT = struct.Struct("!Q")
+@@ -128,9 +131,23 @@ def get_socket_dir(socket_dir: str | None = None) -> str:
+     )
+ 
+ 
+-def get_socket_path(gpu_uuid: str, socket_dir: str | None = None) -> str:
+-    directory = get_socket_dir(socket_dir)
+-    return os.path.join(directory, SOCKET_NAME_TEMPLATE.format(gpu_uuid=gpu_uuid))
++def get_socket_path(
++    gpu_uuid: str,
++    socket_dir: str | None = None,
++    *,
++    is_draft: bool = False,
++) -> str:
++    """Socket path of a daemon group; ``is_draft=False`` is the target.
++
++    The GPU uuid is hashed to keep the name well under the AF_UNIX path
++    limit (~108 bytes) even with the draft role suffix.
++    """
++    gpu_id = safe_hash(gpu_uuid.encode()).hexdigest()
++    name = SOCKET_NAME_TEMPLATE.format(
++        gpu_uuid=gpu_id,
++        role=format_socket_role_suffix(is_draft),
++    )
++    return os.path.join(get_socket_dir(socket_dir), name)
+ 
+ 
+ def ensure_private_socket_dir(directory: str, strict_perms: bool = True) -> None:
+@@ -272,10 +289,17 @@ class WeightCacheKey:
+     quant_config_hash: str
+     revision: str | None
+     vllm_version: str
++    is_draft: bool = False
++    """Daemon group the weights come from; False is the target model."""
+ 
+     @classmethod
+     def from_model_config(
+-        cls, model_config: ModelConfig, tp_size: int, tp_rank: int
++        cls,
++        model_config: ModelConfig,
++        tp_size: int,
++        tp_rank: int,
++        *,
++        is_draft: bool = False,
+     ) -> "WeightCacheKey":
+         """Build the fingerprint for a model configuration.
+ 
+@@ -302,6 +326,7 @@ def from_model_config(
+             quant_config_hash=_hash_quant_config(quant_config),
+             revision=model_config.revision,
+             vllm_version=vllm.version.__version__,
++            is_draft=is_draft,
+         )
+ 
+     def mismatched_fields(self, other: "WeightCacheKey") -> list[str]:
+@@ -345,6 +370,17 @@ def rebuild(self, device_index: int) -> torch.Tensor:
+         return rebuild_cuda_tensor(*args)
+ 
+ 
++class WeightCacheState(NamedTuple):
++    """Client-side decode of a daemon's get_state response payload."""
++
++    entries: dict[str, TensorEntry]
++    """Model tensors, exported as CUDA IPC handles or shipped by value."""
++    aliases: dict[str, str]
++    """Duplicate (tied) weight names aliased to their canonical entry."""
++    attrs: dict[str, bool]
++    """Python-side flags set by load_weights, e.g. EAGLE ownership flags."""
++
++
+ def send_msg(sock: socket.socket, obj: Any) -> None:
+     payload = pickle.dumps(obj, protocol=pickle.HIGHEST_PROTOCOL)
+     sock.sendall(_LEN_STRUCT.pack(len(payload)))
+diff --git a/vllm/model_executor/model_loader/weight_cache/utils.py b/vllm/model_executor/model_loader/weight_cache/utils.py
+new file mode 100644
+index 000000000000..1abbf572f847
+--- /dev/null
++++ b/vllm/model_executor/model_loader/weight_cache/utils.py
+@@ -0,0 +1,48 @@
++# SPDX-License-Identifier: Apache-2.0
++# SPDX-FileCopyrightText: Copyright contributors to the vLLM project
++"""Helpers shared by the weight cache daemon, the IPC loader and the engine.
++
++These live outside ``protocol`` so callers that only need to know whether a
++draft is cached, or how a daemon group is named, do not have to import the
++wire format.
++"""
++
++from typing import Any
++
++from vllm.config import SpeculativeConfig
++from vllm.model_executor.models.interfaces import SupportsEagleBase
++
++# Speculative methods whose draft model the daemon caches in its own group.
++# Other drafts keep loading from disk in the engine.
++WEIGHT_CACHE_DRAFT_METHODS = frozenset({"mtp", "eagle", "eagle3"})
++
++# Python-side flags that weight loading sets on EAGLE-style drafts; the engine
++# never runs load_weights for cached models, so the daemon ships them.
++EXPORTED_MODEL_ATTRS = tuple(SupportsEagleBase.__annotations__)
++
++
++def export_model_attrs(model: Any) -> dict[str, bool]:
++    return {
++        name: bool(getattr(model, name))
++        for name in EXPORTED_MODEL_ATTRS
++        if hasattr(model, name)
++    }
++
++
++def is_draft_model_cacheable(speculative_config: SpeculativeConfig | None) -> bool:
++    """Whether the daemon serves the speculative draft as a separate role."""
++    return (
++        speculative_config is not None
++        and speculative_config.method in WEIGHT_CACHE_DRAFT_METHODS
++        and speculative_config.draft_model_config is not None
++    )
++
++
++def format_daemon_role(is_draft: bool) -> str:
++    """Name of a daemon group: the target model or the draft."""
++    return "draft" if is_draft else "target"
++
++
++def format_socket_role_suffix(is_draft: bool) -> str:
++    """Socket-name suffix keeping the draft group distinct from the target."""
++    return "_draft" if is_draft else ""
+diff --git a/vllm/v1/spec_decode/llm_base_proposer.py b/vllm/v1/spec_decode/llm_base_proposer.py
+index 2affce2fdd55..e4718bb3d7d1 100644
+--- a/vllm/v1/spec_decode/llm_base_proposer.py
++++ b/vllm/v1/spec_decode/llm_base_proposer.py
+@@ -25,6 +25,7 @@
+ from vllm.logger import init_logger
+ from vllm.model_executor.layers.attention_layer_base import AttentionLayerBase
+ from vllm.model_executor.model_loader import get_model
++from vllm.model_executor.model_loader.utils import get_draft_load_config
+ from vllm.model_executor.models import (
+     supports_multimodal,
+     supports_multimodal_embeddings,
+@@ -1311,7 +1312,7 @@ def _get_model(self) -> nn.Module:
+             model = get_model(
+                 vllm_config=draft_vllm_config,
+                 model_config=self.speculative_config.draft_model_config,
+-                load_config=self.speculative_config.draft_load_config,
++                load_config=get_draft_load_config(draft_vllm_config),
+             )
+         return model
+ 
+diff --git a/vllm/v1/worker/gpu/spec_decode/dflash/utils.py b/vllm/v1/worker/gpu/spec_decode/dflash/utils.py
+index 7323b29312c1..2e5826362346 100644
+--- a/vllm/v1/worker/gpu/spec_decode/dflash/utils.py
++++ b/vllm/v1/worker/gpu/spec_decode/dflash/utils.py
+@@ -4,6 +4,7 @@
+ 
+ from vllm.config import VllmConfig, replace
+ from vllm.model_executor.model_loader import get_model
++from vllm.model_executor.model_loader.utils import get_draft_load_config
+ from vllm.v1.worker.gpu.spec_decode.eagle.utils import (
+     _should_share,
+     get_target_lm_head,
+@@ -38,7 +39,7 @@ def load_dflash_model(target_model: nn.Module, vllm_config: VllmConfig) -> nn.Mo
+             if speculative_config.kv_cache_dtype is not None
+             else vllm_config.cache_config
+         ),
+-        load_config=get_pp_safe_draft_load_config(vllm_config.load_config),
++        load_config=get_pp_safe_draft_load_config(get_draft_load_config(vllm_config)),
+     )
+     with set_model_tag("dflash_head"):
+         dflash_model = get_model(
+diff --git a/vllm/v1/worker/gpu/spec_decode/dspark/utils.py b/vllm/v1/worker/gpu/spec_decode/dspark/utils.py
+index bf1a5761b2ef..489d0da554a2 100644
+--- a/vllm/v1/worker/gpu/spec_decode/dspark/utils.py
++++ b/vllm/v1/worker/gpu/spec_decode/dspark/utils.py
+@@ -5,6 +5,7 @@
+ 
+ from vllm.config import ModelConfig, ParallelConfig, VllmConfig, replace
+ from vllm.logger import init_logger
++from vllm.model_executor.model_loader.utils import get_draft_load_config
+ from vllm.v1.attention.backends.registry import AttentionBackendEnum
+ from vllm.v1.worker.gpu.spec_decode.utils import get_pp_safe_draft_load_config
+ 
+@@ -94,7 +95,7 @@ def load_dspark_model(target_model: nn.Module, vllm_config: VllmConfig) -> nn.Mo
+             if speculative_config.kv_cache_dtype is not None
+             else vllm_config.cache_config
+         ),
+-        load_config=get_pp_safe_draft_load_config(vllm_config.load_config),
++        load_config=get_pp_safe_draft_load_config(get_draft_load_config(vllm_config)),
+     )
+     # VllmConfig post-init restores the target's quant config because the target
+     # config is retained for DSpark's target-layer metadata, so we must override it.
+diff --git a/vllm/v1/worker/gpu/spec_decode/eagle/utils.py b/vllm/v1/worker/gpu/spec_decode/eagle/utils.py
+index eb0f4793bf1f..06bed9391e03 100644
+--- a/vllm/v1/worker/gpu/spec_decode/eagle/utils.py
++++ b/vllm/v1/worker/gpu/spec_decode/eagle/utils.py
+@@ -7,6 +7,7 @@
+ from vllm.distributed.parallel_state import get_pp_group
+ from vllm.lora.layers.base import BaseLayerWithLoRA
+ from vllm.model_executor.model_loader import get_model
++from vllm.model_executor.model_loader.utils import get_draft_load_config
+ from vllm.model_executor.models.utils import PPMissingLayer
+ from vllm.v1.worker.gpu.spec_decode.utils import get_pp_safe_draft_load_config
+ 
+@@ -75,35 +76,10 @@ def load_eagle_model(target_model: nn.Module, vllm_config: VllmConfig) -> nn.Mod
+     speculative_config = vllm_config.speculative_config
+     assert speculative_config is not None
+     draft_model_config = speculative_config.draft_model_config
+-    if speculative_config.moe_backend is not None:
+-        # Otherwise the draft inherits the target's --moe-backend, which
+-        # fails when the draft is unquantized and that backend is not.
+-        vllm_config = replace(
+-            vllm_config,
+-            kernel_config=replace(
+-                vllm_config.kernel_config,
+-                moe_backend=speculative_config.moe_backend,
+-            ),
+-        )
+-    if speculative_config.kv_cache_dtype is not None:
+-        vllm_config = replace(
+-            vllm_config,
+-            cache_config=replace(
+-                vllm_config.cache_config,
+-                cache_dtype=speculative_config.kv_cache_dtype,
+-            ),
+-        )
+-    if speculative_config.attention_backend is not None:
+-        # Before get_model(): the backend is read off the constructed layers.
+-        # Only when set, so the draft keeps a KV cache layout the target shares.
+-        vllm_config = replace(
+-            vllm_config,
+-            attention_config=replace(
+-                vllm_config.attention_config,
+-                backend=speculative_config.attention_backend,
+-            ),
+-        )
+-    draft_load_config = get_pp_safe_draft_load_config(vllm_config.load_config)
++    vllm_config = speculative_config.apply_draft_overrides(vllm_config)
++    draft_load_config = get_pp_safe_draft_load_config(
++        get_draft_load_config(vllm_config)
++    )
+     if draft_load_config is not vllm_config.load_config:
+         vllm_config = replace(vllm_config, load_config=draft_load_config)
+     with set_model_tag("eagle_head"):
+diff --git a/vllm/v1/worker/gpu/spec_decode/gemma4/speculator.py b/vllm/v1/worker/gpu/spec_decode/gemma4/speculator.py
+index dfa2c680109d..9a489bcc4844 100644
+--- a/vllm/v1/worker/gpu/spec_decode/gemma4/speculator.py
++++ b/vllm/v1/worker/gpu/spec_decode/gemma4/speculator.py
+@@ -16,6 +16,7 @@
+ from vllm.distributed.parallel_state import get_pp_group
+ from vllm.logger import init_logger
+ from vllm.model_executor.model_loader import get_model
++from vllm.model_executor.model_loader.utils import get_draft_load_config
+ from vllm.v1.worker.gpu.spec_decode.autoregressive.speculator import (
+     AutoRegressiveSpeculator,
+ )
+@@ -40,7 +41,7 @@ def load_draft_model(
+             draft_model = get_model(
+                 vllm_config=draft_vllm_config,
+                 model_config=self.speculative_config.draft_model_config,
+-                load_config=self.speculative_config.draft_load_config,
++                load_config=get_draft_load_config(draft_vllm_config),
+             )
+         self._setup_gemma4_kv_sharing(draft_model, target_attn_layer_names)
+         self._share_embeddings(draft_model, target_model)

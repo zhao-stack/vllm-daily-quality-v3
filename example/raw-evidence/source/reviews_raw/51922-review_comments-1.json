@@ -1,0 +1,209 @@
+[
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4059308261",
+    "pull_request_review_id": 5263106189,
+    "id": 4059308261,
+    "node_id": "PRRC_kwDOI7xefs7x9CDl",
+    "diff_hunk": "",
+    "path": "rust/src/chat/src/multimodal/timing.rs",
+    "commit_id": "943062ef394430c93ae76743ed26f1ef3c66740a",
+    "original_commit_id": "df6a1fbd3e1c78de4933c8408dcda286b4770805",
+    "user": {
+      "login": "Isotr0py",
+      "id": 41363108,
+      "node_id": "MDQ6VXNlcjQxMzYzMTA4",
+      "avatar_url": "https://avatars.githubusercontent.com/u/41363108?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/Isotr0py",
+      "html_url": "https://github.com/Isotr0py",
+      "followers_url": "https://api.github.com/users/Isotr0py/followers",
+      "following_url": "https://api.github.com/users/Isotr0py/following{/other_user}",
+      "gists_url": "https://api.github.com/users/Isotr0py/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/Isotr0py/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/Isotr0py/subscriptions",
+      "organizations_url": "https://api.github.com/users/Isotr0py/orgs",
+      "repos_url": "https://api.github.com/users/Isotr0py/repos",
+      "events_url": "https://api.github.com/users/Isotr0py/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/Isotr0py/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "I think we can use `span` and other stuffs from `tracing` crates to avoid re-implementing timing tools?",
+    "created_at": "2026-09-21T04:42:35Z",
+    "updated_at": "2026-09-21T04:51:55Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/51922#discussion_r4059308261",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/51922",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4059308261"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/51922#discussion_r4059308261"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/51922"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4059308261/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": 1,
+    "original_line": 1,
+    "side": "RIGHT",
+    "author_association": "MEMBER",
+    "original_position": 1,
+    "position": 1,
+    "subject_type": "file"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4059326213",
+    "pull_request_review_id": 5263106189,
+    "id": 4059326213,
+    "node_id": "PRRC_kwDOI7xefs7x9GcF",
+    "diff_hunk": "@@ -548,6 +550,7 @@ pub(crate) async fn finalize_rendered_prompt(\n     rendered: RenderedPrompt,\n     info: Option<&MultimodalModelInfo>,\n     model_dtype: ModelDtype,\n+    timing: &TimingContext,",
+    "path": "rust/src/chat/src/multimodal.rs",
+    "commit_id": "df6a1fbd3e1c78de4933c8408dcda286b4770805",
+    "original_commit_id": "df6a1fbd3e1c78de4933c8408dcda286b4770805",
+    "user": {
+      "login": "Isotr0py",
+      "id": 41363108,
+      "node_id": "MDQ6VXNlcjQxMzYzMTA4",
+      "avatar_url": "https://avatars.githubusercontent.com/u/41363108?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/Isotr0py",
+      "html_url": "https://github.com/Isotr0py",
+      "followers_url": "https://api.github.com/users/Isotr0py/followers",
+      "following_url": "https://api.github.com/users/Isotr0py/following{/other_user}",
+      "gists_url": "https://api.github.com/users/Isotr0py/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/Isotr0py/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/Isotr0py/subscriptions",
+      "organizations_url": "https://api.github.com/users/Isotr0py/orgs",
+      "repos_url": "https://api.github.com/users/Isotr0py/repos",
+      "events_url": "https://api.github.com/users/Isotr0py/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/Isotr0py/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "I wolud like to keep benchmark and frontend implementation relatively isolated. Otherwise we have to pass timing context everywhere. 😅 \n\nI think we can avoid intruding with timing context through `tracing` above because `tracing` crate is much flexible.",
+    "created_at": "2026-09-21T04:47:23Z",
+    "updated_at": "2026-09-21T04:51:55Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/51922#discussion_r4059326213",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/51922",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4059326213"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/51922#discussion_r4059326213"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/51922"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4059326213/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 553,
+    "side": "RIGHT",
+    "author_association": "MEMBER",
+    "original_position": 17,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4059358431",
+    "pull_request_review_id": 5263163161,
+    "id": 4059358431,
+    "node_id": "PRRC_kwDOI7xefs7x9OTf",
+    "diff_hunk": "",
+    "path": "rust/src/chat/src/multimodal/timing.rs",
+    "commit_id": "943062ef394430c93ae76743ed26f1ef3c66740a",
+    "original_commit_id": "df6a1fbd3e1c78de4933c8408dcda286b4770805",
+    "user": {
+      "login": "Isotr0py",
+      "id": 41363108,
+      "node_id": "MDQ6VXNlcjQxMzYzMTA4",
+      "avatar_url": "https://avatars.githubusercontent.com/u/41363108?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/Isotr0py",
+      "html_url": "https://github.com/Isotr0py",
+      "followers_url": "https://api.github.com/users/Isotr0py/followers",
+      "following_url": "https://api.github.com/users/Isotr0py/following{/other_user}",
+      "gists_url": "https://api.github.com/users/Isotr0py/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/Isotr0py/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/Isotr0py/subscriptions",
+      "organizations_url": "https://api.github.com/users/Isotr0py/orgs",
+      "repos_url": "https://api.github.com/users/Isotr0py/repos",
+      "events_url": "https://api.github.com/users/Isotr0py/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/Isotr0py/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "I feel this should be placed at `rust/src/tracing/src` as part of `vllm-tracing` instead",
+    "created_at": "2026-09-21T04:57:22Z",
+    "updated_at": "2026-09-21T04:57:22Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/51922#discussion_r4059358431",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/51922",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4059358431"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/51922#discussion_r4059358431"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/51922"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4059358431/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": 1,
+    "original_line": 1,
+    "side": "RIGHT",
+    "author_association": "MEMBER",
+    "original_position": 1,
+    "position": 1,
+    "subject_type": "file"
+  }
+]

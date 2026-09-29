@@ -1,0 +1,92 @@
+diff --git a/tests/kernels/moe/test_ocp_mx_moe.py b/tests/kernels/moe/test_ocp_mx_moe.py
+index d513a14f775a09b377c6e42c6110604dd7cc6203..1cd204d4b00be77035053be55dce7b7546c013bd 100644
+--- a/tests/kernels/moe/test_ocp_mx_moe.py
++++ b/tests/kernels/moe/test_ocp_mx_moe.py
+@@ -1868,6 +1868,61 @@ def test_select_mxfp4_moe_backend_raises_with_unsupported_reasons(
+         mxfp4_oracle.select_mxfp4_moe_backend(moe_config)
+ 
+ 
++@pytest.mark.parametrize("backend_name", ["AITER_TRITON_MXFP4_BF16", "AITER_MXFP4_FP8"])
++@pytest.mark.parametrize("use_ep", [False, True])
++def test_aiter_mxfp4_monolithic_rejects_expert_parallel(
++    monkeypatch: pytest.MonkeyPatch, backend_name: str, use_ep: bool
++):
++    """Global routing cannot index local expert weights, even without all-to-all."""
++    from tests.kernels.moe.utils import make_dummy_moe_config
++    from vllm.model_executor.layers.fused_moe.activation import MoEActivation
++    from vllm.model_executor.layers.fused_moe.config import RoutingMethodType
++    from vllm.model_executor.layers.fused_moe.modular_kernel import (
++        FusedMoEActivationFormat,
++    )
++    from vllm.model_executor.layers.fused_moe.oracle.mxfp4 import (
++        Mxfp4MoeBackend,
++        backend_to_kernel_cls,
++    )
++    from vllm.model_executor.layers.quantization.utils.quant_utils import (
++        kFp8StaticTensorSym,
++        kMxfp4Static,
++    )
++
++    experts_cls = backend_to_kernel_cls(Mxfp4MoeBackend[backend_name])[0]
++    monkeypatch.setattr(experts_cls, "_supports_current_device", lambda: True)
++    config = make_dummy_moe_config(
++        num_experts=256,
++        num_local_experts=64 if use_ep else 256,
++        experts_per_token=6,
++        hidden_dim=4096,
++        intermediate_size=2048,
++        activation=MoEActivation.SWIGLUOAI,
++    )
++    config = replace(
++        config,
++        routing_method=RoutingMethodType.Renormalize,
++        moe_parallel_config=replace(
++            config.moe_parallel_config,
++            tp_size=1 if use_ep else 4,
++            ep_size=4 if use_ep else 1,
++            use_ep=use_ep,
++        ),
++    )
++    assert not config.moe_parallel_config.use_all2all_kernels
++    supported, reason = experts_cls.is_supported_config(
++        experts_cls,
++        config,
++        kMxfp4Static,
++        kFp8StaticTensorSym if backend_name == "AITER_MXFP4_FP8" else None,
++        FusedMoEActivationFormat.Standard,
++    )
++
++    assert supported is not use_ep
++    if use_ep:
++        assert "parallel config" in reason
++
++
+ # Every activation-quantizing OCP MX scheme must map to a `quant_dtype` that
+ # `moe_kernel_quantize_input` actually dispatches on. Its final `else` returns
+ # the activation untouched, so a name it does not know (e.g. "mxfp6" instead of
+diff --git a/vllm/model_executor/layers/fused_moe/experts/aiter_mxfp4_w4a16_moe.py b/vllm/model_executor/layers/fused_moe/experts/aiter_mxfp4_w4a16_moe.py
+index f6afd6fbfa340bf9034fd481e3664402bf95ea2f..fb3256e1a4c1aec464020afc3bd6aa4a9a482187 100644
+--- a/vllm/model_executor/layers/fused_moe/experts/aiter_mxfp4_w4a16_moe.py
++++ b/vllm/model_executor/layers/fused_moe/experts/aiter_mxfp4_w4a16_moe.py
+@@ -321,7 +321,7 @@ class AiterW4A16ExpertsMonolithic(mk.FusedMoEExpertsMonolithic):
+         moe_parallel_config: FusedMoEParallelConfig,
+     ) -> bool:
+         return (
+-            not moe_parallel_config.use_all2all_kernels
++            not moe_parallel_config.use_ep
+             and not moe_parallel_config.enable_eplb
+             and moe_parallel_config.dp_size <= 1
+         )
+diff --git a/vllm/model_executor/layers/fused_moe/experts/aiter_mxfp4_w4a8_moe.py b/vllm/model_executor/layers/fused_moe/experts/aiter_mxfp4_w4a8_moe.py
+index b327cbeb594cac009ab352e70ddc95c9a48d7255..407dc097b16e8599fa6f19e7b577aea5c0794f5b 100644
+--- a/vllm/model_executor/layers/fused_moe/experts/aiter_mxfp4_w4a8_moe.py
++++ b/vllm/model_executor/layers/fused_moe/experts/aiter_mxfp4_w4a8_moe.py
+@@ -246,7 +246,7 @@ class AiterW4A8ExpertsMonolithic(mk.FusedMoEExpertsMonolithic):
+         moe_parallel_config: FusedMoEParallelConfig,
+     ) -> bool:
+         return (
+-            not moe_parallel_config.use_all2all_kernels
++            not moe_parallel_config.use_ep
+             and not moe_parallel_config.enable_eplb
+             and moe_parallel_config.dp_size <= 1
+         )

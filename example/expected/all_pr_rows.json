@@ -1,0 +1,948 @@
+[
+  {
+    "number": 57910,
+    "merged_at": "2026-09-21T17:15:29Z",
+    "merged_local": "2026-09-22 01:15:29.000",
+    "title": "[Docs] Add an Engram feature page explaining Engram usage in vLLM",
+    "labels": [
+      "documentation",
+      "ready",
+      "build-docs"
+    ],
+    "problem": "Engram使用与存储机制缺少集中说明。",
+    "solution": "新增Engram文档和目录入口。",
+    "why": "说明配置、共享与卸载边界；无运行时修改。",
+    "is_bugfix": "否",
+    "key_files": "docs/features/engram.md",
+    "url": "https://github.com/vllm-project/vllm/pull/57910",
+    "merge_sha": "fba33e39cb74c7c31cc648ae530a85e0c6636f92"
+  },
+  {
+    "number": 54185,
+    "merged_at": "2026-09-21T17:17:56Z",
+    "merged_local": "2026-09-22 01:17:56.000",
+    "title": "[ROCm][Perf] Route the fused shared-expert gate GEMM through the platform dispatcher",
+    "labels": [
+      "rocm",
+      "ready"
+    ],
+    "problem": "ROCm共享专家融合gate仍调用普通F.linear，未使用已有小矩阵优化分派。",
+    "solution": "MoERunner的组合gate GEMM改经dispatch_unquantized_gemm。",
+    "why": "复用平台选核而非新增数学路径；收益随并发变化。",
+    "is_bugfix": "否",
+    "key_files": "vllm/model_executor/layers/fused_moe/runner/moe_runner.py",
+    "url": "https://github.com/vllm-project/vllm/pull/54185",
+    "merge_sha": "17322375a2d7815ed3d7c9c3ffd718196564314e"
+  },
+  {
+    "number": 57937,
+    "merged_at": "2026-09-21T18:16:02Z",
+    "merged_local": "2026-09-22 02:16:02.000",
+    "title": "[Engram] Drop redundant VLLM_PLE_CPU_OFFLOAD env var",
+    "labels": [],
+    "problem": "Engram CPU offload存在环境变量与显式配置两个入口。",
+    "solution": "移除VLLM_PLE_CPU_OFFLOAD，cpu_offload固定默认True，显式EngramConfig继续生效。",
+    "why": "收敛配置事实源；旧环境变量设0不再关闭卸载。",
+    "is_bugfix": "否",
+    "key_files": "vllm/config/engram.py; vllm/envs.py; tests/test_config.py",
+    "url": "https://github.com/vllm-project/vllm/pull/57937",
+    "merge_sha": "54020c3c3ec9de219929a5a956010a0251b87520"
+  },
+  {
+    "number": 57867,
+    "merged_at": "2026-09-21T20:28:35Z",
+    "merged_local": "2026-09-22 04:28:35.000",
+    "title": "[Bugfix][MoE] Reject hash routing for unsupported monolithic backends",
+    "labels": [
+      "bug"
+    ],
+    "problem": "不支持token/hash输入的monolithic MoE后端可被hash routing模型选中。",
+    "solution": "FusedMoEConfig增加has_hash_routing，通用能力检查拒绝hash与monolithic组合。",
+    "why": "提前拒绝不支持协议，保留支持hash的modular路径。",
+    "is_bugfix": "是",
+    "key_files": "vllm/model_executor/layers/fused_moe/config.py; vllm/model_executor/layers/fused_moe/layer.py; vllm/model_executor/layers/fused_moe/modular_kernel.py; tests/kernels/moe/conftest.py; tests/kernels/moe/test_topk_softplus_sqrt.py",
+    "url": "https://github.com/vllm-project/vllm/pull/57867",
+    "merge_sha": "9179bcd4166bd03f4903aafed39d2c284eeb8c91"
+  },
+  {
+    "number": 57866,
+    "merged_at": "2026-09-21T20:30:22Z",
+    "merged_local": "2026-09-22 04:30:22.000",
+    "title": "[Bugfix][ROCm] Reject unsupported EP for monolithic AITER MXFP4 MoE",
+    "labels": [
+      "bug",
+      "rocm",
+      "ready"
+    ],
+    "problem": "AITER MXFP4 monolithic MoE在EP下错误使用全局专家数。",
+    "solution": "W4A16/W4A8能力门禁由all2all条件改为禁止use_ep。",
+    "why": "EP分片专家与内核全局路由协议不匹配，需回退兼容实现。",
+    "is_bugfix": "是",
+    "key_files": "vllm/model_executor/layers/fused_moe/experts/aiter_mxfp4_w4a16_moe.py; vllm/model_executor/layers/fused_moe/experts/aiter_mxfp4_w4a8_moe.py; tests/kernels/moe/test_ocp_mx_moe.py",
+    "url": "https://github.com/vllm-project/vllm/pull/57866",
+    "merge_sha": "12972ae40bece6f9b9898fadd0c50d6a317df6fd"
+  },
+  {
+    "number": 55608,
+    "merged_at": "2026-09-21T20:40:15Z",
+    "merged_local": "2026-09-22 04:40:15.000",
+    "title": "[Docker] Use zstd for CI images and offer a Docker Hub variant",
+    "labels": [
+      "rocm",
+      "ready",
+      "ci/build",
+      "kv-connector"
+    ],
+    "problem": "CUDA CI镜像拉取解压影响启动，gzip产物偏大。",
+    "solution": "CI ECR镜像使用zstd level3，公共CUDA13 amd64另发-zstd变体且保留gzip。",
+    "why": "缩短镜像到首次正确响应时间，同时保留旧运行时兼容入口。",
+    "is_bugfix": "否",
+    "key_files": ".buildkite/image_build/image_build.sh; .buildkite/image_build/zstd.hcl; .buildkite/scripts/publish-release-images.sh; .buildkite/scripts/publish-zstd-image.sh",
+    "url": "https://github.com/vllm-project/vllm/pull/55608",
+    "merge_sha": "9fe1cbd463055314863a6de210d5f898200a0a9a"
+  },
+  {
+    "number": 50592,
+    "merged_at": "2026-09-21T20:44:43Z",
+    "merged_local": "2026-09-22 04:44:43.000",
+    "title": "[Kimi-K3][AMD] Return KDA and MLA projection outputs directly",
+    "labels": [
+      "rocm",
+      "ready",
+      "kimi",
+      "k3"
+    ],
+    "problem": "Kimi-K3 AMD attention将投影结果复制到预分配output，增加每步搬运。",
+    "solution": "KDA/MLA直接返回投影张量，更新调用方及prefix_delta残差传递。",
+    "why": "删除无用副本并维持返回值契约；Nvidia共享调用方也需同步。",
+    "is_bugfix": "否",
+    "key_files": "vllm/model_executor/layers/mamba/gdn/kimi_gdn_linear_attn.py; vllm/models/kimi_k3/amd/kda.py; vllm/models/kimi_k3/amd/linear.py; vllm/models/kimi_k3/nvidia/model.py; tests/models/kimi_k3/test_amd_kda_direct_return.py",
+    "url": "https://github.com/vllm-project/vllm/pull/50592",
+    "merge_sha": "382970ee6ca490aeaaaf4e32c53695b581ff61ba"
+  },
+  {
+    "number": 57871,
+    "merged_at": "2026-09-21T22:30:15Z",
+    "merged_local": "2026-09-22 06:30:15.000",
+    "title": "[CI][Build] Harden triton-cpu sleef submodule fetch in CPU image build",
+    "labels": [
+      "ci/build",
+      "cpu"
+    ],
+    "problem": "CPU镜像triton-cpu浅克隆偶发缺失sleef子模块，CMake失败。",
+    "solution": "检查CMakeLists，缺失则完整重取子模块，仍缺失时明确失败。",
+    "why": "把网络残缺检出与编译失败区分，避免含糊错误。",
+    "is_bugfix": "是",
+    "key_files": "docker/Dockerfile.cpu",
+    "url": "https://github.com/vllm-project/vllm/pull/57871",
+    "merge_sha": "8644d2af2fb7c4588190a8d7f6c26a3cbef78a0f"
+  },
+  {
+    "number": 57984,
+    "merged_at": "2026-09-21T22:38:39Z",
+    "merged_local": "2026-09-22 06:38:39.000",
+    "title": "[Bugfix][Kernel] Skip the fused silu-mul block-quant fast path when a swiglu clamp is set",
+    "labels": [
+      "bug",
+      "ready",
+      "stale",
+      "quantization",
+      "verified"
+    ],
+    "problem": "Triton block FP8融合SiLU量化忽略SwiGLU clamp，输出错误。",
+    "solution": "仅clamp_limit为空才用融合快路径，其他走已有clamp实现。",
+    "why": "融合内核无clamp参数，不能静默丢失模型数学语义。",
+    "is_bugfix": "是",
+    "key_files": "vllm/model_executor/layers/fused_moe/experts/triton_moe.py; tests/kernels/moe/test_block_fp8.py",
+    "url": "https://github.com/vllm-project/vllm/pull/57984",
+    "merge_sha": "8bf051cd51adff79e1bc94e910adaea543aaa2e1"
+  },
+  {
+    "number": 51360,
+    "merged_at": "2026-09-21T23:18:50Z",
+    "merged_local": "2026-09-22 07:18:50.000",
+    "title": "[Frontend] Add reusable TP1 initialized-engine snapshots",
+    "labels": [
+      "documentation",
+      "frontend",
+      "ready",
+      "ci/build",
+      "deepseek",
+      "kv-connector",
+      "nvidia",
+      "DSv4"
+    ],
+    "problem": "完整进程退出后重新初始化模型耗时长。",
+    "solution": "新增同机TP1初始化快照，level2释放设备状态后用CRIU/CUDA恢复，再用确定性token oracle验收。",
+    "why": "复用初始化状态以缩短激活；限制Linux x86_64单Nvidia卡同机同环境，非通用跨平台快照。",
+    "is_bugfix": "否",
+    "key_files": "vllm/entrypoints/cli/main.py; vllm/entrypoints/cli/snapshot.py; vllm/snapshot/__init__.py; vllm/snapshot/controller.py; vllm/snapshot/manifest.py",
+    "url": "https://github.com/vllm-project/vllm/pull/51360",
+    "merge_sha": "13058faa49f5e4a4d50e1ca562ba0c2fdd73c7bc"
+  },
+  {
+    "number": 57737,
+    "merged_at": "2026-09-21T23:54:58Z",
+    "merged_local": "2026-09-22 07:54:58.000",
+    "title": "[Pooling] MRV2 pooling shutdown model ref",
+    "labels": [
+      "ready",
+      "mrv2"
+    ],
+    "problem": "MRV2 shutdown后PoolingRunner仍引用模型，设备内存未释放。",
+    "solution": "GPUModelRunner.shutdown清空pooling_runner。",
+    "why": "解除最后引用而不改推理数学；需区分shutdown后存活对象与析构。",
+    "is_bugfix": "是",
+    "key_files": "vllm/v1/worker/gpu/model_runner.py",
+    "url": "https://github.com/vllm-project/vllm/pull/57737",
+    "merge_sha": "7d06dd1ffaab13bb6b9a34e86a8a62e4d715bd1e"
+  },
+  {
+    "number": 57965,
+    "merged_at": "2026-09-22T00:19:18Z",
+    "merged_local": "2026-09-22 08:19:18.000",
+    "title": "[CI] Split (H200) LM Eval Large Models into per-model jobs",
+    "labels": [
+      "ci/build"
+    ],
+    "problem": "六项大模型评测串行占用一个长H200 job，重试代价大。",
+    "solution": "拆为五个具名job，六个配置各覆盖一次，AMD维持独立原job。",
+    "why": "缩短关键路径并隔离失败，但并发峰值需40卡且总资源成本上升。",
+    "is_bugfix": "否",
+    "key_files": ".buildkite/test_areas/lm_eval.yaml; tests/evals/gsm8k/configs/models-h200-deepseek-r1-dp.txt; tests/evals/gsm8k/configs/models-h200-deepseek-r1-tp.txt; tests/evals/gsm8k/configs/models-h200-deepseek-v32-dp.txt; tests/evals/gsm8k/configs/models-h200-deepseek-v32-tp.txt",
+    "url": "https://github.com/vllm-project/vllm/pull/57965",
+    "merge_sha": "78d78365254dfa20d3a265b6da695ab8151ec8b1"
+  },
+  {
+    "number": 57951,
+    "merged_at": "2026-09-22T00:19:42Z",
+    "merged_local": "2026-09-22 08:19:42.000",
+    "title": "[Scheduler] Soften Long Prefill Tokens Threshhold",
+    "labels": [
+      "ready",
+      "scheduler"
+    ],
+    "problem": "单独一个长prefill仍受单请求阈值切块，空耗剩余token预算。",
+    "solution": "每次schedule按running/waiting/skipped_waiting总数决定是否启用阈值，覆盖运行与等待队列。",
+    "why": "无人竞争时放宽公平性限制；多请求继续保持公平。",
+    "is_bugfix": "否",
+    "key_files": "vllm/config/scheduler.py; vllm/v1/core/sched/scheduler.py; tests/v1/core/test_deferred_block_free.py; tests/v1/core/test_scheduler.py; tests/v1/e2e/general/test_pooling_chunked_prefill.py",
+    "url": "https://github.com/vllm-project/vllm/pull/57951",
+    "merge_sha": "c64b15cde583c7dd3cbb906b30164131a030d6b4"
+  },
+  {
+    "number": 57458,
+    "merged_at": "2026-09-22T00:24:26Z",
+    "merged_local": "2026-09-22 08:24:26.000",
+    "title": "[Perf][Attention] Reduce GLM sparse MLA preparation overhead",
+    "labels": [
+      "ready",
+      "nvidia",
+      "glm"
+    ],
+    "problem": "GLM NoPE sparse MLA预处理有无用cat、填充和计数开销。",
+    "solution": "连续且rope尾为空时复用query；小容量remap单tile融合填充计数；按DCP/HiSparse需要处理空query。",
+    "why": "减少launch和中间写入，同时保留空行LSE/NaN及大容量回退语义。",
+    "is_bugfix": "否",
+    "key_files": "vllm/model_executor/layers/attention/mla_attention.py; vllm/v1/attention/backends/mla/flashinfer_mla_sparse.py; vllm/v1/attention/backends/mla/sparse_utils.py; tests/kernels/attention/test_flashinfer_mla_decode.py; tests/kernels/test_concat_mla_q.py",
+    "url": "https://github.com/vllm-project/vllm/pull/57458",
+    "merge_sha": "a369a7becc20c6c4dda601aedef51b8cc8387971"
+  },
+  {
+    "number": 55390,
+    "merged_at": "2026-09-22T00:31:26Z",
+    "merged_local": "2026-09-22 08:31:26.000",
+    "title": "[Bugfix] Annotate MTP draft KV cache groups positionally on the hybrid grouping path",
+    "labels": [
+      "bug",
+      "ready",
+      "verified",
+      "kv-cache-manager"
+    ],
+    "problem": "混合Attention/Mamba MTP通用分组漏标draft，外部卸载未保护易变尾块。",
+    "solution": "packed和general路径采用末层定位并检查分组恰好覆盖所有层，替换注解函数关键字。",
+    "why": "让MTP draft组获得volatile尾块处理；跨多组draft只标末组仍有限制。",
+    "is_bugfix": "是",
+    "key_files": "vllm/v1/core/kv_cache_utils.py; tests/v1/core/test_kv_cache_utils.py",
+    "url": "https://github.com/vllm-project/vllm/pull/55390",
+    "merge_sha": "0bce411a073e0da2c9bded9bb6ced1cbee51c564"
+  },
+  {
+    "number": 51565,
+    "merged_at": "2026-09-22T01:11:50Z",
+    "merged_local": "2026-09-22 09:11:50.000",
+    "title": "[Bugfix][GDN] Fix stateless first-chunk classification",
+    "labels": [
+      "bug",
+      "ready"
+    ],
+    "problem": "GDN无历史状态的一token首块被当decode，读到回收页旧状态。",
+    "solution": "结合seq/query长度与is_prefilling区分首块、续块、capture dummy，修正padding计数。",
+    "why": "单token形状不代表有状态；保留续块和图dummy的decode行为。",
+    "is_bugfix": "是",
+    "key_files": "vllm/v1/attention/backends/gdn_attn.py; tests/v1/attention/test_gdn_metadata_builder.py",
+    "url": "https://github.com/vllm-project/vllm/pull/51565",
+    "merge_sha": "79468c20ef23227d4e051f807e10fd54fb24e24f"
+  },
+  {
+    "number": 54867,
+    "merged_at": "2026-09-22T01:36:46Z",
+    "merged_local": "2026-09-22 09:36:46.000",
+    "title": "[CI] Add pre-commit check that new tests are tethered to Buildkite jobs",
+    "labels": [
+      "ready",
+      "ci/build",
+      "cpu"
+    ],
+    "problem": "新增测试文件能够合入却不被任何Buildkite job执行。",
+    "solution": "pre-commit解析CI命令、wrapper及白名单，检查测试与job连接。",
+    "why": "防止测试覆盖成为空声明；这是质量门禁而非推理性能优化。",
+    "is_bugfix": "否",
+    "key_files": ".buildkite/test_areas/misc.yaml; .pre-commit-config.yaml; docker/Dockerfile.cpu; tests/tools/test_check_test_tethering.py; tools/__init__.py",
+    "url": "https://github.com/vllm-project/vllm/pull/54867",
+    "merge_sha": "e9f169d16b9408bb9ae44f75072b91a5521d733c"
+  },
+  {
+    "number": 49685,
+    "merged_at": "2026-09-22T02:05:26Z",
+    "merged_local": "2026-09-22 10:05:26.000",
+    "title": "[XPU] Fix Nemotron FP8 LM-eval config: drop CUDA-only moe_backend and wire to new Buildkite job",
+    "labels": [
+      "intel-gpu",
+      "ci/build",
+      "nvidia"
+    ],
+    "problem": "Nemotron FP8评测配置指定CUDA-only MoE后端导致XPU失败。",
+    "solution": "新建XPU配置去掉flashinfer_cutlass并连接Intel CI job。",
+    "why": "按平台选择后端，不复用不兼容CUDA覆盖值。",
+    "is_bugfix": "是",
+    "key_files": ".buildkite/intel_jobs/lm_eval_intel.yaml; .buildkite/lm-eval-harness/configs/NVIDIA-Nemotron-3-Nano-30B-A3B-FP8-xpu.yaml; .buildkite/lm-eval-harness/configs/models-large-xpu-fp8.txt",
+    "url": "https://github.com/vllm-project/vllm/pull/49685",
+    "merge_sha": "1fee69838eeb72622b441a593888687831c1e434"
+  },
+  {
+    "number": 57606,
+    "merged_at": "2026-09-22T03:03:04Z",
+    "merged_local": "2026-09-22 11:03:04.000",
+    "title": "[Docker] Expose bundled vllm-rs on PATH",
+    "labels": [
+      "documentation",
+      "ready",
+      "ci/build",
+      "rust"
+    ],
+    "problem": "CUDA镜像已带vllm-rs二进制但PATH找不到，entrypoint退出127。",
+    "solution": "从sysconfig包路径创建/usr/local/bin链接并构建时运行help。",
+    "why": "修复打包可发现性，保留默认Python入口。",
+    "is_bugfix": "是",
+    "key_files": "docker/Dockerfile",
+    "url": "https://github.com/vllm-project/vllm/pull/57606",
+    "merge_sha": "f07e227ee9acdb8d7e48d69f178c897fb54ecd88"
+  },
+  {
+    "number": 57312,
+    "merged_at": "2026-09-22T03:13:39Z",
+    "merged_local": "2026-09-22 11:13:39.000",
+    "title": "[Fast Start] Cache the MTP draft model in a separate daemon group",
+    "labels": [
+      "speculative-decoding",
+      "ready",
+      "qwen",
+      "mrv2",
+      "dflash"
+    ],
+    "problem": "IPC权重缓存把draft送入target daemon或重读磁盘。",
+    "solution": "独立draft daemon、socket及缓存key，导出加载属性；最终代码支持mtp/eagle/eagle3，其余回退磁盘。",
+    "why": "模型角色和指纹必须隔离；正文MTP-only描述落后于最终diff。",
+    "is_bugfix": "是",
+    "key_files": "vllm/config/speculative.py; vllm/model_executor/model_loader/utils.py; vllm/model_executor/model_loader/weight_cache/__init__.py; vllm/model_executor/model_loader/weight_cache/daemon.py; vllm/model_executor/model_loader/weight_cache/ipc_loader.py",
+    "url": "https://github.com/vllm-project/vllm/pull/57312",
+    "merge_sha": "c723a831a81cb4ff89ea6d61b2d15109306ed1bc"
+  },
+  {
+    "number": 57933,
+    "merged_at": "2026-09-22T04:27:10Z",
+    "merged_local": "2026-09-22 12:27:10.000",
+    "title": "[Rust Frontend] Add MiMo V2.6 parser support",
+    "labels": [
+      "ready",
+      "rust"
+    ],
+    "problem": "Rust前端缺MiMo裸reasoning分隔和function/parameter工具协议。",
+    "solution": "增加MiMo选择、空白保留、None按schema转换及主模板发现修复。",
+    "why": "以真实模板验证流式往返，不把其他Qwen JSON语法直接套入。",
+    "is_bugfix": "是",
+    "key_files": "rust/src/chat/src/lib.rs; rust/src/chat/src/output/default/structural_tag.rs; rust/src/chat/src/parser/reasoning/mod.rs; rust/src/chat/src/parser/tool/mod.rs; rust/src/chat/src/parser/tool/tests.rs",
+    "url": "https://github.com/vllm-project/vllm/pull/57933",
+    "merge_sha": "ff3c9cba3f459085efdac7e8b7fed35bdb0151a2"
+  },
+  {
+    "number": 56448,
+    "merged_at": "2026-09-22T04:36:32Z",
+    "merged_local": "2026-09-22 12:36:32.000",
+    "title": "[Bugfix][Spec Decode] Cap DFlash/DSpark profiling query batch",
+    "labels": [
+      "bug",
+      "speculative-decoding",
+      "ready",
+      "nvidia",
+      "mrv2",
+      "verified",
+      "dflash"
+    ],
+    "problem": "DFlash/DSpark profiling按max_num_seqs造批，query行数可超buffer。",
+    "solution": "MRV2初始dummy请求数按max_num_tokens/num_query_per_req截断，speculator提供默认宽度。",
+    "why": "synthetic批绕过调度预算，须自行限制；最终diff比正文描述的完整hook方案窄。",
+    "is_bugfix": "是",
+    "key_files": "vllm/v1/worker/gpu/model_runner.py; vllm/v1/worker/gpu/spec_decode/speculator.py; tests/v1/spec_decode/test_dflash_profile.py",
+    "url": "https://github.com/vllm-project/vllm/pull/56448",
+    "merge_sha": "c4d424c2e27b392da235704ba0edca7ac48bd495"
+  },
+  {
+    "number": 57891,
+    "merged_at": "2026-09-22T04:36:56Z",
+    "merged_local": "2026-09-22 12:36:56.000",
+    "title": "[RL][Sleep] Retain frozen weights across level-2 sleep",
+    "labels": [
+      "documentation",
+      "ready"
+    ],
+    "problem": "level2 sleep丢弃训练端不再发送的冻结权重，唤醒后失效。",
+    "solution": "新增参数名glob，sleep备份选定设备参数到CPU，weights wake原位恢复并清理备份。",
+    "why": "冻结参数和buffer不同；须保持storage、限制host容量并由trainer跳过更新。",
+    "is_bugfix": "是",
+    "key_files": "vllm/config/model.py; vllm/engine/arg_utils.py; vllm/v1/worker/gpu_worker.py; docs/features/sleep_mode.md; tests/v1/worker/test_sleep_mode_backend.py",
+    "url": "https://github.com/vllm-project/vllm/pull/57891",
+    "merge_sha": "639461eda424debe7bbdf2b1fc577bf83e29c643"
+  },
+  {
+    "number": 57919,
+    "merged_at": "2026-09-22T04:45:53Z",
+    "merged_local": "2026-09-22 12:45:53.000",
+    "title": "[ROCm][Bugfix] Explicitly reject FSE=1 with DPA+ETP deployment for DeepSeek-V4",
+    "labels": [
+      "bug",
+      "rocm",
+      "ready",
+      "deepseek",
+      "DSv4"
+    ],
+    "problem": "ROCm DSV4 DPA+ETP启用融合共享专家会以权重KeyError失败。",
+    "solution": "在模型构造检查非EP且DP>1与FSE组合并给出关闭选项。",
+    "why": "内核无法将FP8共享专家装入MXFP4 routed slot，提前明确拒绝。",
+    "is_bugfix": "是",
+    "key_files": "vllm/models/deepseek_v4/amd/model.py; tests/models/test_deepseek_v4_vl_rocm.py",
+    "url": "https://github.com/vllm-project/vllm/pull/57919",
+    "merge_sha": "42a85a49761921fe5965e28eb971d863d9759503"
+  },
+  {
+    "number": 58065,
+    "merged_at": "2026-09-22T05:05:45Z",
+    "merged_local": "2026-09-22 13:05:45.000",
+    "title": "[Spec Decode] Enable async scheduling for DFlash",
+    "labels": [
+      "dflash"
+    ],
+    "problem": "DFlash被排除异步调度，CPU调度与decode不能重叠。",
+    "solution": "在显式开关及默认自动开关两处将dflash加入允许列表。",
+    "why": "MRV2已有通用异步张量路径，仍须按NPU实际runner组合验证。",
+    "is_bugfix": "否",
+    "key_files": "vllm/config/vllm.py; tests/test_config.py",
+    "url": "https://github.com/vllm-project/vllm/pull/58065",
+    "merge_sha": "0961bbae2894d574be790d219651824eb199318e"
+  },
+  {
+    "number": 51922,
+    "merged_at": "2026-09-22T05:08:36Z",
+    "merged_local": "2026-09-22 13:08:36.000",
+    "title": "[Rust Frontend] Add mm-processor benchmark",
+    "labels": [
+      "performance",
+      "ready",
+      "rust"
+    ],
+    "problem": "Rust多模态预处理缺少可重复分阶段时延基准。",
+    "solution": "新增request timing及mm-processor benchmark，支持并发预热和JSON。",
+    "why": "隔离fetch/预处理/展开开销；当前仍需要headless engine，不是无权重离线工具。",
+    "is_bugfix": "否",
+    "key_files": "rust/Cargo.lock; rust/src/bench/AGENTS.md; rust/src/bench/Cargo.toml; rust/src/bench/README.md; rust/src/bench/src/lib.rs",
+    "url": "https://github.com/vllm-project/vllm/pull/51922",
+    "merge_sha": "f84325c48c0acc1e3703103788c5f2976e719762"
+  },
+  {
+    "number": 55269,
+    "merged_at": "2026-09-22T05:35:08Z",
+    "merged_local": "2026-09-22 13:35:08.000",
+    "title": "[Rust Frontend] Introduce parser-owned output grammar interfaces",
+    "labels": [
+      "ready",
+      "rust",
+      "kimi",
+      "k3"
+    ],
+    "problem": "工具grammar在parser获得最终prompt状态前构造，无法支持完整输出语法。",
+    "solution": "新增parser-owned grammar接口，将初始化和grammar构造移至tokenize后；删除旧UnifiedParser接口。",
+    "why": "按实际初始状态构建语法；初始化失败改为提交前拒绝。",
+    "is_bugfix": "否",
+    "key_files": "rust/Cargo.lock; rust/src/chat/src/error.rs; rust/src/chat/src/lib.rs; rust/src/chat/src/output/default/mod.rs; rust/src/chat/src/output/default/structural_tag.rs",
+    "url": "https://github.com/vllm-project/vllm/pull/55269",
+    "merge_sha": "d50723df04f77c732c75e07d337ee81d843e014f"
+  },
+  {
+    "number": 57731,
+    "merged_at": "2026-09-22T05:50:24Z",
+    "merged_local": "2026-09-22 13:50:24.000",
+    "title": "[Security] Reject min_tokens that exceeds the filled max_tokens default",
+    "labels": [
+      "ready"
+    ],
+    "problem": "max_tokens为null时过大的min_tokens绕过校验，EngineCore重建参数后线程异常。",
+    "solution": "InputProcessor填充max_tokens后再次检查min_tokens上界。",
+    "why": "在准入阶段拒绝非法请求，避免用户输入拖死引擎。",
+    "is_bugfix": "是",
+    "key_files": "vllm/v1/engine/input_processor.py; tests/entrypoints/scale_out/token_in_token_out/test_serving_tokens.py; tests/test_request_input_bounds.py",
+    "url": "https://github.com/vllm-project/vllm/pull/57731",
+    "merge_sha": "4800024b98f70c9b3022c27b41e63a5dc9556ed7"
+  },
+  {
+    "number": 57006,
+    "merged_at": "2026-09-22T05:50:31Z",
+    "merged_local": "2026-09-22 13:50:31.000",
+    "title": "[Bugfix][Frontend] Validate mixed prompt embedding mask lengths",
+    "labels": [
+      "bug",
+      "ready"
+    ],
+    "problem": "混合embedding mask长度错位可广播错误甚至静默错配。",
+    "solution": "InputProcessor验证mask长度等于embedding行数并返回参数错误。",
+    "why": "mask逐位置对应，不能允许NumPy广播替代语义检查。",
+    "is_bugfix": "是",
+    "key_files": "vllm/v1/engine/input_processor.py; tests/test_request_input_bounds.py",
+    "url": "https://github.com/vllm-project/vllm/pull/57006",
+    "merge_sha": "5abf85d27ace7998a86b27d2754de239c73d0723"
+  },
+  {
+    "number": 47736,
+    "merged_at": "2026-09-22T05:56:13Z",
+    "merged_local": "2026-09-22 13:56:13.000",
+    "title": "[Bugfix][Qwen2.5-VL] Honor video fps for temporal M-RoPE",
+    "labels": [
+      "bug",
+      "documentation",
+      "ready",
+      "multi-modality",
+      "qwen",
+      "nvidia"
+    ],
+    "problem": "Qwen2.5VL视频元数据被丢弃，fps不同仍产生相同时间MRoPE。",
+    "solution": "保留视频metadata并传HF processor，dummy video也附合成metadata。",
+    "why": "时间位置应源于真实sampled_fps；无metadata的裸视频数组现在明确报错。",
+    "is_bugfix": "是",
+    "key_files": "vllm/model_executor/models/qwen2_5_vl.py; examples/generate/multimodal/vision_language_offline.py; tests/models/multimodal/generation/test_common.py; tests/models/multimodal/generation/test_qwen2_5_vl.py; tests/models/multimodal/generation/test_vit_cudagraph.py",
+    "url": "https://github.com/vllm-project/vllm/pull/47736",
+    "merge_sha": "a33b3bac5dad5654065adbdadc87f35118e482e3"
+  },
+  {
+    "number": 57340,
+    "merged_at": "2026-09-22T06:11:55Z",
+    "merged_local": "2026-09-22 14:11:55.000",
+    "title": "[Rust Frontend] Build full-output grammars from initialized reasoning parsers",
+    "labels": [
+      "rust",
+      "kimi",
+      "k3"
+    ],
+    "problem": "Rust严格工具语法仅约束reasoning结束之后的输出。",
+    "solution": "从初始化后的reasoning parser构造包装grammar并启用FromTokenZero。",
+    "why": "确保reasoning关闭和工具输出连续约束；K3/Gemma4/Harmony等未纳入。",
+    "is_bugfix": "否",
+    "key_files": "rust/src/parser/src/output_grammar.rs; rust/src/parser/src/reasoning/deepseek_r1.rs; rust/src/parser/src/reasoning/deepseek_v3.rs; rust/src/parser/src/reasoning/delimited.rs; rust/src/parser/src/reasoning/glm45.rs",
+    "url": "https://github.com/vllm-project/vllm/pull/57340",
+    "merge_sha": "496c6472cb70d5eb8681dadae238d160f5086454"
+  },
+  {
+    "number": 47842,
+    "merged_at": "2026-09-22T06:38:16Z",
+    "merged_local": "2026-09-22 14:38:16.000",
+    "title": "[ROCm][Perf] Avoid extra reshape kernel in Qwen GDN output norm",
+    "labels": [
+      "performance",
+      "rocm",
+      "ready",
+      "torch.compile",
+      "ci/build",
+      "qwen"
+    ],
+    "problem": "Qwen GDN norm周围的reshape造成ROCm Inductor额外copy kernel。",
+    "solution": "norm直接处理原rank，统一输出projection；AITER匹配兼容两类layout并消除noop reshape。",
+    "why": "减少编译布局转换；NPU自有forward与norm需独立profile。",
+    "is_bugfix": "否",
+    "key_files": "vllm/compilation/passes/fusion/rocm_aiter_fusion.py; vllm/compilation/passes/vllm_inductor_pass.py; vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py; tests/compile/passes/test_fusion.py; tests/kernels/mamba/test_gdn_output_projection.py",
+    "url": "https://github.com/vllm-project/vllm/pull/47842",
+    "merge_sha": "68363d64ec476bbbf5025b30ced0f6a2425b1291"
+  },
+  {
+    "number": 50814,
+    "merged_at": "2026-09-22T06:51:13Z",
+    "merged_local": "2026-09-22 14:51:13.000",
+    "title": "[Kernel] Add opt-in load-time MXFP4 dequantization",
+    "labels": [
+      "rocm",
+      "quantization",
+      "verified",
+      "kimi",
+      "k3"
+    ],
+    "problem": "MXFP4仿真每次linear都反量化同一权重。",
+    "solution": "默认关闭的新环境开关允许加载时反量化成BF16，保留激活QDQ。",
+    "why": "用常驻内存换重复计算，native MXFP4/MoE选核不变。",
+    "is_bugfix": "否",
+    "key_files": "vllm/envs.py; vllm/model_executor/kernels/linear/mxfp4/emulation.py; tests/kernels/quantization/test_mxfp4_kernel_selection.py",
+    "url": "https://github.com/vllm-project/vllm/pull/50814",
+    "merge_sha": "2af05512cf94eda87b4eb51e9f1345a12337a36d"
+  },
+  {
+    "number": 58084,
+    "merged_at": "2026-09-22T06:57:56Z",
+    "merged_local": "2026-09-22 14:57:56.000",
+    "title": "[Rust Frontend] Separate multimodal instrumentation from request timing",
+    "labels": [
+      "ready",
+      "rust"
+    ],
+    "problem": "Rust MM计时职责混在通用tracing中，统计句柄契约不清。",
+    "solution": "MM instrumentation移入chat，benchmark直接用RequestTimingStats，保留阶段和聚合语义。",
+    "why": "分离领域埋点与通用计时；非独立性能提升。",
+    "is_bugfix": "否",
+    "key_files": "rust/src/bench/src/mm_processor.rs; rust/src/chat/src/lib.rs; rust/src/chat/src/multimodal.rs; rust/src/chat/src/multimodal/audio.rs; rust/src/chat/src/multimodal/expand.rs",
+    "url": "https://github.com/vllm-project/vllm/pull/58084",
+    "merge_sha": "a6c47fbbf4187e8ae5396ebdcf93234db617a4ad"
+  },
+  {
+    "number": 57428,
+    "merged_at": "2026-09-22T08:07:18Z",
+    "merged_local": "2026-09-22 16:07:18.000",
+    "title": "[Kernel][DSV4.1] Fuse MXFP8 wo_b GEMM with sequence-parallel reduce-scatter",
+    "labels": [
+      "performance",
+      "ready",
+      "ci/build",
+      "deepseek",
+      "nvidia",
+      "DSv4",
+      "kimi",
+      "k3",
+      "DSv4.1"
+    ],
+    "problem": "DSV4.1 SP wo_b矩阵乘后单独reduce-scatter产生launch与HBM往返。",
+    "solution": "SM100 MXFP8 GEMM-RS融合，统一共享workspace与门禁，默认关闭并按shape回退。",
+    "why": "融合计算通信；小M握手开销会更慢，不能忽略阈值与数值舍入差异。",
+    "is_bugfix": "否",
+    "key_files": "vllm/cute_utils/_tcgen05.py; vllm/envs.py; vllm/model_executor/kernels/linear/cute_dsl/gemm_rs_ar.py; vllm/model_executor/warmup/kernel_warmup.py; vllm/models/deepseek_v4/nvidia/ops/o_proj.py",
+    "url": "https://github.com/vllm-project/vllm/pull/57428",
+    "merge_sha": "f92b78f6ef9c9b28f60668da77af5b65645b1a45"
+  },
+  {
+    "number": 58097,
+    "merged_at": "2026-09-22T08:37:34Z",
+    "merged_local": "2026-09-22 16:37:34.000",
+    "title": "[CI] Emit a kernel symbol map from the csrc build (opt-in, for test selection)",
+    "labels": [
+      "documentation",
+      "ci/build"
+    ],
+    "problem": "仅文件依赖选择GPU测试过宽，缺少实际内核与源码对应。",
+    "solution": "可选构建产出对象/头文件/内核symbol map，与nightly运行trace联合选择测试。",
+    "why": "用真实构建和执行证据缩小测试集合；cuobjdump不可直接用于NPU。",
+    "is_bugfix": "否",
+    "key_files": ".buildkite/image_build/image_build.sh; docker/Dockerfile; docs/assets/contributing/dockerfile-stages-dependency.png; tools/ci/kernel_symbol_map.py",
+    "url": "https://github.com/vllm-project/vllm/pull/58097",
+    "merge_sha": "64a48b19b41005f1e783a69b9fdd0b5364aea4cf"
+  },
+  {
+    "number": 55385,
+    "merged_at": "2026-09-22T09:04:00Z",
+    "merged_local": "2026-09-22 17:04:00.000",
+    "title": "[perf] wire FA and FlashMLA for sm90 GLM5Next NoPE SparseMLA",
+    "labels": [
+      "ready",
+      "ci/build",
+      "glm"
+    ],
+    "problem": "GLM NoPE SM90 sparse MLA仅默认FlashInfer路径，缺少后端选择。",
+    "solution": "为FlashMLA/FA3接入head512、rope0、BF16 KV条件并增加选型测试。",
+    "why": "以可选后端改善时延；修正旧benchmark受1M上下文plan成本干扰的夸大数字。",
+    "is_bugfix": "否",
+    "key_files": "vllm/v1/attention/backends/mla/flashattn_mla_sparse.py; vllm/v1/attention/backends/mla/flashmla_sparse.py; cmake/external_projects/vllm_flash_attn.cmake; tests/v1/attention/test_flashmla_nope_sm90_backend_selection.py",
+    "url": "https://github.com/vllm-project/vllm/pull/55385",
+    "merge_sha": "91d7324cb19d301c72d849e457221ee8dd645024"
+  },
+  {
+    "number": 56547,
+    "merged_at": "2026-09-22T09:37:15Z",
+    "merged_local": "2026-09-22 17:37:15.000",
+    "title": "[CPU] Add device-memory-utilization CLI alias",
+    "labels": [
+      "ready",
+      "cpu",
+      "verified",
+      "build-docs"
+    ],
+    "problem": "CPU用户使用gpu-memory-utilization名称易误解。",
+    "solution": "新增device-memory-utilization别名，仍写原字段。",
+    "why": "统一设备无关CLI语义，不改变内存计算算法。",
+    "is_bugfix": "否",
+    "key_files": "vllm/config/cache.py; vllm/engine/arg_utils.py; tests/engine/test_arg_utils.py",
+    "url": "https://github.com/vllm-project/vllm/pull/56547",
+    "merge_sha": "6dc34b6334fe9439a46748a0df290bc785dd69df"
+  },
+  {
+    "number": 58109,
+    "merged_at": "2026-09-22T10:01:54Z",
+    "merged_local": "2026-09-22 18:01:54.000",
+    "title": "[Rust Frontend] Construct model-owned vision processors through specs",
+    "labels": [
+      "ready",
+      "rust"
+    ],
+    "problem": "Rust视觉processor构造和所有权不在模型生命周期统一管理。",
+    "solution": "模型加载按spec构造图像/视频processor，Arc复用并更新依赖。",
+    "why": "统一配置隔离和错误传播；未提供独立构造复用的性能A/B。",
+    "is_bugfix": "否",
+    "key_files": "rust/Cargo.lock; rust/Cargo.toml; rust/src/chat/src/multimodal.rs; rust/src/chat/src/multimodal/image.rs; rust/src/chat/src/multimodal/video.rs",
+    "url": "https://github.com/vllm-project/vllm/pull/58109",
+    "merge_sha": "81d7293c2167e39f3ffddc9a82d633f94e8a1eaa"
+  },
+  {
+    "number": 55931,
+    "merged_at": "2026-09-22T11:39:47Z",
+    "merged_local": "2026-09-22 19:39:47.000",
+    "title": "[BugFix][Core] Make the structured-output grammar poll non-blocking",
+    "labels": [
+      "bug",
+      "structured-output",
+      "ready"
+    ],
+    "problem": "结构化grammar轮询每future等待100微秒，编译自身TimeoutError被误判为未完成。",
+    "solution": "先done非阻塞检查，再result读取真实异常并存失败标志。",
+    "why": "消除调度空等并区分未就绪和编译失败。",
+    "is_bugfix": "是",
+    "key_files": "vllm/v1/structured_output/request.py; tests/v1/structured_output/test_request.py",
+    "url": "https://github.com/vllm-project/vllm/pull/55931",
+    "merge_sha": "9815732c16ca076c60b65fccd787167d6a9c5328"
+  },
+  {
+    "number": 58050,
+    "merged_at": "2026-09-22T11:56:02Z",
+    "merged_local": "2026-09-22 19:56:02.000",
+    "title": "[XPU][CI]Remove model_runner_v2 test from Intel GPU CI",
+    "labels": [
+      "intel-gpu",
+      "ci/build"
+    ],
+    "problem": "Intel CI仍保留已不需要的MRV2测试job。",
+    "solution": "删除对应Intel测试配置。",
+    "why": "跟随后续测试整合；仅CI维护，不能据此认定NPU可删测试。",
+    "is_bugfix": "否",
+    "key_files": ".buildkite/intel_jobs/model_runner_v2_intel.yaml",
+    "url": "https://github.com/vllm-project/vllm/pull/58050",
+    "merge_sha": "362a64b21d5038691c929521478b63dcb4828e58"
+  },
+  {
+    "number": 47450,
+    "merged_at": "2026-09-22T13:09:40Z",
+    "merged_local": "2026-09-22 21:09:40.000",
+    "title": "[Bugfix][Structured Outputs] Reject empty `structural_tag` at request validation",
+    "labels": [
+      "bug",
+      "structured-output",
+      "ready",
+      "v1"
+    ],
+    "problem": "空structural_tag进入grammar编译后返回500而非准入400。",
+    "solution": "SamplingParams加入空字符串校验并扩展回归。",
+    "why": "已有编译异常隔离不代替输入校验；空regex仍可合法。",
+    "is_bugfix": "是",
+    "key_files": "vllm/sampling_params.py; tests/v1/structured_output/test_validation.py",
+    "url": "https://github.com/vllm-project/vllm/pull/47450",
+    "merge_sha": "e548298f8144cae77d26949078c264d819d3993c"
+  },
+  {
+    "number": 57945,
+    "merged_at": "2026-09-22T13:13:07Z",
+    "merged_local": "2026-09-22 21:13:07.000",
+    "title": "[Build] Fix CUDA 12 KV connector dependency selection",
+    "labels": [
+      "ci/build",
+      "nvidia"
+    ],
+    "problem": "CUDA12安装新KV connector依赖冲突并可替换固定Torch栈。",
+    "solution": "按CUDA版本选LMCache/CuPy并施加Torch约束，冲突直接失败。",
+    "why": "避免构建悄然漂移；CUDA13依赖不变。",
+    "is_bugfix": "是",
+    "key_files": ".buildkite/scripts/install-kv-connectors.sh; docker/Dockerfile; requirements/kv_connectors_cu12.txt",
+    "url": "https://github.com/vllm-project/vllm/pull/57945",
+    "merge_sha": "d90f0eade5b56ca83ba03839591fe111c51790b3"
+  },
+  {
+    "number": 58061,
+    "merged_at": "2026-09-22T13:58:22Z",
+    "merged_local": "2026-09-22 21:58:22.000",
+    "title": "[Bugfix][GLM-5.3-Flash] Run the dense MLP layers on the sequence-parallel shard",
+    "labels": [
+      "bug",
+      "ready",
+      "glm"
+    ],
+    "problem": "GLM5Next SP分片后dense MLP仍做TP allreduce，混合不同token输出。",
+    "solution": "dense MLP传is_sequence_parallel并关闭重复TP切分/归约。",
+    "why": "非MoE层也必须遵守全模型SP布局，不可仅修共享专家。",
+    "is_bugfix": "是",
+    "key_files": "vllm/models/glm5next/common/model.py; tests/models/glm5next/test_sequence_parallel.py",
+    "url": "https://github.com/vllm-project/vllm/pull/58061",
+    "merge_sha": "c9b34fdb2d0c9fdcc20fae6454bf0895a5faf6f5"
+  },
+  {
+    "number": 56250,
+    "merged_at": "2026-09-22T14:00:06Z",
+    "merged_local": "2026-09-22 22:00:06.000",
+    "title": "[Bugfix][Structured Output] Disallow MRV1 + PP>1 + async sched + structured output",
+    "labels": [
+      "bug",
+      "ready",
+      "scheduler"
+    ],
+    "problem": "MRV1 PP>1异步结构化输出FSM未等前步完成而失败。",
+    "solution": "自动异步时关闭不支持组合，显式启用则加入V1 unsupported列表。",
+    "why": "选择明确拒绝而非扩展旧runner；最终仅禁PP+async，不是禁所有PP。",
+    "is_bugfix": "是",
+    "key_files": "vllm/config/vllm.py; tests/test_config.py",
+    "url": "https://github.com/vllm-project/vllm/pull/56250",
+    "merge_sha": "1ea7c63f4af7bb4fd6f025c8db44434ab274cb51"
+  },
+  {
+    "number": 55881,
+    "merged_at": "2026-09-22T15:06:55Z",
+    "merged_local": "2026-09-22 23:06:55.000",
+    "title": "[Feat][XPU] VLLM_BATCH_INVARIANT support for Dense/MoE models",
+    "labels": [
+      "intel-gpu",
+      "ci/build"
+    ],
+    "problem": "XPU batch invariant选核及浮点归约顺序仍随batch变化。",
+    "solution": "强制兼容Triton MoE并采用固定rank顺序归约代替XCCL allreduce。",
+    "why": "确定性依赖算子与通信共同保证；不是性能提升承诺。",
+    "is_bugfix": "是",
+    "key_files": "vllm/distributed/device_communicators/xpu_communicator.py; vllm/model_executor/determinism/batch_invariant.py; vllm/model_executor/layers/fused_moe/oracle/unquantized.py; vllm/model_executor/layers/layernorm.py; vllm/platforms/xpu.py",
+    "url": "https://github.com/vllm-project/vllm/pull/55881",
+    "merge_sha": "e4340e41c9a32b2247cc2442b35aa91b081c424f"
+  },
+  {
+    "number": 58166,
+    "merged_at": "2026-09-22T15:07:31Z",
+    "merged_local": "2026-09-22 23:07:31.000",
+    "title": "[SpecDecode] Restore residual-logits comments in _resample_kernel",
+    "labels": [
+      "speculative-decoding",
+      "mrv2"
+    ],
+    "problem": "拒绝采样残差分布注释被缩减，数学依据难追溯。",
+    "solution": "恢复原始推导注释。",
+    "why": "仅注释，无行为或收益变化。",
+    "is_bugfix": "否",
+    "key_files": "vllm/v1/worker/gpu/spec_decode/rejection_sampler_utils.py",
+    "url": "https://github.com/vllm-project/vllm/pull/58166",
+    "merge_sha": "5c121e962a31ed0b5fe70d743b6e194686d2b473"
+  },
+  {
+    "number": 58150,
+    "merged_at": "2026-09-22T15:09:40Z",
+    "merged_local": "2026-09-22 23:09:40.000",
+    "title": "[Bugfix] Narrow AuxOutput KV restrictions to known PD connectors",
+    "labels": [
+      "bug",
+      "ready",
+      "kv-connector"
+    ],
+    "problem": "AuxOutput一律拒绝KV connector，误伤KV offload组合。",
+    "solution": "使用has_connector只拒绝五个已知PD connector且递归MultiConnector。",
+    "why": "按协议能力约束；放行不代表历史KV和R3联合恢复已验证。",
+    "is_bugfix": "是",
+    "key_files": "vllm/config/vllm.py; tests/config/test_aux_output_config.py",
+    "url": "https://github.com/vllm-project/vllm/pull/58150",
+    "merge_sha": "feb87b1934c10046a19cfef610c44f1710b825b8"
+  },
+  {
+    "number": 58073,
+    "merged_at": "2026-09-22T15:38:05Z",
+    "merged_local": "2026-09-22 23:38:05.000",
+    "title": "[Bugfix] prioritize architecture capability before DeepGEMM availability check",
+    "labels": [
+      "bug",
+      "ready"
+    ],
+    "problem": "不支持DeepGEMM的架构仍触发模块可用性检查及无关警告。",
+    "solution": "将is_supported_arch置于and表达式最左侧。",
+    "why": "利用短路先排除不支持平台，避免无意义环境导入。",
+    "is_bugfix": "是",
+    "key_files": "vllm/utils/deep_gemm.py",
+    "url": "https://github.com/vllm-project/vllm/pull/58073",
+    "merge_sha": "c42f5285ec9851dacfa370e163e7837e87fd7b6d"
+  },
+  {
+    "number": 56579,
+    "merged_at": "2026-09-22T16:11:06Z",
+    "merged_local": "2026-09-23 00:11:06.000",
+    "title": "[Bugfix][Attention] Avoid NaN in the Triton softcap for large attention logits",
+    "labels": [
+      "bug",
+      "ready",
+      "verified"
+    ],
+    "problem": "Triton attention softcap用双指数计算tanh，大logit溢出成NaN。",
+    "solution": "改用1-2/(exp(2S/x)+1)稳定饱和形式。",
+    "why": "保持数学softcap，避免inf/inf污染attention行。",
+    "is_bugfix": "是",
+    "key_files": "vllm/v1/attention/ops/triton_attention_helpers.py; tests/kernels/attention/test_triton_unified_attention.py",
+    "url": "https://github.com/vllm-project/vllm/pull/56579",
+    "merge_sha": "066ee911975133dc148433ed9e65061b4587c969"
+  },
+  {
+    "number": 57914,
+    "merged_at": "2026-09-22T16:19:10Z",
+    "merged_local": "2026-09-23 00:19:10.000",
+    "title": "[Bugfix][Engram] Fall back when /dev/shm is absent before sharing tables",
+    "labels": [
+      "bug",
+      "ready",
+      "deepseek",
+      "DSv4.1"
+    ],
+    "problem": "Engram自动共享表在无/dev/shm主机直接disk_usage报错。",
+    "solution": "先检查SHM目录，缺失回退；简化存储分配异常清理。",
+    "why": "自动能力检测应可降级，保持资源注销顺序。",
+    "is_bugfix": "是",
+    "key_files": "vllm/models/deepseek_v41/nvidia/engram.py",
+    "url": "https://github.com/vllm-project/vllm/pull/57914",
+    "merge_sha": "a6131b0e656e18eeb3797b8856aa3dbc69efd8e5"
+  },
+  {
+    "number": 43462,
+    "merged_at": "2026-09-22T16:48:21Z",
+    "merged_local": "2026-09-23 00:48:21.000",
+    "title": "[Bugfix] hadacore_transform: respect inplace parameter to fix garbage outputs with QuIP transforms",
+    "labels": [
+      "bug",
+      "ready",
+      "nvidia",
+      "quantization"
+    ],
+    "problem": "hadacore忽略inplace，输出未写；图编译别名优化后QuIP生成乱码。",
+    "solution": "CUDA kernel写out指针，调用显式inplace=False并保留防御clone。",
+    "why": "实现必须满足可变schema与返回存储契约，不能只依赖clone。",
+    "is_bugfix": "是",
+    "key_files": "csrc/libtorch_stable/quantization/hadamard/hadacore/hadamard_transform_cuda.cu; vllm/model_executor/layers/quantization/compressed_tensors/transform/module.py",
+    "url": "https://github.com/vllm-project/vllm/pull/43462",
+    "merge_sha": "74370a0e3044c16b6ba58f9c144b02ab733cd73a"
+  }
+]

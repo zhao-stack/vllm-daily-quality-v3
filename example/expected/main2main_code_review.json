@@ -1,0 +1,214 @@
+[
+  {
+    "pr_number": 54185,
+    "migration_method": "idea-copy",
+    "target_ascend_module": "csrc/moe",
+    "patch_matched_keys": [],
+    "ascend_relation": "NPU FusedMoEFactory创建自有router/expert，ROCm dispatcher不会提供NPU快核；可在NPU gate projection评估小矩阵选核。",
+    "five_category": "平台差异可借鉴",
+    "secondary_category": "硬件相关：平台实现不同，思路可验证",
+    "four_gate_action": null,
+    "main2main_report": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\direct-source-review.json"
+  },
+  {
+    "pr_number": 55608,
+    "migration_method": "idea-copy",
+    "target_ascend_module": "python-adapter",
+    "patch_matched_keys": [],
+    "ascend_relation": "Ascend独立Docker/镜像发布工作流不继承上游构建参数；压缩方法跨硬件，但NPU运行时兼容和网络/CPU瓶颈需测量。",
+    "five_category": "收益不明确待验证",
+    "secondary_category": "有效路径或实际瓶颈待验证",
+    "four_gate_action": null,
+    "main2main_report": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\direct-source-review.json"
+  },
+  {
+    "pr_number": 50592,
+    "migration_method": "idea-copy",
+    "target_ascend_module": "python-adapter",
+    "patch_matched_keys": [],
+    "ascend_relation": "AscendKimiDecoderLayer._run_self_attn已直接return self.self_attn；NPU无需迁移AMD output缓冲接口。AMD prefix_delta和剩余NPU norm/copy可另做profile，不能重复计已有直接返回收益。",
+    "five_category": "平台差异可借鉴",
+    "secondary_category": "硬件相关：平台实现不同，思路可验证",
+    "four_gate_action": null,
+    "main2main_report": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\direct-source-review.json"
+  },
+  {
+    "pr_number": 51360,
+    "migration_method": "idea-copy",
+    "target_ascend_module": "python-adapter",
+    "patch_matched_keys": [],
+    "ascend_relation": "CUDA CRIU checkpoint不能用于NPU；Ascend rfork处理权重共享不等同进程恢复。可借鉴初始化阶段拆分、指纹和恢复oracle，但需NPU驱动恢复能力POC。",
+    "five_category": "平台差异可借鉴",
+    "secondary_category": "硬件相关：平台实现不同，思路可验证",
+    "four_gate_action": null,
+    "main2main_report": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\direct-source-review.json"
+  },
+  {
+    "pr_number": 57737,
+    "migration_method": "auto-inherit",
+    "target_ascend_module": "none",
+    "patch_matched_keys": [],
+    "ascend_relation": "worker/v2/model_runner.py的NPUModelRunner继承GPUModelRunner，未重写shutdown；worker.shutdown调用runner关闭，清空共享pooling_runner进入。",
+    "five_category": "直接继承",
+    "secondary_category": "硬件无关：共享路径进入，NPU收益待验证",
+    "four_gate_action": null,
+    "main2main_report": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\direct-source-review.json"
+  },
+  {
+    "pr_number": 57965,
+    "migration_method": "idea-copy",
+    "target_ascend_module": "python-adapter",
+    "patch_matched_keys": [],
+    "ascend_relation": "Ascend有独立nightly/CI资源池，不执行H200 Buildkite job。方法可跨平台迁移，但排队和多job加载成本须测。",
+    "five_category": "收益不明确待验证",
+    "secondary_category": "有效路径或实际瓶颈待验证",
+    "four_gate_action": null,
+    "main2main_report": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\direct-source-review.json"
+  },
+  {
+    "pr_number": 57951,
+    "migration_method": "patch-sync",
+    "target_ascend_module": "python-adapter",
+    "patch_matched_keys": [
+      "vllm.v1.core.sched.scheduler"
+    ],
+    "ascend_relation": "Ascend BalanceScheduler及DyntraLB/Recompute/ProfilingChunk自有schedule仍无条件应用long_prefill_token_threshold；platform能选这些类。默认共享路径可继承，覆盖路径相同空耗仍存在，需同步。",
+    "five_category": "收益明确待适配",
+    "secondary_category": "硬件无关：自有覆盖缺少上游机制",
+    "four_gate_action": {
+      "relationship_verified": true,
+      "contract_changed": true,
+      "runtime_reachable": true,
+      "version_lane_matches": true
+    },
+    "main2main_report": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\direct-source-review.json"
+  },
+  {
+    "pr_number": 57458,
+    "migration_method": "idea-copy",
+    "target_ascend_module": "csrc/attention",
+    "patch_matched_keys": [],
+    "ascend_relation": "Ascend使用dsa_v1、自有indexer及NPU MLA算子，不进入FlashInfer safe_lengths/remap CUDA链；可借鉴单tile计数填充融合及空rope旁路。",
+    "five_category": "平台差异可借鉴",
+    "secondary_category": "硬件相关：平台实现不同，思路可验证",
+    "four_gate_action": null,
+    "main2main_report": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\direct-source-review.json"
+  },
+  {
+    "pr_number": 57312,
+    "migration_method": "idea-copy",
+    "target_ascend_module": "python-adapter",
+    "patch_matched_keys": [],
+    "ascend_relation": "上游weight_cache/protocol.check_ipc_platform_support只允许is_cuda_alike；NPU不走CUDA IPC loader，现有rfork和NPU IPC权重传输不是此daemon协议。优化思想另列POC。",
+    "five_category": "平台差异可借鉴",
+    "secondary_category": "硬件相关：平台实现不同，思路可验证",
+    "four_gate_action": null,
+    "main2main_report": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\direct-source-review.json"
+  },
+  {
+    "pr_number": 57891,
+    "migration_method": "patch-sync",
+    "target_ascend_module": "python-adapter",
+    "patch_matched_keys": [
+      "vllm.v1.worker.gpu_worker"
+    ],
+    "ascend_relation": "Ascend worker.py自有sleep/wake_up，仅备份named_buffers，CaMemAllocator level2丢弃weights；未读取新sleep_preserve_parameter_names，也无named_parameters备份。trainer省略冻结参数时缺口确定。",
+    "five_category": "收益明确待适配",
+    "secondary_category": "硬件无关：自有覆盖缺少上游机制",
+    "four_gate_action": {
+      "relationship_verified": true,
+      "contract_changed": true,
+      "runtime_reachable": true,
+      "version_lane_matches": true
+    },
+    "main2main_report": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\direct-source-review.json"
+  },
+  {
+    "pr_number": 58065,
+    "migration_method": "idea-copy",
+    "target_ascend_module": "python-adapter",
+    "patch_matched_keys": [],
+    "ascend_relation": "共享allowlist进入，但Ascend默认仍是V1，另有NPU DFlash/V2实现；不能把上游默认MRV2视为NPU默认。",
+    "five_category": "收益不明确待验证",
+    "secondary_category": "有效路径或实际瓶颈待验证",
+    "four_gate_action": null,
+    "main2main_report": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\direct-source-review.json"
+  },
+  {
+    "pr_number": 47842,
+    "migration_method": "idea-copy",
+    "target_ascend_module": "python-adapter",
+    "patch_matched_keys": [],
+    "ascend_relation": "Ascend ops/gdn.py自有forward仍reshape为2D再norm/rearrange；AscendRMSNormGated走LayerNormFn而非AITER fusion。代码不自动进入，但reshape是否产生设备copy须NPU profile。",
+    "five_category": "收益不明确待验证",
+    "secondary_category": "有效路径或实际瓶颈待验证",
+    "four_gate_action": null,
+    "main2main_report": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\direct-source-review.json"
+  },
+  {
+    "pr_number": 50814,
+    "migration_method": "idea-copy",
+    "target_ascend_module": "csrc/quantization",
+    "patch_matched_keys": [],
+    "ascend_relation": "NPU采用自有量化方法和算子，未进入上游EmulationMxfp4LinearKernel；可对确有逐步反量化的NPU回退路径借鉴，不能扩大BF16内存而忽视KV容量。",
+    "five_category": "平台差异可借鉴",
+    "secondary_category": "硬件相关：平台实现不同，思路可验证",
+    "four_gate_action": null,
+    "main2main_report": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\direct-source-review.json"
+  },
+  {
+    "pr_number": 57428,
+    "migration_method": "idea-copy",
+    "target_ascend_module": "fallback_comm",
+    "patch_matched_keys": [],
+    "ascend_relation": "NPU DSV4.1模型使用自有wo_b/通信与HCCL，不执行SM100 CuTe multicast kernel；计算通信融合边界可借鉴，但布局/精度及同步须重做。",
+    "five_category": "平台差异可借鉴",
+    "secondary_category": "硬件相关：平台实现不同，思路可验证",
+    "four_gate_action": null,
+    "main2main_report": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\direct-source-review.json"
+  },
+  {
+    "pr_number": 58097,
+    "migration_method": "idea-copy",
+    "target_ascend_module": "python-adapter",
+    "patch_matched_keys": [],
+    "ascend_relation": "上游cuobjdump/fatbin专属CUDA，Ascend使用AscendC/Triton-NPU和不同CI。可借鉴构建产物到测试的动态覆盖关联，不直接套用GPU symbol工具。",
+    "five_category": "平台差异可借鉴",
+    "secondary_category": "硬件相关：平台实现不同，思路可验证",
+    "four_gate_action": null,
+    "main2main_report": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\direct-source-review.json"
+  },
+  {
+    "pr_number": 55385,
+    "migration_method": "idea-copy",
+    "target_ascend_module": "csrc/attention",
+    "patch_matched_keys": [],
+    "ascend_relation": "SM90 FlashMLA/FA3不在NPU平台候选；Ascend自有DSA实现可借鉴NoPE几何专用路径和公平后端对照方法，不能移植FA内核。",
+    "five_category": "平台差异可借鉴",
+    "secondary_category": "硬件相关：平台实现不同，思路可验证",
+    "four_gate_action": null,
+    "main2main_report": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\direct-source-review.json"
+  },
+  {
+    "pr_number": 58109,
+    "migration_method": "idea-copy",
+    "target_ascend_module": "python-adapter",
+    "patch_matched_keys": [],
+    "ascend_relation": "Rust model spec改为Arc持有processor；NPU Python前端不走Rust生命周期，实际Rust+NPU部署可达性未确认。仅作为构造复用收益候选。",
+    "five_category": "收益不明确待验证",
+    "secondary_category": "有效路径或实际瓶颈待验证",
+    "four_gate_action": null,
+    "main2main_report": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\direct-source-review.json"
+  },
+  {
+    "pr_number": 55931,
+    "migration_method": "auto-inherit",
+    "target_ascend_module": "none",
+    "patch_matched_keys": [],
+    "ascend_relation": "Ascend patch_structured_output包装SamplingParams与StructuredOutputManager，未覆盖StructuredOutputRequest._check_grammar_completion；共享done/result逻辑进入所有相关scheduler。",
+    "five_category": "直接继承",
+    "secondary_category": "硬件无关：共享路径进入，NPU收益待验证",
+    "four_gate_action": null,
+    "main2main_report": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\direct-source-review.json"
+  }
+]

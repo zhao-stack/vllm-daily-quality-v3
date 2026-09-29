@@ -1,0 +1,18 @@
+{
+  "name": "vllm-main-verified.commit",
+  "path": ".github/vllm-main-verified.commit",
+  "sha": "67f578fff3f8068f780a20916592291bb6c6ca22",
+  "size": 41,
+  "url": "https://api.github.com/repos/vllm-project/vllm-ascend/contents/.github/vllm-main-verified.commit?ref=a71b766ce6fc0a9669a412e15a5cf53f7f827093",
+  "html_url": "https://github.com/vllm-project/vllm-ascend/blob/a71b766ce6fc0a9669a412e15a5cf53f7f827093/.github/vllm-main-verified.commit",
+  "git_url": "https://api.github.com/repos/vllm-project/vllm-ascend/git/blobs/67f578fff3f8068f780a20916592291bb6c6ca22",
+  "download_url": "https://raw.githubusercontent.com/vllm-project/vllm-ascend/a71b766ce6fc0a9669a412e15a5cf53f7f827093/.github/vllm-main-verified.commit",
+  "type": "file",
+  "content": "ODQwMzBiYmUzZDc0ZDk5YmFkNDc3YTNkMmUzN2E5NzNjY2Q4ODY1Ywo=\n",
+  "encoding": "base64",
+  "_links": {
+    "self": "https://api.github.com/repos/vllm-project/vllm-ascend/contents/.github/vllm-main-verified.commit?ref=a71b766ce6fc0a9669a412e15a5cf53f7f827093",
+    "git": "https://api.github.com/repos/vllm-project/vllm-ascend/git/blobs/67f578fff3f8068f780a20916592291bb6c6ca22",
+    "html": "https://github.com/vllm-project/vllm-ascend/blob/a71b766ce6fc0a9669a412e15a5cf53f7f827093/.github/vllm-main-verified.commit"
+  }
+}

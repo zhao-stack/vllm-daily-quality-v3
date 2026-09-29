@@ -1,0 +1,153 @@
+diff --git a/docs/features/sleep_mode.md b/docs/features/sleep_mode.md
+index 2616f374ea5ad47d84162200d34e67ed79078fe1..3e419707f219798f1b4c71befccd6fe8d19ebc06 100644
+--- a/docs/features/sleep_mode.md
++++ b/docs/features/sleep_mode.md
+@@ -74,6 +74,21 @@ llm.wake_up(tags=["weights"])
+ llm.wake_up(tags=["kv_cache"])
+ ```
+ 
++#### Retaining frozen weights during RLHF updates
++
++Set `sleep_preserve_parameter_names` (CLI: `--sleep-preserve-parameter-names`)
++to runtime parameter-name glob
++patterns for weights that stay frozen during training. Each pattern must match
++`model.named_parameters()`; checkpoint names and `requires_grad` are not used.
++
++Level-2 sleep backs up selected GPU parameters to pageable CPU memory; weights
++wake-up restores them in place and releases the backups. CPU parameters need no
++copy. Allow enough host memory for backups. Level-1 behavior is unchanged.
++
++The trainer must omit these parameters from updates, and reload/post-processing
++must preserve their values and storage (including avoiding replacement with meta
++tensors). This option does not filter updates and applies only to the target model.
++
+ #### Release only KV cache memory
+ 
+ `LLM.release_kv_cache_memory()` discards KV cache physical memory while keeping model weights resident. It requires a completed pause and all executor memory to be resident: full sleep, partial wake-up, and repeated release without restoring memory are rejected. Requests retained with `mode="keep"` are recomputed after wake-up.
+diff --git a/tests/v1/worker/test_sleep_mode_backend.py b/tests/v1/worker/test_sleep_mode_backend.py
+index e2514f84e162765929f7608143c85fd305bd5b48..686331f2d700f34d9b739aa946cb6f5ee3e04cd8 100644
+--- a/tests/v1/worker/test_sleep_mode_backend.py
++++ b/tests/v1/worker/test_sleep_mode_backend.py
+@@ -56,6 +56,7 @@ def test_worker_drives_communicator_suspension(monkeypatch, enable_nccl_comm_sus
+ 
+     worker = object.__new__(Worker)
+     worker._sleep_mode_backend = Backend()
++    worker._sleep_saved_parameters = {}
+     worker._sleep_saved_buffers = {}
+     worker._sleep_saved_draft_buffers = {}
+     worker.vllm_config = SimpleNamespace(
+diff --git a/vllm/config/model.py b/vllm/config/model.py
+index 6b36afd910682ee82a7712456459b295c4842a99..7cdba9f78fcc879b1a1c1b3364de1fb3581bf3a2 100644
+--- a/vllm/config/model.py
++++ b/vllm/config/model.py
+@@ -340,6 +340,9 @@ class ModelConfig:
+     enable_sleep_mode: bool = False
+     """Enable sleep mode for the engine (only cuda and
+     hip platforms are supported)."""
++    sleep_preserve_parameter_names: list[str] = field(default_factory=list)
++    """Parameter-name globs to preserve across level-2 sleep.
++    The sender must omit these parameters; loaders must preserve their storage."""
+     sleep_mode_backend: str = "cumem"
+     """Mechanism used to free and restore GPU state for sleep mode. ``"cumem"``
+     (default) uses the built-in ``CuMemAllocator`` and is behavior-compatible
+diff --git a/vllm/engine/arg_utils.py b/vllm/engine/arg_utils.py
+index 555f1aebb67f95802db54f5af0fbe57031e2a47d..a6df0d7230626882d342b3ab8b8d2251d243859b 100644
+--- a/vllm/engine/arg_utils.py
++++ b/vllm/engine/arg_utils.py
+@@ -741,6 +741,9 @@ class EngineArgs:
+ 
+     generation_config: str = ModelConfig.generation_config
+     enable_sleep_mode: bool = ModelConfig.enable_sleep_mode
++    sleep_preserve_parameter_names: list[str] = get_field(
++        ModelConfig, "sleep_preserve_parameter_names"
++    )
+     enable_cumem_allocator: bool = ModelConfig.enable_cumem_allocator
+     enable_nccl_comm_suspend: bool = ModelConfig.enable_nccl_comm_suspend
+     override_generation_config: dict[str, Any] = get_field(
+@@ -975,6 +978,10 @@ class EngineArgs:
+         model_group.add_argument(
+             "--enable-sleep-mode", **model_kwargs["enable_sleep_mode"]
+         )
++        model_group.add_argument(
++            "--sleep-preserve-parameter-names",
++            **model_kwargs["sleep_preserve_parameter_names"],
++        )
+         model_group.add_argument(
+             "--enable-cumem-allocator", **model_kwargs["enable_cumem_allocator"]
+         )
+@@ -1901,6 +1908,7 @@ class EngineArgs:
+             generation_config=self.generation_config,
+             override_generation_config=self.override_generation_config,
+             enable_sleep_mode=self.enable_sleep_mode,
++            sleep_preserve_parameter_names=self.sleep_preserve_parameter_names,
+             enable_cumem_allocator=self.enable_cumem_allocator,
+             enable_nccl_comm_suspend=self.enable_nccl_comm_suspend,
+             model_impl=self.model_impl,
+diff --git a/vllm/v1/worker/gpu_worker.py b/vllm/v1/worker/gpu_worker.py
+index b6bc122a28b74edbd0bf1d042eb49bea3bce0b0e..df1d9de6ae40a426e8fbb9edcf493b06b9508184 100644
+--- a/vllm/v1/worker/gpu_worker.py
++++ b/vllm/v1/worker/gpu_worker.py
+@@ -8,6 +8,7 @@ import time
+ from collections.abc import Callable
+ from contextlib import AbstractContextManager, contextmanager, nullcontext
+ from datetime import timedelta
++from fnmatch import filter as fnmatch_filter
+ from types import NoneType
+ from typing import TYPE_CHECKING, Any, cast
+ 
+@@ -208,6 +209,7 @@ class Worker(WorkerBase):
+             self.worker_sentinel = WorkerSentinel(worker=self)
+         # Buffers saved before sleep
+         self._sleep_saved_buffers: dict[str, torch.Tensor] = {}
++        self._sleep_saved_parameters: dict[str, torch.Tensor] = {}
+         self._sleep_saved_draft_buffers: dict[str, torch.Tensor] = {}
+ 
+         # Weight transfer engine is created in `load_model` once the model
+@@ -243,6 +245,30 @@ class Worker(WorkerBase):
+             )
+         return self._sleep_mode_backend
+ 
++    def _save_sleep_parameters(self, model: nn.Module) -> None:
++        patterns = self.model_config.sleep_preserve_parameter_names
++        if not patterns:
++            self._sleep_saved_parameters = {}
++            return
++        parameters = dict(model.named_parameters())
++        names: set[str] = set()
++        for pattern in patterns:
++            matches = fnmatch_filter(parameters, pattern)
++            if not matches:
++                raise ValueError(f"No parameter matches sleep retention: {pattern}")
++            names.update(matches)
++        self._sleep_saved_parameters = {
++            name: param.detach().to("cpu")
++            for name, param in parameters.items()
++            if name in names and not param.is_cpu
++        }
++
++    @torch.no_grad()
++    def _restore_sleep_parameters(self, model: nn.Module) -> None:
++        for name, value in self._sleep_saved_parameters.items():
++            model.get_parameter(name).copy_(value)
++        self._sleep_saved_parameters.clear()
++
+     def sleep(self, level: int = 1) -> None:
+         torch.accelerator.synchronize()
+         free_bytes_before_sleep = torch.accelerator.get_memory_info()[0]
+@@ -250,6 +276,7 @@ class Worker(WorkerBase):
+         # Save the buffers before level 2 sleep
+         if level == 2:
+             model = self.model_runner.model
++            self._save_sleep_parameters(model)
+             self._sleep_saved_buffers = {
+                 name: buffer.cpu().clone() for name, buffer in model.named_buffers()
+             }
+@@ -287,6 +314,8 @@ class Worker(WorkerBase):
+ 
+         # Restore the buffers after level 2 sleep
+         wake_weights = tags is None or "weights" in tags
++        if wake_weights and self._sleep_saved_parameters:
++            self._restore_sleep_parameters(self.model_runner.model)
+         if wake_weights and len(self._sleep_saved_buffers):
+             model = self.model_runner.model
+             for name, buffer in model.named_buffers():

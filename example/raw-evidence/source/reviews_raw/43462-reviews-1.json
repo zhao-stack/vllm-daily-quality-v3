@@ -1,0 +1,202 @@
+[
+  {
+    "id": 4349404521,
+    "node_id": "PRR_kwDOI7xefs8AAAABAz6laQ",
+    "user": {
+      "login": "gemini-code-assist[bot]",
+      "id": 176961590,
+      "node_id": "BOT_kgDOCow4Ng",
+      "avatar_url": "https://avatars.githubusercontent.com/in/956858?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/gemini-code-assist%5Bbot%5D",
+      "html_url": "https://github.com/apps/gemini-code-assist",
+      "followers_url": "https://api.github.com/users/gemini-code-assist%5Bbot%5D/followers",
+      "following_url": "https://api.github.com/users/gemini-code-assist%5Bbot%5D/following{/other_user}",
+      "gists_url": "https://api.github.com/users/gemini-code-assist%5Bbot%5D/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/gemini-code-assist%5Bbot%5D/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/gemini-code-assist%5Bbot%5D/subscriptions",
+      "organizations_url": "https://api.github.com/users/gemini-code-assist%5Bbot%5D/orgs",
+      "repos_url": "https://api.github.com/users/gemini-code-assist%5Bbot%5D/repos",
+      "events_url": "https://api.github.com/users/gemini-code-assist%5Bbot%5D/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/gemini-code-assist%5Bbot%5D/received_events",
+      "type": "Bot",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "## Code Review\n\nThis pull request fixes a bug in the hadacore_transform CUDA kernel where the output was being written to the input pointer instead of the output pointer. It also updates the Python module to explicitly set inplace=False when calling this transform. I have no feedback to provide as there were no review comments to evaluate.",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/43462#pullrequestreview-4349404521",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/43462",
+    "author_association": "CONTRIBUTOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/43462#pullrequestreview-4349404521"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/43462"
+      }
+    },
+    "submitted_at": "2026-05-23T00:44:32Z",
+    "commit_id": null
+  },
+  {
+    "id": 4442845929,
+    "node_id": "PRR_kwDOI7xefs8AAAABCNBy6Q",
+    "user": {
+      "login": "yewentao256",
+      "id": 44945378,
+      "node_id": "MDQ6VXNlcjQ0OTQ1Mzc4",
+      "avatar_url": "https://avatars.githubusercontent.com/u/44945378?u=20f873a58d4883af014b6a2c43786961f2f50ee9&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/yewentao256",
+      "html_url": "https://github.com/yewentao256",
+      "followers_url": "https://api.github.com/users/yewentao256/followers",
+      "following_url": "https://api.github.com/users/yewentao256/following{/other_user}",
+      "gists_url": "https://api.github.com/users/yewentao256/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/yewentao256/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/yewentao256/subscriptions",
+      "organizations_url": "https://api.github.com/users/yewentao256/orgs",
+      "repos_url": "https://api.github.com/users/yewentao256/repos",
+      "events_url": "https://api.github.com/users/yewentao256/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/yewentao256/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Thanks for the work!\n\nPlease add full reproduce command in main branch with the full error report.\nThen tested again in your PR with the same command, showing everything works",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/43462#pullrequestreview-4442845929",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/43462",
+    "author_association": "MEMBER",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/43462#pullrequestreview-4442845929"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/43462"
+      }
+    },
+    "submitted_at": "2026-06-06T14:09:34Z",
+    "commit_id": null
+  },
+  {
+    "id": 4445650716,
+    "node_id": "PRR_kwDOI7xefs8AAAABCPs_HA",
+    "user": {
+      "login": "yewentao256",
+      "id": 44945378,
+      "node_id": "MDQ6VXNlcjQ0OTQ1Mzc4",
+      "avatar_url": "https://avatars.githubusercontent.com/u/44945378?u=20f873a58d4883af014b6a2c43786961f2f50ee9&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/yewentao256",
+      "html_url": "https://github.com/yewentao256",
+      "followers_url": "https://api.github.com/users/yewentao256/followers",
+      "following_url": "https://api.github.com/users/yewentao256/following{/other_user}",
+      "gists_url": "https://api.github.com/users/yewentao256/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/yewentao256/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/yewentao256/subscriptions",
+      "organizations_url": "https://api.github.com/users/yewentao256/orgs",
+      "repos_url": "https://api.github.com/users/yewentao256/repos",
+      "events_url": "https://api.github.com/users/yewentao256/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/yewentao256/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Thanks @Yatimai \n\nPlease note that main refers to vLLM main branch, instead of v0.21.0",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/43462#pullrequestreview-4445650716",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/43462",
+    "author_association": "MEMBER",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/43462#pullrequestreview-4445650716"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/43462"
+      }
+    },
+    "submitted_at": "2026-06-07T19:09:18Z",
+    "commit_id": null
+  },
+  {
+    "id": 4461467864,
+    "node_id": "PRR_kwDOI7xefs8AAAABCeyY2A",
+    "user": {
+      "login": "yewentao256",
+      "id": 44945378,
+      "node_id": "MDQ6VXNlcjQ0OTQ1Mzc4",
+      "avatar_url": "https://avatars.githubusercontent.com/u/44945378?u=20f873a58d4883af014b6a2c43786961f2f50ee9&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/yewentao256",
+      "html_url": "https://github.com/yewentao256",
+      "followers_url": "https://api.github.com/users/yewentao256/followers",
+      "following_url": "https://api.github.com/users/yewentao256/following{/other_user}",
+      "gists_url": "https://api.github.com/users/yewentao256/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/yewentao256/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/yewentao256/subscriptions",
+      "organizations_url": "https://api.github.com/users/yewentao256/orgs",
+      "repos_url": "https://api.github.com/users/yewentao256/repos",
+      "events_url": "https://api.github.com/users/yewentao256/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/yewentao256/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "LGTM, thanks for the work!",
+    "state": "APPROVED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/43462#pullrequestreview-4461467864",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/43462",
+    "author_association": "MEMBER",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/43462#pullrequestreview-4461467864"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/43462"
+      }
+    },
+    "submitted_at": "2026-06-09T18:43:03Z",
+    "commit_id": "3a4c10913c8b300bed9ccc240056b8f9a52c224b"
+  },
+  {
+    "id": 5281031220,
+    "node_id": "PRR_kwDOI7xefs8AAAABOsYkNA",
+    "user": {
+      "login": "mgoin",
+      "id": 3195154,
+      "node_id": "MDQ6VXNlcjMxOTUxNTQ=",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3195154?u=baa3820b95103662bc2aca01959e41aa651764b5&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/mgoin",
+      "html_url": "https://github.com/mgoin",
+      "followers_url": "https://api.github.com/users/mgoin/followers",
+      "following_url": "https://api.github.com/users/mgoin/following{/other_user}",
+      "gists_url": "https://api.github.com/users/mgoin/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/mgoin/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/mgoin/subscriptions",
+      "organizations_url": "https://api.github.com/users/mgoin/orgs",
+      "repos_url": "https://api.github.com/users/mgoin/repos",
+      "events_url": "https://api.github.com/users/mgoin/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/mgoin/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "APPROVED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/43462#pullrequestreview-5281031220",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/43462",
+    "author_association": "MEMBER",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/43462#pullrequestreview-5281031220"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/43462"
+      }
+    },
+    "submitted_at": "2026-09-22T16:48:04Z",
+    "commit_id": "3a4c10913c8b300bed9ccc240056b8f9a52c224b"
+  }
+]

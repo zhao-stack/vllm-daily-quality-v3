@@ -1,0 +1,15 @@
+{
+  "status": "evidence-collected-not-report-success",
+  "period_start": "2026-09-22T01:00:58.960+08:00",
+  "period_end_exclusive": "2026-09-23T01:01:54.707+08:00",
+  "timezone": "Asia/Hong_Kong",
+  "filtered_count": 52,
+  "vllm_old_sha": "986e217158a9ed54eca8307c6bb9abac7c5b2278",
+  "vllm_new_sha": "74370a0e3044c16b6ba58f9c144b02ab733cd73a",
+  "vllm_ascend_sha": "a71b766ce6fc0a9669a412e15a5cf53f7f827093",
+  "verified_anchor": "84030bbe3d74d99bad477a3d2e37a973ccd8865c",
+  "main_lys_sha": "2c815be15c4e094447c38d67f666e590492f4c28",
+  "main_first_parent_chain_verified": true,
+  "review_complete": true,
+  "exact_merge_diff_count": 52
+}

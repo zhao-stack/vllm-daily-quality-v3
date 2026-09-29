@@ -1,0 +1,23 @@
+{
+  "valid": true,
+  "official_schema": true,
+  "negative_schema_tests": 6,
+  "optimization_count": 18,
+  "all_prs": 52,
+  "bugfix_count": 28,
+  "source_checks": {
+    "57737_shared_shutdown_inherited": true,
+    "55390_live_npu_old_keyword_target_signature_rejects": true,
+    "57891_npu_sleep_buffers_only_new_parameter_retention_missing": true,
+    "57951_npu_copied_schedulers_keep_unconditional_cap": true,
+    "51565_npu_non_spec_prefill_already_not_shape_only": true,
+    "58061_npu_dense_mlp_sp_already_passed": true,
+    "56448_npu_dummy_super_consumes_cap": true,
+    "50592_npu_attention_already_returns_tensor": true,
+    "47842_npu_own_gdn_reshape_needs_profile": true,
+    "47450_wrapper_calls_original_55931_57731_57006_shared": true,
+    "56250_shared_v1_restriction_not_filtered_58065_npu_default_v1": true,
+    "57312_cuda_ipc_gate_not_npu": true,
+    "57914_npu_explicit_shared_storage_not_nvidia_auto_probe": true
+  }
+}

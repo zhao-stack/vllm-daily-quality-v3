@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpstreamOptimizationRecordV3",
+  "description": "上游 bugfix/优化 -> 下游迁移 单条记录 Schema（v3 智能体增强版）",
+  "type": "object",
+  "required": [
+    "_thought_process", "sha", "full_sha", "date", "repo", "title", "commit_url",
+    "category", "target_ascend_module", "change_type", "optimization_point", "affected_files",
+    "ascend_value", "ascend_value_reason",
+    "migration_method", "patch_conflict",
+    "priority", "priority_reason", "effort_estimate", "risk_level",
+    "status", "key_files"
+  ],
+  "properties": {
+    "_thought_process": { "type": "string", "description": "强制 LLM 输出思维链推导过程" },
+    "sha": { "type": "string", "pattern": "^[0-9a-f]{7,8}$", "description": "短SHA" },
+    "full_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$", "description": "40位完整SHA" },
+    "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "repo": { "type": "string", "enum": ["vllm-project/vllm", "vllm-project/vllm-ascend"] },
+    "title": { "type": "string", "maxLength": 200 },
+    "pr_number": { "type": ["string", "null"], "pattern": "^[0-9]+$" },
+    "pr_url": { "type": ["string", "null"], "format": "uri" },
+    "commit_url": { "type": "string", "format": "uri" },
+    "upstream_status": { "type": "string", "enum": ["merged", "open", "closed", "draft", "unknown"] },
+    "merged_at": { "type": ["string", "null"] },
+    "author": {
+      "type": "object",
+      "properties": { "name": { "type": "string" }, "email": { "type": "string" } },
+      "required": ["name"]
+    },
+    "labels": { "type": "array", "items": { "type": "string" } },
+
+    "category": {
+      "type": "string",
+      "enum": [
+        "core-engine", "attention-kv-cache", "model-architecture",
+        "moe-fusion", "operator-kernel", "distributed",
+        "spec-decode", "kv-offload", "quantization", "lora",
+        "multimodal", "config", "scheduler", "test-ci", "other"
+      ]
+    },
+    "target_ascend_module": {
+      "type": "string",
+      "enum": [
+        "python-adapter", "csrc/attention", "csrc/moe", "csrc/gmm",
+        "csrc/quantization", "csrc/aclnn_torch_adapter", "fallback_comm", "none"
+      ],
+      "description": "映射到 vllm-ascend 的具体 C++/Python 模块，便于自动分配与 PR 生成"
+    },
+    "change_type": { "type": "string", "enum": ["bugfix", "performance", "feature", "refactor"] },
+    "optimization_point": { "type": "string", "maxLength": 100 },
+    "affected_files": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+
+    "ascend_value": { "type": "string", "enum": ["high", "medium", "low", "none"] },
+    "ascend_value_reason": { "type": "string", "maxLength": 100 },
+    "ascend_impact_ref": {
+      "type": ["object", "null"],
+      "properties": {
+        "ascend_affected": { "type": "boolean" },
+        "functionality": { "type": "string" },
+        "source": { "type": "string" }
+      }
+    },
+
+    "migration_method": {
+      "type": "string",
+      "enum": ["cherry-pick", "patch-sync", "idea-copy", "config-align", "auto-inherit", "skip"]
+    },
+    "migration_steps": { "type": "array", "items": { "type": "string", "minLength": 5 }, "minItems": 1 },
+    "patch_conflict": { "type": "boolean" },
+    "patch_conflict_detail": { "type": "string" },
+    "patch_matched_keys": { "type": "array", "items": { "type": "string" } },
+
+    "priority": { "type": "string", "enum": ["P0", "P1", "P2", "P3", "skip"] },
+    "priority_reason": { "type": "string", "maxLength": 80 },
+    "effort_estimate": { "type": "string", "enum": ["S", "M", "L", "XL"] },
+    "risk_level": { "type": "string", "enum": ["high-risk", "medium-risk", "low-risk"] },
+
+    "test_verification": { "type": "array", "items": { "type": "string", "minLength": 5 }, "minItems": 1 },
+    "status": { "type": "string", "enum": ["pending", "in-progress", "done", "skipped", "blocked"] },
+    "assignee": { "type": "string", "default": "" },
+    "key_files": { "type": "string" },
+
+    "related_prs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "pr_number": { "type": "string" },
+          "repo": { "type": "string" },
+          "relation": { "type": "string", "enum": ["depends-on", "reverts", "follows-up", "supersedes"] }
+        },
+        "required": ["pr_number", "relation"]
+      }
+    },
+    "blocking_issues": { "type": "array", "items": { "type": "string" } },
+    "review_notes": { "type": ["string", "null"] },
+    "low_confidence": { "type": "boolean", "default": false },
+    "confidence_reason": { "type": ["string", "null"] }
+  },
+
+  "allOf": [
+    { "if": { "properties": { "migration_method": { "not": { "const": "skip" } } } }, "then": { "required": ["migration_steps"] } },
+    { "if": { "properties": { "patch_conflict": { "const": true } } }, "then": { "required": ["patch_conflict_detail"] } },
+    { "if": { "properties": { "priority": { "enum": ["P0", "P1", "P2"] } } }, "then": { "required": ["test_verification"] } },
+    { "if": { "properties": { "migration_method": { "const": "skip" } } }, "then": { "properties": { "ascend_value_reason": { "minLength": 1 }, "ascend_value": { "const": "none" }, "priority": { "const": "skip" }, "target_ascend_module": { "const": "none" } } } },
+    { "if": { "properties": { "low_confidence": { "const": true } } }, "then": { "required": ["confidence_reason"] } },
+    { "if": { "properties": { "priority": { "const": "P0" } } }, "then": { "required": ["review_notes"] } }
+  ]
+}

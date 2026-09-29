@@ -1,0 +1,101 @@
+diff --git a/tests/models/test_deepseek_v4_vl_rocm.py b/tests/models/test_deepseek_v4_vl_rocm.py
+index 35d5227a6afc..098e5185fcea 100644
+--- a/tests/models/test_deepseek_v4_vl_rocm.py
++++ b/tests/models/test_deepseek_v4_vl_rocm.py
+@@ -7,6 +7,7 @@
+ import torch
+ from torch import nn
+ 
++from vllm.config import ParallelConfig
+ from vllm.model_executor.models.utils import WeightsMapper
+ from vllm.platforms import current_platform
+ 
+@@ -100,7 +101,9 @@ def fake_factory(**kwargs):
+         n_shared_experts=None,
+     )
+     vllm_config = SimpleNamespace(
+-        model_config=SimpleNamespace(hf_config=config), quant_config=None
++        model_config=SimpleNamespace(hf_config=config),
++        quant_config=None,
++        parallel_config=ParallelConfig(),
+     )
+ 
+     hash_moe = rocm_model.DeepseekV4MoE(vllm_config, prefix="model.layers.0.ffn")
+@@ -115,6 +118,24 @@ def fake_factory(**kwargs):
+         assert factory_kwargs["image_sentinel_lo"] == IMAGE_SENTINEL_BASE_ID
+ 
+ 
++def test_rocm_fse_rejects_data_parallel_deployment(
++    monkeypatch: pytest.MonkeyPatch,
++) -> None:
++    from vllm.models.deepseek_v4.amd.model import _fuse_shared_experts_enabled
++
++    config = SimpleNamespace(n_shared_experts=1)
++
++    monkeypatch.setenv("VLLM_ROCM_USE_AITER_FUSION_SHARED_EXPERTS", "1")
++    with pytest.raises(ValueError, match="data parallelism"):
++        _fuse_shared_experts_enabled(config, ParallelConfig(data_parallel_size=2))
++
++    # Expert parallelism already disables FSE: no raise, FSE stays off.
++    assert not _fuse_shared_experts_enabled(
++        config, ParallelConfig(data_parallel_size=2, enable_expert_parallel=True)
++    )
++    assert _fuse_shared_experts_enabled(config, ParallelConfig())
++
++
+ def test_rocm_mtp_forwards_input_ids_for_vision_routing(
+     monkeypatch: pytest.MonkeyPatch,
+ ) -> None:
+diff --git a/vllm/models/deepseek_v4/amd/model.py b/vllm/models/deepseek_v4/amd/model.py
+index b23e728b46bb..f8306dd12c23 100644
+--- a/vllm/models/deepseek_v4/amd/model.py
++++ b/vllm/models/deepseek_v4/amd/model.py
+@@ -12,7 +12,7 @@
+ 
+ import vllm.envs as envs
+ from vllm._aiter_ops import rocm_aiter_ops
+-from vllm.config import VllmConfig, get_current_vllm_config
++from vllm.config import ParallelConfig, VllmConfig
+ from vllm.distributed import (
+     get_pp_group,
+     get_tensor_model_parallel_rank,
+@@ -504,11 +504,28 @@ def forward_modular(
+         return routed + shared_out
+ 
+ 
+-def _fuse_shared_experts_enabled(config) -> bool:
++def _fuse_shared_experts_enabled(config, parallel_config: ParallelConfig) -> bool:
++    if (
++        getattr(config, "n_shared_experts", None)
++        and envs.VLLM_ROCM_USE_AITER_FUSION_SHARED_EXPERTS
++        and not parallel_config.enable_expert_parallel
++        and parallel_config.data_parallel_size > 1
++    ):
++        # Fused shared experts are not supported under data parallelism:
++        # the fused path cannot load the FP8 shared expert into the MXFP4
++        # routed slot, which fails obscurely during weight loading. Fail
++        # fast with an actionable message instead.
++        raise ValueError(
++            "DeepSeek-V4 fused shared experts "
++            "(VLLM_ROCM_USE_AITER_FUSION_SHARED_EXPERTS=1) are not supported "
++            "with data parallelism (data_parallel_size > 1). Set "
++            "VLLM_ROCM_USE_AITER_FUSION_SHARED_EXPERTS=0 to run the shared "
++            "expert as an unfused FP8 MLP."
++        )
+     return bool(
+         getattr(config, "n_shared_experts", None)
+         and envs.VLLM_ROCM_USE_AITER_FUSION_SHARED_EXPERTS
+-        and not get_current_vllm_config().parallel_config.enable_expert_parallel
++        and not parallel_config.enable_expert_parallel
+     )
+ 
+ 
+@@ -586,7 +603,7 @@ def __init__(
+         # This should be cleaned up and use `resolve_layer_fused_shared_expert`.
+         self.fuse_heterogeneous_shared_expert = fuse_heterogeneous_shared_expert
+         fse_requested = (
+-            _fuse_shared_experts_enabled(config)
++            _fuse_shared_experts_enabled(config, vllm_config.parallel_config)
+             and not self.fuse_heterogeneous_shared_expert
+         )
+         fse_compatible = False

@@ -1,0 +1,82 @@
+[
+  {
+    "id": 5049418097,
+    "node_id": "PRR_kwDOI7xefs8AAAABLPgBcQ",
+    "user": {
+      "login": "claude[bot]",
+      "id": 209825114,
+      "node_id": "BOT_kgDODIGtWg",
+      "avatar_url": "https://avatars.githubusercontent.com/in/1236702?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/claude%5Bbot%5D",
+      "html_url": "https://github.com/apps/claude",
+      "followers_url": "https://api.github.com/users/claude%5Bbot%5D/followers",
+      "following_url": "https://api.github.com/users/claude%5Bbot%5D/following{/other_user}",
+      "gists_url": "https://api.github.com/users/claude%5Bbot%5D/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/claude%5Bbot%5D/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/claude%5Bbot%5D/subscriptions",
+      "organizations_url": "https://api.github.com/users/claude%5Bbot%5D/orgs",
+      "repos_url": "https://api.github.com/users/claude%5Bbot%5D/repos",
+      "events_url": "https://api.github.com/users/claude%5Bbot%5D/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/claude%5Bbot%5D/received_events",
+      "type": "Bot",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "## Claude Code Review\n\nThis pull request is from a fork — automated review is disabled. A repository maintainer can comment `@claude review` to run a one-time review.",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/54185#pullrequestreview-5049418097",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/54185",
+    "author_association": "NONE",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/54185#pullrequestreview-5049418097"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/54185"
+      }
+    },
+    "submitted_at": "2026-08-28T08:41:57Z",
+    "commit_id": "b4942cf779a60f570a31b2e046f2cb116a8919b0"
+  },
+  {
+    "id": 5091180867,
+    "node_id": "PRR_kwDOI7xefs8AAAABL3VBQw",
+    "user": {
+      "login": "dllehr-amd",
+      "id": 91553416,
+      "node_id": "U_kgDOBXT-iA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/91553416?u=5ce59e36fd483c0bdef7deb1f979baeb48bab07b&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/dllehr-amd",
+      "html_url": "https://github.com/dllehr-amd",
+      "followers_url": "https://api.github.com/users/dllehr-amd/followers",
+      "following_url": "https://api.github.com/users/dllehr-amd/following{/other_user}",
+      "gists_url": "https://api.github.com/users/dllehr-amd/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/dllehr-amd/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/dllehr-amd/subscriptions",
+      "organizations_url": "https://api.github.com/users/dllehr-amd/orgs",
+      "repos_url": "https://api.github.com/users/dllehr-amd/repos",
+      "events_url": "https://api.github.com/users/dllehr-amd/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/dllehr-amd/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Looks straightforward  Thanks @mjkvaak-amd ",
+    "state": "APPROVED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/54185#pullrequestreview-5091180867",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/54185",
+    "author_association": "COLLABORATOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/54185#pullrequestreview-5091180867"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/54185"
+      }
+    },
+    "submitted_at": "2026-09-02T14:44:50Z",
+    "commit_id": "342221b44037205beafd4be286b1e78efbcf747b"
+  }
+]

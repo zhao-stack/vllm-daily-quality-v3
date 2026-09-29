@@ -1,0 +1,567 @@
+diff --git a/tests/kernels/attention/test_flashinfer_mla_decode.py b/tests/kernels/attention/test_flashinfer_mla_decode.py
+index 0d3791964398f363b19b91d8f0f794ae41d7a0c7..c3f7b4c96f7881219d00c527c30eeb8a77058f9c 100644
+--- a/tests/kernels/attention/test_flashinfer_mla_decode.py
++++ b/tests/kernels/attention/test_flashinfer_mla_decode.py
+@@ -130,69 +130,123 @@ def test_flashinfer_mla_decode(dtype: torch.dtype, bs: int, block_size: int):
+     torch.testing.assert_close(out_ans, out_ref, atol=1e-2, rtol=1e-2)
+ 
+ 
++@pytest.mark.parametrize("dtype", [torch.bfloat16, torch.float8_e4m3fn])
++@pytest.mark.parametrize("mode", ["tp", "dcp", "hisparse"])
+ @requires_sm10x
+-def test_flashinfer_trtllm_sparse_mla_decode_without_rope():
+-    """The native sparse MLA path supports a zero-width rotary tail."""
++def test_flashinfer_trtllm_sparse_mla_decode_without_rope(dtype, mode, monkeypatch):
++    """TP skips preparation; empty DCP contributions and HiSparse outputs vanish."""
++    import vllm.v1.attention.backends.mla.flashinfer_mla_sparse as backend
++    from vllm.v1.attention.backends.mla.index_group import HiSparseMLAIndexGroup
++
+     torch.set_default_device("cuda")
+     torch.manual_seed(42)
+-
+-    batch_size = 2
+-    block_size = 64
+-    num_blocks = 4
+-    sparse_topk = 128
+-    valid_lens = torch.tensor([17, 73], dtype=torch.int32)
+-
+-    query = torch.randn(
+-        batch_size,
+-        1,
+-        NUM_HEADS,
+-        KV_LORA_RANK,
+-        dtype=torch.bfloat16,
+-    )
+-    kv_cache = torch.randn(
+-        num_blocks,
+-        block_size,
+-        KV_LORA_RANK,
+-        dtype=torch.bfloat16,
+-    )
+-
++    batch_size, num_heads, block_size, num_blocks, sparse_topk = 3, 8, 64, 4, 2176
++    valid_lens = [1 if mode == "tp" else 0, 17, 73]
++    counts = torch.tensor(valid_lens, dtype=torch.int32)
++    query = torch.randn(batch_size, 1, num_heads, KV_LORA_RANK).to(dtype)
++    kv_cache = torch.randn(num_blocks, block_size, KV_LORA_RANK).to(dtype)
+     num_slots = num_blocks * block_size
+-    slot_tables = torch.stack(
+-        [torch.randperm(num_slots)[:sparse_topk] for _ in range(batch_size)]
+-    ).to(torch.int32)
+-    for row, valid_len in zip(slot_tables, valid_lens.tolist()):
+-        row[valid_len:] = -1
+-
+-    workspace_buffer = torch.empty(
+-        FLASHINFER_WORKSPACE_BUFFER_SIZE,
+-        dtype=torch.int8,
++    indices = torch.full((batch_size, sparse_topk), -1, dtype=torch.int32)
++    for token, length in enumerate(valid_lens):
++        indices[token, :length] = torch.randperm(num_slots)[:length].int()
++    empty = counts == 0
++    reference_indices = indices.clone()
++    reference_indices[:, 0].masked_fill_(empty, 0)
++    workspace = torch.empty(FLASHINFER_WORKSPACE_BUFFER_SIZE, dtype=torch.int8)
++
++    impl = object.__new__(backend.FlashInferMLASparseImpl)
++    impl.qk_nope_head_dim = QK_NOPE_HEAD_DIM
++    impl.kv_lora_rank = KV_LORA_RANK
++    impl.qk_rope_head_dim = 0
++    impl.index_group = (
++        object.__new__(HiSparseMLAIndexGroup) if mode == "hisparse" else None
+     )
+-    out = trtllm_batch_decode_with_kv_cache_mla(
++    impl._workspace_buffer = workspace
++    impl.bmm1_scale = QK_NOPE_HEAD_DIM**-0.5
++    impl.bmm2_scale = 1.0
++    impl.is_nope_mla = True
++    impl.need_to_return_lse_for_decode = mode == "dcp"
++    if mode == "tp":
++
++        def unexpected_helper(*args, **kwargs):
++            pytest.fail("TP must not launch empty-query preparation")
++
++        monkeypatch.setattr(
++            backend, "prepare_sparse_mla_safe_lengths", unexpected_helper
++        )
++
++    out, lse = impl._run_mqa_kernel(query.squeeze(1), kv_cache, indices, counts)
++    reference = trtllm_batch_decode_with_kv_cache_mla(
+         query=query,
+         kv_cache=kv_cache.unsqueeze(1),
+-        workspace_buffer=workspace_buffer,
++        workspace_buffer=workspace,
+         qk_nope_head_dim=QK_NOPE_HEAD_DIM,
+         kv_lora_rank=KV_LORA_RANK,
+         qk_rope_head_dim=0,
+-        block_tables=slot_tables.unsqueeze(1),
+-        seq_lens=valid_lens,
++        block_tables=reference_indices.unsqueeze(1),
++        seq_lens=counts,
+         max_seq_len=sparse_topk,
+         sparse_mla_top_k=sparse_topk,
+-        sparse_mla_top_k_lens=valid_lens,
++        sparse_mla_top_k_lens=counts.clamp(min=1),
+         bmm1_scale=QK_NOPE_HEAD_DIM**-0.5,
+         bmm2_scale=1.0,
+-    ).squeeze(1)
+-
+-    flat_cache = kv_cache.view(num_slots, KV_LORA_RANK).float()
+-    refs = []
+-    for batch_idx, valid_len in enumerate(valid_lens.tolist()):
+-        selected_kv = flat_cache[slot_tables[batch_idx, :valid_len].long()]
+-        scores = torch.einsum("hd,kd->hk", query[batch_idx, 0].float(), selected_kv)
+-        probs = torch.softmax(scores * QK_NOPE_HEAD_DIM**-0.5, dim=-1)
+-        refs.append(torch.einsum("hk,kd->hd", probs, selected_kv))
+-    ref = torch.stack(refs).to(torch.bfloat16)
+-
+-    torch.testing.assert_close(out, ref, atol=2e-2, rtol=2e-2)
++        return_lse=mode == "dcp",
++    )
++    if mode == "dcp":
++        reference, reference_lse = reference
++        reference_lse = reference_lse.reshape(batch_size, num_heads)
++        reference_lse.masked_fill_(empty[:, None], float("-inf"))
++        torch.testing.assert_close(lse, reference_lse, atol=0, rtol=0)
++
++        from vllm.v1.attention.ops.dcp import CPTritonContext, correct_attn_out
++
++        # The peer owns only our empty selections. Check our contribution after
++        # the production merge, without zeroing the local attention output.
++        peer_lse = torch.full_like(lse, float("-inf")).masked_fill(empty[:, None], 0)
++        out, _ = correct_attn_out(
++            out, torch.stack((lse, peer_lse)), cp_rank=0, ctx=CPTritonContext()
++        )
++    else:
++        assert lse is None
++    reference = reference.squeeze(1).masked_fill(empty[:, None, None], 0)
++    torch.testing.assert_close(out, reference, atol=0, rtol=0)
++
++    if dtype == torch.bfloat16:
++        flat_cache = kv_cache.view(num_slots, KV_LORA_RANK).float()
++        refs = []
++        for token, length in enumerate(valid_lens):
++            selected_kv = flat_cache[reference_indices[token, :length].long()]
++            scores = torch.einsum("hd,kd->hk", query[token, 0].float(), selected_kv)
++            probs = torch.softmax(scores * QK_NOPE_HEAD_DIM**-0.5, dim=-1)
++            refs.append(torch.einsum("hk,kd->hd", probs, selected_kv))
++        ref = torch.stack(refs).to(torch.bfloat16)
++        torch.testing.assert_close(out, ref, atol=2e-2, rtol=2e-2)
++
++
++@requires_sm10x
++def test_sparse_mla_safe_lengths():
++    from vllm.v1.attention.backends.mla.sparse_utils import (
++        prepare_sparse_mla_safe_lengths,
++    )
++
++    device = "cuda"
++    num_tokens = 259
++    # Include a partial tile and expose accidental writes into adjacent storage.
++    counts_storage = torch.full((num_tokens, 2), 17, dtype=torch.int32, device=device)
++    counts = counts_storage[:, 0]
++    counts[::3] = 0
++    original_counts = counts_storage.clone()
++    empty = counts == 0
++    indices_storage = torch.full(
++        (num_tokens, 256), 42, dtype=torch.int32, device=device
++    )
++    indices = indices_storage[:, ::2]
++    expected_indices = indices_storage.clone()
++    expected_indices[:, 0].masked_fill_(empty, 0)
++    safe = prepare_sparse_mla_safe_lengths(indices, counts)
++    torch.testing.assert_close(safe, counts.clamp(min=1), rtol=0, atol=0)
++    torch.testing.assert_close(indices_storage, expected_indices, rtol=0, atol=0)
++    torch.testing.assert_close(counts_storage, original_counts, rtol=0, atol=0)
+ 
+ 
+ @requires_sm90
+diff --git a/tests/kernels/test_concat_mla_q.py b/tests/kernels/test_concat_mla_q.py
+index 6ace34e503e4ddd6698aee45875cd24d5065dcc5..39c2742e4f8a2ab5cd5521b23deecbcc929bc4c3 100644
+--- a/tests/kernels/test_concat_mla_q.py
++++ b/tests/kernels/test_concat_mla_q.py
+@@ -148,3 +148,32 @@ def test_concat_mla_q_values_preserved(num_tokens):
+     assert torch.equal(out_bits[..., :nope_dim], ql_nope_bits)
+ 
+     assert torch.equal(out_bits[..., nope_dim:], q_pe_bits)
++
++
++@pytest.mark.parametrize("rope_dim,transposed", [(0, False), (0, True), (64, False)])
++@pytest.mark.parametrize("enabled", [False, True])
++def test_concat_mla_q_fp8_nope_and_rope(rope_dim, transposed, enabled):
++    """FP8 query packing preserves values with empty RoPE and strided BMM output."""
++    from vllm.config import CompilationConfig, VllmConfig, set_current_vllm_config
++    from vllm.model_executor.layers.attention.mla_attention import _DecodeConcatQuantFP8
++    from vllm.model_executor.layers.quantization.utils.quant_utils import GroupShape
++
++    torch.manual_seed(42)
++    shape = (8, 17, 512) if transposed else (17, 8, 512)
++    ql = torch.randn(shape, dtype=torch.bfloat16, device="cuda") * 128
++    if transposed:
++        ql = ql.transpose(0, 1)
++    qp = torch.randn(17, 8, rope_dim, dtype=torch.bfloat16, device="cuda") * 128
++    scale = torch.tensor(0.3, device="cuda", dtype=torch.float32)
++    joined = torch.cat((ql, qp), dim=-1)
++    expected = (joined.float() * scale.reciprocal()).clamp(-448, 448)
++    expected = expected.to(torch.float8_e4m3fn)
++    custom_ops = ["none"] + (["+mla_decode_concat_quant_fp8"] if enabled else [])
++    config = VllmConfig(
++        compilation_config=CompilationConfig(mode=0, custom_ops=custom_ops)
++    )
++    with set_current_vllm_config(config):
++        quant = _DecodeConcatQuantFP8(static=True, group_shape=GroupShape.PER_TENSOR)
++        actual = quant(ql, qp, scale)
++    torch.testing.assert_close(actual.float(), expected.float(), atol=0, rtol=0)
++    assert actual.is_contiguous()
+diff --git a/tests/v1/attention/test_indexer_dcp_localize.py b/tests/v1/attention/test_indexer_dcp_localize.py
+index 8bc409adb7047ff7962a4d8db07e2b305c408809..b099159bc7660d636938316e489ca380ae458d0b 100644
+--- a/tests/v1/attention/test_indexer_dcp_localize.py
++++ b/tests/v1/attention/test_indexer_dcp_localize.py
+@@ -700,9 +700,8 @@ def test_dcp_filter_compacts_valid_slots_for_sparse_kernel(
+ @pytest.mark.skipif(not current_platform.is_cuda(), reason="This test requires CUDA")
+ @pytest.mark.parametrize("interleave", [1, 2])
+ @pytest.mark.parametrize("dcp_rank", [0, 1])
+-# 384 is not a power of two, so it exercises the multi-tile atomic allocator
+-# rather than the single-tile path 1024 takes.
+-@pytest.mark.parametrize("num_topk", [1024, 384])
++# Include padded single-tile compaction and the multi-tile atomic fallback.
++@pytest.mark.parametrize("num_topk", [1024, 2176, 4224])
+ def test_dcp_filter_compaction_matches_reference(
+     interleave: int, dcp_rank: int, num_topk: int
+ ):
+@@ -729,7 +728,7 @@ def test_dcp_filter_compaction_matches_reference(
+     for r in range(num_rows):
+         # Ids are distinct, so a row holds at most `seq` valid entries.
+         hi = min(num_topk * 3 // 4, seq)
+-        n_valid = int(torch.randint(num_topk // 4, hi, (1,)).item())
++        n_valid = int(torch.randint(hi // 3, hi, (1,)).item())
+         perm = torch.randperm(seq, device=device)[:n_valid].to(torch.int32)
+         token_indices[r, :n_valid] = perm
+ 
+diff --git a/tests/v1/attention/test_sparse_mla_backends.py b/tests/v1/attention/test_sparse_mla_backends.py
+index 7704600d09d4f0d92cc33ae6d65bc155c8fe5817..1d7fc389ef696fb5cde7a2f07e9279690b0239ee 100644
+--- a/tests/v1/attention/test_sparse_mla_backends.py
++++ b/tests/v1/attention/test_sparse_mla_backends.py
+@@ -1663,10 +1663,12 @@ def test_split_indexer_prefill_chunks_single_request_overflow():
+     assert out == expected
+ 
+ 
+-# 384 is not a power of two, so it counts via the tiled atomic accumulation
+-# rather than the single-tile path 128 takes.
+-@pytest.mark.parametrize("num_topk_tokens", [128, 384])
+-def test_triton_convert_returns_valid_counts(num_topk_tokens: int):
++# Power-of-two, GLM's padded tile, and atomic fallback, with reused buffers.
++@pytest.mark.parametrize(
++    "num_topk_tokens,reuse_buffers",
++    [(128, False), (2176, False), (2176, True), (4224, False), (4224, True)],
++)
++def test_triton_convert_returns_valid_counts(num_topk_tokens: int, reuse_buffers: bool):
+     """Test that return_valid_counts correctly counts non-negative indices."""
+     device = torch.device(DEVICE_TYPE)
+     num_tokens = 8
+@@ -1679,8 +1681,7 @@ def test_triton_convert_returns_valid_counts(num_topk_tokens: int):
+         num_requests * max_blocks_per_req, dtype=torch.int32, device=device
+     ).view(num_requests, max_blocks_per_req)
+ 
+-    # Create token indices with varying numbers of valid entries: half the row,
+-    # a quarter of it, the whole row, then a single valid entry -- twice over.
++    # Include partly valid, fully valid, and empty selections for each request.
+     token_indices = torch.full(
+         (num_tokens, num_topk_tokens), -1, dtype=torch.int32, device=device
+     )
+@@ -1688,7 +1689,7 @@ def test_triton_convert_returns_valid_counts(num_topk_tokens: int):
+         num_topk_tokens // 2,
+         num_topk_tokens // 4,
+         num_topk_tokens,
+-        1,
++        0,
+     ] * 2
+     expected_valid = []
+     for i in range(num_tokens):
+@@ -1702,6 +1703,15 @@ def test_triton_convert_returns_valid_counts(num_topk_tokens: int):
+         expected_valid, dtype=torch.int32, device=device
+     )
+ 
++    buffers = {}
++    if reuse_buffers:
++        buffers = dict(
++            out=torch.full_like(token_indices, -99),
++            valid_counts_out=torch.full(
++                (num_tokens,), 99, dtype=torch.int32, device=device
++            ),
++        )
++
+     # Test with return_valid_counts=True
+     result, valid_counts = triton_convert_req_index_to_global_index(
+         req_id,
+@@ -1710,6 +1720,7 @@ def test_triton_convert_returns_valid_counts(num_topk_tokens: int):
+         BLOCK_SIZE=block_size,
+         NUM_TOPK_TOKENS=num_topk_tokens,
+         return_valid_counts=True,
++        **buffers,
+     )
+ 
+     torch.testing.assert_close(valid_counts, expected_valid_tensor, rtol=0, atol=0)
+diff --git a/vllm/model_executor/layers/attention/mla_attention.py b/vllm/model_executor/layers/attention/mla_attention.py
+index 3104ac25c6ef56297ace220177c0a4b51b34c141..c37801e8871697f6455deb2eb6419d70f911cb29 100644
+--- a/vllm/model_executor/layers/attention/mla_attention.py
++++ b/vllm/model_executor/layers/attention/mla_attention.py
+@@ -1553,7 +1553,10 @@ class _DecodeConcatQuantFP8(QuantFP8):
+             scale: torch.Tensor,
+             scale_ub: torch.Tensor | None = None,
+         ) -> torch.Tensor:
+-            decode_q0 = torch.cat((decode_ql_nope, decode_q_pe), dim=-1)
++            if decode_q_pe.shape[-1] == 0 and decode_ql_nope.is_contiguous():
++                decode_q0 = decode_ql_nope
++            else:
++                decode_q0 = torch.cat((decode_ql_nope, decode_q_pe), dim=-1)
+             decode_q_flat = decode_q0.reshape(decode_q0.shape[0], -1)
+             decode_q, _ = quant_fn(self, decode_q_flat, scale, scale_ub)
+             return decode_q.view(decode_q0.shape)
+diff --git a/vllm/v1/attention/backends/mla/flashinfer_mla_sparse.py b/vllm/v1/attention/backends/mla/flashinfer_mla_sparse.py
+index ba10a2e91cea43e04b0c897f9b038914c5fee02a..142a63ec7234bde3b90be2247ee1737660929640 100644
+--- a/vllm/v1/attention/backends/mla/flashinfer_mla_sparse.py
++++ b/vllm/v1/attention/backends/mla/flashinfer_mla_sparse.py
+@@ -30,6 +30,7 @@ from vllm.v1.attention.backend import (
+ from vllm.v1.attention.backends.mla.index_group import HiSparseMLAIndexGroup
+ from vllm.v1.attention.backends.mla.sparse_utils import (
+     flat_kv_row_view,
++    prepare_sparse_mla_safe_lengths,
+     triton_convert_req_index_to_global_index,
+     triton_filter_and_convert_dcp_index,
+ )
+@@ -697,18 +698,16 @@ class FlashInferMLASparseImpl(SparseMLACommonImpl[FlashInferMLASparseMetadata]):
+         sparse_topk_capacity = topk_indices.shape[1]
+ 
+         extra_kwargs: dict[str, torch.Tensor] = {}
+-        empty_rows: torch.Tensor | None = None
++        needs_empty_query_guard = self.need_to_return_lse_for_decode or isinstance(
++            self.index_group, HiSparseMLAIndexGroup
++        )
+         if self.is_nope_mla:
+-            # The native no-rope kernel takes the active top-k length per query
+-            # token (``seq_lens`` here is already the compacted per-token valid
+-            # count, int32) and rejects zero-length rows. Point empty rows at a
+-            # single valid dummy slot with length 1 and zero their output after
+-            # the launch. ``triton_convert_req_index_to_global_index`` packs the
+-            # valid indices into a contiguous prefix, which is what the kernel
+-            # requires of the page table.
+-            empty_rows = seq_lens == 0
+-            topk_indices[:, 0] = topk_indices[:, 0].masked_fill(empty_rows, 0)
+-            extra_kwargs["sparse_mla_top_k_lens"] = seq_lens.clamp(min=1)
++            # Resident TP queries have nonempty selections. Preserve empty-query
++            # handling for DCP's local selections and host-backed HiSparse.
++            topk_lens = seq_lens
++            if needs_empty_query_guard:
++                topk_lens = prepare_sparse_mla_safe_lengths(topk_indices, seq_lens)
++            extra_kwargs["sparse_mla_top_k_lens"] = topk_lens
+ 
+         kernel_out = trtllm_batch_decode_with_kv_cache_mla(
+             query=query,
+@@ -737,12 +736,17 @@ class FlashInferMLASparseImpl(SparseMLACommonImpl[FlashInferMLASparseMetadata]):
+         out = o.view(-1, o.shape[-2], o.shape[-1])
+         if lse is not None:
+             lse = self._normalize_lse(lse, out.shape[0], out.shape[1])
+-        if empty_rows is None and lse is not None:
++        if self.is_nope_mla and needs_empty_query_guard:
++            empty_queries = seq_lens == 0
++            if lse is not None:
++                # DCP combine already suppresses outputs with zero LSE weight.
++                lse.masked_fill_(empty_queries[:, None], float("-inf"))
++            else:
++                out.masked_fill_(empty_queries[:, None, None], 0.0)
++        elif lse is not None:
+             empty_rows = (topk_indices == -1).all(dim=-1)
+-        if empty_rows is not None:
+             out.masked_fill_(empty_rows.view(-1, 1, 1), 0.0)
+-            if lse is not None:
+-                lse.masked_fill_(empty_rows.view(-1, 1), float("-inf"))
++            lse.masked_fill_(empty_rows.view(-1, 1), float("-inf"))
+         return out, lse
+ 
+     @staticmethod
+diff --git a/vllm/v1/attention/backends/mla/sparse_utils.py b/vllm/v1/attention/backends/mla/sparse_utils.py
+index 0ac131cee5df2b4205205a0a51a32a6ac91e527b..2ec10218d99fb665a94b1977e9b06c59033fff0d 100644
+--- a/vllm/v1/attention/backends/mla/sparse_utils.py
++++ b/vllm/v1/attention/backends/mla/sparse_utils.py
+@@ -86,7 +86,7 @@ class ConvertReqIndexToGlobalIndexKernel(
+ 
+     @staticmethod
+     @triton.jit(do_not_specialize=["max_num_blocks_per_req", "workspace_rank_stride"])
+-    def kernel(
++    def sparse_mla_index_remap_kernel(
+         req_id_ptr,  # int32 [num_tokens]
+         block_table_ptr,  # int32 [num_requests, max_num_blocks_per_req]
+         token_indices_ptr,  # int32 [num_tokens, NUM_TOPK_TOKENS]
+@@ -100,15 +100,16 @@ class ConvertReqIndexToGlobalIndexKernel(
+         BLOCK_SIZE: tl.constexpr,
+         BLOCK_STRIDE_ROWS: tl.constexpr,
+         BLOCK_N: tl.constexpr,  # tile width along columns
++        NUM_TOPK_TOKENS: tl.constexpr,
+         HAS_PREFILL: tl.constexpr,
+         COUNT_VALID: tl.constexpr,  # whether to count valid indices
+-        # BLOCK_N == NUM_TOPK_TOKENS: one program owns the row, so the valid count
++        # BLOCK_N >= NUM_TOPK_TOKENS: one program owns the query, so its count
+         # is an in-register reduction and needs no atomic.
+         SINGLE_TILE: tl.constexpr,
+         # When set, scatter valid slots to a contiguous prefix [0, valid_count) using
+         # valid_count_ptr as an atomic slot allocator (DCP filtering leaves interior
+         # -1 gaps; the trtllm-gen sparse kernel reads the first valid_count entries).
+-        # Requires COUNT_VALID and an out buffer pre-filled with -1. Order within the
++        # Requires COUNT_VALID; multi-tile output must be pre-filled with -1. The
+         # prefix is unspecified (only the selected set matters).
+         COMPACT_TO_FRONT: tl.constexpr,
+         # DCP de-interleave: with DCP_SIZE == 1 these are an exact no-op
+@@ -136,7 +137,7 @@ class ConvertReqIndexToGlobalIndexKernel(
+ 
+         # Load token indices for this tile
+         ti_ptr = token_indices_ptr + token_id * ti_stride0 + indice_id * ti_stride1
+-        tok = tl.load(ti_ptr)  # int32
++        tok = tl.load(ti_ptr, mask=indice_id < NUM_TOPK_TOKENS, other=-1)
+ 
+         # Only token == -1 should propagate as -1
+         is_invalid_tok = tok < 0
+@@ -197,10 +198,19 @@ class ConvertReqIndexToGlobalIndexKernel(
+             dest = base + local_offset
+             out_ptr_dest = out_ptr + token_id * out_stride0 + dest * out_stride1
+             tl.store(out_ptr_dest, out_val, mask=is_valid == 1)
++            if SINGLE_TILE:
++                # This program owns both the compacted prefix and its padding.
++                # The stores are disjoint, so no separate initialization is needed.
++                tl.store(
++                    out_ptr + token_id * out_stride0 + indice_id * out_stride1,
++                    -1,
++                    mask=(indice_id >= tile_valid_count)
++                    & (indice_id < NUM_TOPK_TOKENS),
++                )
+         else:
+             # Store results in place (input column == output column).
+             out_ptr_ij = out_ptr + token_id * out_stride0 + indice_id * out_stride1
+-            tl.store(out_ptr_ij, out_val)
++            tl.store(out_ptr_ij, out_val, mask=indice_id < NUM_TOPK_TOKENS)
+ 
+             # Accumulate the tile's valid count into the row total; a single tile's
+             # reduction *is* the total.
+@@ -211,6 +221,9 @@ class ConvertReqIndexToGlobalIndexKernel(
+                 else:
+                     tl.atomic_add(valid_count_ptr + token_id, tile_valid_count)
+ 
++    # Keep the warmup wrapper interface while exposing a descriptive CUDA symbol.
++    kernel = sparse_mla_index_remap_kernel
++
+     def dispatch(  # type: ignore[override]
+         self,
+         *,
+@@ -421,18 +434,19 @@ def _remap_tiling(
+     Counting the valid slots per row is the only reason the column tiles have to
+     talk to each other, so when counting give one program the whole row: the
+     count becomes an in-register reduction plus a plain store, needing neither
+-    atomics nor a zero-initialized counter. The row is one ``tl.arange``, so this
+-    needs a power-of-two width; other top-k sizes stay tiled and atomic.
++    atomics nor a zero-initialized counter. Pad modest non-power-of-two widths
++    (including GLM's 2176 entries) to one tile; larger widths stay tiled and atomic.
+ 
+     Returns:
+         (single_tile, block_n, tiles_per_row, num_warps)
+ 
+     """
+-    single_tile = (
+-        count_valid and triton.next_power_of_2(NUM_TOPK_TOKENS) == NUM_TOPK_TOKENS
++    padded_width = triton.next_power_of_2(NUM_TOPK_TOKENS)
++    single_tile = count_valid and (
++        padded_width == NUM_TOPK_TOKENS or padded_width <= 4096
+     )
+     if single_tile:
+-        return True, NUM_TOPK_TOKENS, 1, 8
++        return True, padded_width, 1, 8
+     return False, BLOCK_N, NUM_TOPK_TOKENS // BLOCK_N, 4
+ 
+ 
+@@ -504,14 +518,11 @@ def triton_convert_req_index_to_global_index(
+     req_id_c = req_id.contiguous()
+     block_table_c = block_table.contiguous()
+     token_indices_c = token_indices.contiguous()
+-    # When return_valid_counts, the kernel scatters valid entries to a
+-    # contiguous prefix [0, valid_count) and leaves the tail unwritten, so
+-    # pre-fill -1 there. flash_mla_sparse_fwd then bounds attention to
+-    # [:topk_length] == exactly the valid set (no dropped tokens).
++    # Only multi-tile compaction needs separate padding initialization.
+     if out is None:
+         out = (
+             torch.full_like(token_indices_c, -1)
+-            if return_valid_counts
++            if return_valid_counts and not single_tile
+             else torch.empty_like(token_indices_c)
+         )
+     else:
+@@ -519,7 +530,7 @@ def triton_convert_req_index_to_global_index(
+         assert out.device == token_indices_c.device
+         assert out.shape == token_indices_c.shape
+         assert out.is_contiguous()
+-        if return_valid_counts:
++        if return_valid_counts and not single_tile:
+             out.fill_(-1)
+ 
+     valid_counts: torch.Tensor | None = None
+@@ -636,13 +647,13 @@ def triton_filter_and_convert_dcp_index(
+     token_indices_c = token_indices.contiguous()
+ 
+     # The compaction uses the valid-count buffer as a slot allocator, so it
+-    # requires counting. Pre-fill out with -1 so the unwritten tail stays -1.
++    # requires counting. Only the multi-tile path needs pre-filled padding.
+     count_valid = return_valid_counts or compact_valid_to_front
+ 
+     # The compaction builds on the counting, so it shares the tiling.
+     single_tile, _, _, _ = _remap_tiling(NUM_TOPK_TOKENS, BLOCK_N, count_valid)
+ 
+-    if compact_valid_to_front:
++    if compact_valid_to_front and not single_tile:
+         out = torch.full_like(token_indices_c, -1)
+     else:
+         out = torch.empty_like(token_indices_c)
+@@ -685,3 +696,46 @@ def triton_filter_and_convert_dcp_index(
+ 
+ 
+ _CONVERT_REQ_INDEX_TO_GLOBAL_INDEX_KERNEL = ConvertReqIndexToGlobalIndexKernel()
++
++
++@triton.jit(do_not_specialize=["num_tokens"])
++def sparse_mla_prepare_safe_lengths_kernel(
++    indices_ptr,
++    counts_ptr,
++    safe_lengths_ptr,
++    num_tokens,
++    index_stride0: tl.constexpr,
++    count_stride: tl.constexpr,
++    BLOCK: tl.constexpr,
++):
++    token = tl.program_id(0) * BLOCK + tl.arange(0, BLOCK)
++    count = tl.load(counts_ptr + token * count_stride, token < num_tokens, other=1)
++    tl.store(safe_lengths_ptr + token, tl.maximum(count, 1), token < num_tokens)
++    # TRTLLM's NoPE sparse kernel requires at least one valid KV-cache entry.
++    tl.store(
++        indices_ptr + token * index_stride0, 0, (token < num_tokens) & (count == 0)
++    )
++
++
++def prepare_sparse_mla_safe_lengths(
++    physical_indices: torch.Tensor, valid_counts: torch.Tensor
++) -> torch.Tensor:
++    """Install dummy slots for empty queries and return nonzero kernel lengths.
++
++    Preserve the raw counts so empty outputs and LSE can be neutralized later.
++    """
++    num_tokens = valid_counts.numel()
++    safe_lengths = torch.empty(
++        (num_tokens,), dtype=valid_counts.dtype, device=valid_counts.device
++    )
++    if num_tokens:
++        sparse_mla_prepare_safe_lengths_kernel[(triton.cdiv(num_tokens, 256),)](
++            physical_indices,
++            valid_counts,
++            safe_lengths,
++            num_tokens,
++            physical_indices.stride(0),
++            valid_counts.stride(0),
++            BLOCK=256,
++        )
++    return safe_lengths

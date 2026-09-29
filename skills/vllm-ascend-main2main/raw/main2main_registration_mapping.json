@@ -1,0 +1,1012 @@
+{
+  "schema_version": 1,
+  "generated_from": {
+    "scope": "patch/plugin/package registration and glue entrypoints"
+  },
+  "summary": {
+    "total": 62,
+    "by_relation": {
+      "patch_module_registered": 41,
+      "plugin_entrypoint": 5,
+      "package_entrypoint": 16
+    },
+    "by_risk": {
+      "high": 46,
+      "medium": 16
+    }
+  },
+  "mappings": [
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/platform/__init__.py",
+        "line": 19,
+        "registered_file": "vllm_ascend/patch/platform/patch_distributed.py",
+        "expression": "import vllm_ascend.patch.platform.patch_distributed"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/platform/__init__.py",
+        "line": 20,
+        "registered_file": "vllm_ascend/patch/platform/patch_kv_cache_interface.py",
+        "expression": "import vllm_ascend.patch.platform.patch_kv_cache_interface"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/platform/__init__.py",
+        "line": 21,
+        "registered_file": "vllm_ascend/patch/platform/patch_kv_cache_utils.py",
+        "expression": "import vllm_ascend.patch.platform.patch_kv_cache_utils"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/platform/__init__.py",
+        "line": 26,
+        "registered_file": "vllm_ascend/patch/platform/patch_mamba_config.py",
+        "expression": "import vllm_ascend.patch.platform.patch_mamba_config"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/platform/__init__.py",
+        "line": 28,
+        "registered_file": "vllm_ascend/patch/platform/patch_mamba_config_310.py",
+        "expression": "import vllm_ascend.patch.platform.patch_mamba_config_310"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/platform/__init__.py",
+        "line": 29,
+        "registered_file": "vllm_ascend/patch/platform/patch_minimax_m2_config.py",
+        "expression": "import vllm_ascend.patch.platform.patch_minimax_m2_config"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/platform/__init__.py",
+        "line": 30,
+        "registered_file": "vllm_ascend/patch/platform/patch_minimax_usage_accounting.py",
+        "expression": "import vllm_ascend.patch.platform.patch_minimax_usage_accounting"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/platform/__init__.py",
+        "line": 31,
+        "registered_file": "vllm_ascend/patch/platform/patch_glm_tool_call_parser.py",
+        "expression": "import vllm_ascend.patch.platform.patch_glm_tool_call_parser"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/platform/__init__.py",
+        "line": 32,
+        "registered_file": "vllm_ascend/patch/platform/patch_sched_yield.py",
+        "expression": "import vllm_ascend.patch.platform.patch_sched_yield"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/platform/__init__.py",
+        "line": 33,
+        "registered_file": "vllm_ascend/patch/platform/patch_torch_accelerator.py",
+        "expression": "import vllm_ascend.patch.platform.patch_torch_accelerator"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/platform/__init__.py",
+        "line": 34,
+        "registered_file": "vllm_ascend/patch/platform/patch_tool_choice_none_content.py",
+        "expression": "import vllm_ascend.patch.platform.patch_tool_choice_none_content"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/platform/__init__.py",
+        "line": 37,
+        "registered_file": "vllm_ascend/patch/platform/patch_multiproc_executor.py",
+        "expression": "import vllm_ascend.patch.platform.patch_multiproc_executor"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/platform/__init__.py",
+        "line": 40,
+        "registered_file": "vllm_ascend/patch/platform/patch_balance_schedule.py",
+        "expression": "import vllm_ascend.patch.platform.patch_balance_schedule"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 23,
+        "registered_file": "vllm_ascend/patch/worker/patch_triton.py",
+        "expression": "import vllm_ascend.patch.worker.patch_triton"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 24,
+        "registered_file": "vllm_ascend/patch/worker/patch_v2/patch_triton.py",
+        "expression": "import vllm_ascend.patch.worker.patch_v2.patch_triton"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 28,
+        "registered_file": "vllm_ascend/patch/worker/patch_weight_utils.py",
+        "expression": "import vllm_ascend.patch.worker.patch_weight_utils"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 29,
+        "registered_file": "vllm_ascend/patch/platform/patch_sched_yield.py",
+        "expression": "import vllm_ascend.patch.platform.patch_sched_yield"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 30,
+        "registered_file": "vllm_ascend/patch/worker/patch_bert.py",
+        "expression": "import vllm_ascend.patch.worker.patch_bert"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 31,
+        "registered_file": "vllm_ascend/patch/worker/patch_distributed.py",
+        "expression": "import vllm_ascend.patch.worker.patch_distributed"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 32,
+        "registered_file": "vllm_ascend/patch/worker/patch_minimax_m2.py",
+        "expression": "import vllm_ascend.patch.worker.patch_minimax_m2"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 33,
+        "registered_file": "vllm_ascend/patch/worker/patch_minimax_m2_linear_attn.py",
+        "expression": "import vllm_ascend.patch.worker.patch_minimax_m2_linear_attn"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 34,
+        "registered_file": "vllm_ascend/patch/worker/patch_mamba_utils.py",
+        "expression": "import vllm_ascend.patch.worker.patch_mamba_utils"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 35,
+        "registered_file": "vllm_ascend/patch/worker/patch_qwen3_next_mtp.py",
+        "expression": "import vllm_ascend.patch.worker.patch_qwen3_next_mtp"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 38,
+        "registered_file": "vllm_ascend/patch/worker/patch_qwen3_5.py",
+        "expression": "import vllm_ascend.patch.worker.patch_qwen3_5"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 39,
+        "registered_file": "vllm_ascend/patch/worker/patch_gdn_attn.py",
+        "expression": "import vllm_ascend.patch.worker.patch_gdn_attn"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 40,
+        "registered_file": "vllm_ascend/patch/worker/patch_qwen3_dflash.py",
+        "expression": "import vllm_ascend.patch.worker.patch_qwen3_dflash"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 42,
+        "registered_file": "vllm_ascend/patch/worker/patch_rejection_sampler.py",
+        "expression": "import vllm_ascend.patch.worker.patch_rejection_sampler"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 43,
+        "registered_file": "vllm_ascend/patch/worker/patch_v2/patch_uva.py",
+        "expression": "import vllm_ascend.patch.worker.patch_v2.patch_uva"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 44,
+        "registered_file": "vllm_ascend/patch/worker/patch_huanyuan_vl.py",
+        "expression": "import vllm_ascend.patch.worker.patch_huanyuan_vl"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 45,
+        "registered_file": "vllm_ascend/patch/worker/patch_npugraph_ex_triton.py",
+        "expression": "import vllm_ascend.patch.worker.patch_npugraph_ex_triton"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 46,
+        "registered_file": "vllm_ascend/patch/worker/patch_kimi_k25.py",
+        "expression": "import vllm_ascend.patch.worker.patch_kimi_k25"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 47,
+        "registered_file": "vllm_ascend/patch/worker/patch_draft_quarot.py",
+        "expression": "import vllm_ascend.patch.worker.patch_draft_quarot"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 48,
+        "registered_file": "vllm_ascend/patch/worker/patch_cudagraph.py",
+        "expression": "import vllm_ascend.patch.worker.patch_cudagraph"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 49,
+        "registered_file": "vllm_ascend/patch/worker/patch_deepseek_mtp.py",
+        "expression": "import vllm_ascend.patch.worker.patch_deepseek_mtp"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 50,
+        "registered_file": "vllm_ascend/patch/worker/patch_v2/patch_input_batch.py",
+        "expression": "import vllm_ascend.patch.worker.patch_v2.patch_input_batch"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 51,
+        "registered_file": "vllm_ascend/patch/worker/patch_v2/patch_model_state.py",
+        "expression": "import vllm_ascend.patch.worker.patch_v2.patch_model_state"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 52,
+        "registered_file": "vllm_ascend/patch/worker/patch_v2/patch_block_table.py",
+        "expression": "import vllm_ascend.patch.worker.patch_v2.patch_block_table"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 53,
+        "registered_file": "vllm_ascend/patch/worker/patch_gqa_c8.py",
+        "expression": "import vllm_ascend.patch.worker.patch_gqa_c8"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 54,
+        "registered_file": "vllm_ascend/patch/worker/patch_qwen3vl.py",
+        "expression": "import vllm_ascend.patch.worker.patch_qwen3vl"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 55,
+        "registered_file": "vllm_ascend/patch/worker/patch_v2/patch_attn_utils.py",
+        "expression": "import vllm_ascend.patch.worker.patch_v2.patch_attn_utils"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 56,
+        "registered_file": "vllm_ascend/patch/worker/patch_bailing_moe_linear.py",
+        "expression": "import vllm_ascend.patch.worker.patch_bailing_moe_linear"
+      },
+      "reason": "patch module must be imported by registry to take effect"
+    },
+    {
+      "relation": "plugin_entrypoint",
+      "risk": "high",
+      "upstream": {
+        "trigger": "vllm_plugin_lifecycle",
+        "file": "vllm/plugins",
+        "symbol": "_ensure_global_patch"
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/__init__.py",
+        "line": 21,
+        "registered_file": "vllm_ascend/__init__.py",
+        "expression": "_ensure_global_patch"
+      },
+      "reason": "vLLM plugin loading or subprocess initialization changes may require this entrypoint"
+    },
+    {
+      "relation": "plugin_entrypoint",
+      "risk": "high",
+      "upstream": {
+        "trigger": "vllm_plugin_lifecycle",
+        "file": "vllm/plugins",
+        "symbol": "register"
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/__init__.py",
+        "line": 38,
+        "registered_file": "vllm_ascend/__init__.py",
+        "expression": "register"
+      },
+      "reason": "vLLM plugin loading or subprocess initialization changes may require this entrypoint"
+    },
+    {
+      "relation": "plugin_entrypoint",
+      "risk": "high",
+      "upstream": {
+        "trigger": "vllm_plugin_lifecycle",
+        "file": "vllm/plugins",
+        "symbol": "register_connector"
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/__init__.py",
+        "line": 44,
+        "registered_file": "vllm_ascend/__init__.py",
+        "expression": "register_connector"
+      },
+      "reason": "vLLM plugin loading or subprocess initialization changes may require this entrypoint"
+    },
+    {
+      "relation": "plugin_entrypoint",
+      "risk": "high",
+      "upstream": {
+        "trigger": "vllm_plugin_lifecycle",
+        "file": "vllm/plugins",
+        "symbol": "register_model_loader"
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/__init__.py",
+        "line": 52,
+        "registered_file": "vllm_ascend/__init__.py",
+        "expression": "register_model_loader"
+      },
+      "reason": "vLLM plugin loading or subprocess initialization changes may require this entrypoint"
+    },
+    {
+      "relation": "plugin_entrypoint",
+      "risk": "high",
+      "upstream": {
+        "trigger": "vllm_plugin_lifecycle",
+        "file": "vllm/plugins",
+        "symbol": "register_service_profiling"
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/__init__.py",
+        "line": 62,
+        "registered_file": "vllm_ascend/__init__.py",
+        "expression": "register_service_profiling"
+      },
+      "reason": "vLLM plugin loading or subprocess initialization changes may require this entrypoint"
+    },
+    {
+      "relation": "package_entrypoint",
+      "risk": "medium",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 132,
+        "registered_file": null,
+        "expression": "envs = load_module_from_path(\"envs\", os.path.join(ROOT_DIR, \"vllm_ascend\", \"envs.py\"))"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration"
+    },
+    {
+      "relation": "package_entrypoint",
+      "risk": "medium",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 186,
+        "registered_file": null,
+        "expression": "package_dir = os.path.join(ROOT_DIR, \"vllm_ascend\", \"_build_info.py\")"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration"
+    },
+    {
+      "relation": "package_entrypoint",
+      "risk": "medium",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 310,
+        "registered_file": null,
+        "expression": "install_path = os.path.join(ROOT_DIR, \"vllm_ascend\")"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration"
+    },
+    {
+      "relation": "package_entrypoint",
+      "risk": "medium",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 380,
+        "registered_file": null,
+        "expression": "os.makedirs(os.path.join(self.build_lib, \"vllm_ascend\"), exist_ok=True)"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration"
+    },
+    {
+      "relation": "package_entrypoint",
+      "risk": "medium",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 383,
+        "registered_file": null,
+        "expression": "return s.removeprefix(\"vllm_ascend.\")"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration"
+    },
+    {
+      "relation": "package_entrypoint",
+      "risk": "medium",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 421,
+        "registered_file": null,
+        "expression": "dst_path = os.path.join(self.build_lib, \"vllm_ascend\", file)"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration"
+    },
+    {
+      "relation": "package_entrypoint",
+      "risk": "medium",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 426,
+        "registered_file": null,
+        "expression": "src_cann_ops_custom = os.path.join(ROOT_DIR, \"vllm_ascend\", \"_cann_ops_custom\")"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration"
+    },
+    {
+      "relation": "package_entrypoint",
+      "risk": "medium",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 427,
+        "registered_file": null,
+        "expression": "dst_cann_ops_custom = os.path.join(self.build_lib, \"vllm_ascend\", \"_cann_ops_custom\")"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration"
+    },
+    {
+      "relation": "package_entrypoint",
+      "risk": "medium",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 453,
+        "registered_file": null,
+        "expression": "VERSION = get_version(write_to=\"vllm_ascend/_version.py\")"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration"
+    },
+    {
+      "relation": "package_entrypoint",
+      "risk": "medium",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 461,
+        "registered_file": null,
+        "expression": "ext_modules = [CMakeExtension(name=\"vllm_ascend.vllm_ascend_C\")]"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration"
+    },
+    {
+      "relation": "package_entrypoint",
+      "risk": "medium",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 497,
+        "registered_file": null,
+        "expression": "print(\"Failed to read requirements.txt in vllm_ascend.\")"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration"
+    },
+    {
+      "relation": "package_entrypoint",
+      "risk": "medium",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 510,
+        "registered_file": null,
+        "expression": "name=\"vllm_ascend\","
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration"
+    },
+    {
+      "relation": "package_entrypoint",
+      "risk": "medium",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 541,
+        "registered_file": null,
+        "expression": "\"vllm.platform_plugins\": [\"ascend = vllm_ascend:register\"],"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration"
+    },
+    {
+      "relation": "package_entrypoint",
+      "risk": "medium",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 543,
+        "registered_file": null,
+        "expression": "\"ascend_kv_connector = vllm_ascend:register_connector\","
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration"
+    },
+    {
+      "relation": "package_entrypoint",
+      "risk": "medium",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 544,
+        "registered_file": null,
+        "expression": "\"ascend_model_loader = vllm_ascend:register_model_loader\","
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration"
+    },
+    {
+      "relation": "package_entrypoint",
+      "risk": "medium",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 545,
+        "registered_file": null,
+        "expression": "\"ascend_service_profiling = vllm_ascend:register_service_profiling\","
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration"
+    }
+  ]
+}

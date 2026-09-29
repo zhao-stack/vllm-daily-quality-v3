@@ -1,0 +1,141 @@
+[
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4065237778",
+    "pull_request_review_id": 5270435921,
+    "id": 4065237778,
+    "node_id": "PRRC_kwDOI7xefs7yTpsS",
+    "diff_hunk": "@@ -45,7 +46,25 @@ def __init__(\n                 self.all2all_manager = AgRsAll2AllManager(self.cpu_group)\n                 logger.info(\"Using AgRs manager on XPU device.\")\n \n+    def _fixed_rank_sum(self, input_: torch.Tensor) -> torch.Tensor:\n+        flat_input = input_.reshape(-1)\n+        gathered = torch.empty(\n+            (self.world_size, flat_input.numel()),\n+            dtype=input_.dtype,\n+            device=input_.device,\n+        )\n+        dist.all_gather_single(gathered.view(-1), flat_input, group=self.device_group)",
+    "path": "vllm/distributed/device_communicators/xpu_communicator.py",
+    "commit_id": "49fa735e8af3becb607dddce91824e717c11d3c9",
+    "original_commit_id": "e569c04e3abcbfd1a30666c2236ba3fdb7c20ea9",
+    "user": {
+      "login": "sfeng33",
+      "id": 200688931,
+      "node_id": "U_kgDOC_ZFIw",
+      "avatar_url": "https://avatars.githubusercontent.com/u/200688931?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/sfeng33",
+      "html_url": "https://github.com/sfeng33",
+      "followers_url": "https://api.github.com/users/sfeng33/followers",
+      "following_url": "https://api.github.com/users/sfeng33/following{/other_user}",
+      "gists_url": "https://api.github.com/users/sfeng33/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/sfeng33/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/sfeng33/subscriptions",
+      "organizations_url": "https://api.github.com/users/sfeng33/orgs",
+      "repos_url": "https://api.github.com/users/sfeng33/repos",
+      "events_url": "https://api.github.com/users/sfeng33/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/sfeng33/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Non blocking - this guarantees a fixed reduction order, but requires world_size × tensor_size temporary memory and redundantly reduces the full tensor on every rank. CUDA uses one-stage or reduce-scatter + all-gather depending on size. Perhaps XPU can adopt the same pattern.",
+    "created_at": "2026-09-21T18:37:25Z",
+    "updated_at": "2026-09-21T18:37:33Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/55881#discussion_r4065237778",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/55881",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4065237778"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/55881#discussion_r4065237778"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/55881"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4065237778/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": 56,
+    "original_line": 56,
+    "side": "RIGHT",
+    "author_association": "COLLABORATOR",
+    "original_position": 19,
+    "position": 19,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4067523526",
+    "pull_request_review_id": 5273109950,
+    "id": 4067523526,
+    "node_id": "PRRC_kwDOI7xefs7ycXvG",
+    "diff_hunk": "@@ -45,7 +46,25 @@ def __init__(\n                 self.all2all_manager = AgRsAll2AllManager(self.cpu_group)\n                 logger.info(\"Using AgRs manager on XPU device.\")\n \n+    def _fixed_rank_sum(self, input_: torch.Tensor) -> torch.Tensor:\n+        flat_input = input_.reshape(-1)\n+        gathered = torch.empty(\n+            (self.world_size, flat_input.numel()),\n+            dtype=input_.dtype,\n+            device=input_.device,\n+        )\n+        dist.all_gather_single(gathered.view(-1), flat_input, group=self.device_group)",
+    "path": "vllm/distributed/device_communicators/xpu_communicator.py",
+    "commit_id": "49fa735e8af3becb607dddce91824e717c11d3c9",
+    "original_commit_id": "e569c04e3abcbfd1a30666c2236ba3fdb7c20ea9",
+    "user": {
+      "login": "hlin99",
+      "id": 73271530,
+      "node_id": "MDQ6VXNlcjczMjcxNTMw",
+      "avatar_url": "https://avatars.githubusercontent.com/u/73271530?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/hlin99",
+      "html_url": "https://github.com/hlin99",
+      "followers_url": "https://api.github.com/users/hlin99/followers",
+      "following_url": "https://api.github.com/users/hlin99/following{/other_user}",
+      "gists_url": "https://api.github.com/users/hlin99/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/hlin99/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/hlin99/subscriptions",
+      "organizations_url": "https://api.github.com/users/hlin99/orgs",
+      "repos_url": "https://api.github.com/users/hlin99/repos",
+      "events_url": "https://api.github.com/users/hlin99/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/hlin99/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Hi @sfeng33, thanks for taking the time to review this PR and for the suggestion!\r\n\r\nThe current implementation prioritizes correctness and functionality, but I agree that gathering and reducing the full tensor on every rank has significant memory and computation overhead. \r\n\r\nI’m planning further batch-invariance improvements in follow-up PRs, including support for quantized models, dedicated SYCL kernels to replace the current Triton implementations where appropriate, and the more efficient collective communication patterns you suggested。\r\n\r\nI’ll take your suggestion into account in future optimizations. Since this comment is non-blocking, I’d prefer to address these performance improvements separately to keep the scope of this PR focused. Thanks again!\r\n\r\nNow that all CI checks are green, would you mind enabling auto-merge for this PR? Thanks, @sfeng33 !\r\n",
+    "created_at": "2026-09-22T00:23:05Z",
+    "updated_at": "2026-09-22T00:23:06Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/55881#discussion_r4067523526",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/55881",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4067523526"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/55881#discussion_r4067523526"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/55881"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4067523526/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": 56,
+    "original_line": 56,
+    "side": "RIGHT",
+    "in_reply_to_id": 4065237778,
+    "author_association": "CONTRIBUTOR",
+    "original_position": 19,
+    "position": 19,
+    "subject_type": "line"
+  }
+]

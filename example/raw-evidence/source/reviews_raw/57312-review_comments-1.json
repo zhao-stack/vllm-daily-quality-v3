@@ -1,0 +1,280 @@
+[
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4052632577",
+    "pull_request_review_id": 5255079630,
+    "id": 4052632577,
+    "node_id": "PRRC_kwDOI7xefs7xjkQB",
+    "diff_hunk": "@@ -34,6 +40,35 @@\n logger = init_logger(__name__)\n \n \n+def get_draft_load_config(vllm_config: VllmConfig) -> LoadConfig:\n+    \"\"\"Load config for the speculative draft model.\n+\n+    An explicit ``draft_load_config`` always wins. Otherwise the draft inherits\n+    the target's load config, except under ``ipc_cache``: a cached draft\n+    (MTP, EAGLE, EAGLE3) is routed to the daemon's draft group, and any other\n+    draft falls back to disk loading instead of being sent to the target\n+    daemon with a mismatching fingerprint.\n+    \"\"\"\n+    from vllm.model_executor.model_loader.weight_cache.protocol import (\n+        caches_draft_model,\n+    )",
+    "path": "vllm/model_executor/model_loader/utils.py",
+    "commit_id": "42a33abaa13c649dc8bcd4e1bffa7db6d98727c4",
+    "original_commit_id": "e5d0102f88f019a921888ec22bbe6a36736e88af",
+    "user": {
+      "login": "Isotr0py",
+      "id": 41363108,
+      "node_id": "MDQ6VXNlcjQxMzYzMTA4",
+      "avatar_url": "https://avatars.githubusercontent.com/u/41363108?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/Isotr0py",
+      "html_url": "https://github.com/Isotr0py",
+      "followers_url": "https://api.github.com/users/Isotr0py/followers",
+      "following_url": "https://api.github.com/users/Isotr0py/following{/other_user}",
+      "gists_url": "https://api.github.com/users/Isotr0py/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/Isotr0py/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/Isotr0py/subscriptions",
+      "organizations_url": "https://api.github.com/users/Isotr0py/orgs",
+      "repos_url": "https://api.github.com/users/Isotr0py/repos",
+      "events_url": "https://api.github.com/users/Isotr0py/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/Isotr0py/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "It's a bit weird to import helper function from protocol directly, maybe consider move some helper functions from `vllm/model_executor/model_loader/weight_cache/protocol.py` to somewhere like `vllm/model_executor/model_loader/weight_cache/utils.py`",
+    "created_at": "2026-09-19T08:10:40Z",
+    "updated_at": "2026-09-19T08:13:27Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57312#discussion_r4052632577",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57312",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4052632577"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57312#discussion_r4052632577"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57312"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4052632577/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 54,
+    "side": "RIGHT",
+    "author_association": "MEMBER",
+    "original_position": 30,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4052637380",
+    "pull_request_review_id": 5255079630,
+    "id": 4052637380,
+    "node_id": "PRRC_kwDOI7xefs7xjlbE",
+    "diff_hunk": "@@ -128,9 +128,62 @@ def get_socket_dir(socket_dir: str | None = None) -> str:\n     )\n \n \n-def get_socket_path(gpu_uuid: str, socket_dir: str | None = None) -> str:\n+# Speculative methods whose draft model the daemon caches in its own group.\n+# Other drafts keep loading from disk in the engine.\n+WEIGHT_CACHE_DRAFT_METHODS = frozenset({\"mtp\", \"eagle\", \"eagle3\"})\n+\n+# Python-side flags that weight loading sets on EAGLE-style drafts; the engine\n+# never runs load_weights for cached models, so the daemon ships them.\n+EXPORTED_MODEL_ATTRS = (\"has_own_embed_tokens\", \"has_own_lm_head\")\n+\n+\n+def export_model_attrs(model: Any) -> dict[str, bool]:\n+    return {\n+        name: bool(getattr(model, name))\n+        for name in EXPORTED_MODEL_ATTRS\n+        if hasattr(model, name)\n+    }\n+\n+\n+def caches_draft_model(\n+    speculative_config: SpeculativeConfig | None,\n+) -> TypeGuard[SpeculativeConfig]:\n+    \"\"\"Whether the daemon serves the speculative draft as a separate role.\"\"\"\n+    return (\n+        speculative_config is not None\n+        and speculative_config.method in WEIGHT_CACHE_DRAFT_METHODS\n+        and speculative_config.draft_model_config is not None\n+    )\n+\n+\n+def normalize_draft_model_idx(draft_model_idx: int | None) -> int:\n+    return -1 if draft_model_idx is None else draft_model_idx\n+\n+\n+def format_daemon_role(\n+    is_draft_model: bool = False, draft_model_idx: int | None = None\n+) -> str:\n+    \"\"\"Socket-name suffix distinguishing the draft daemon group from the target.\"\"\"\n+    if not is_draft_model:\n+        return \"\"\n+    return f\"_draft{draft_model_idx if draft_model_idx is not None else 0}\"\n+\n+\n+def get_socket_path(\n+    gpu_uuid: str,\n+    socket_dir: str | None = None,\n+    *,\n+    is_draft_model: bool = False,\n+    draft_model_idx: int | None = None,\n+) -> str:\n     directory = get_socket_dir(socket_dir)\n-    return os.path.join(directory, SOCKET_NAME_TEMPLATE.format(gpu_uuid=gpu_uuid))\n+    return os.path.join(\n+        directory,\n+        SOCKET_NAME_TEMPLATE.format(\n+            gpu_uuid=gpu_uuid,\n+            role=format_daemon_role(is_draft_model, draft_model_idx),\n+        ),\n+    )",
+    "path": "vllm/model_executor/model_loader/weight_cache/protocol.py",
+    "commit_id": "9d0ad0c0a68ecbeddf025150e0d991c796d29b40",
+    "original_commit_id": "e5d0102f88f019a921888ec22bbe6a36736e88af",
+    "user": {
+      "login": "Isotr0py",
+      "id": 41363108,
+      "node_id": "MDQ6VXNlcjQxMzYzMTA4",
+      "avatar_url": "https://avatars.githubusercontent.com/u/41363108?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/Isotr0py",
+      "html_url": "https://github.com/Isotr0py",
+      "followers_url": "https://api.github.com/users/Isotr0py/followers",
+      "following_url": "https://api.github.com/users/Isotr0py/following{/other_user}",
+      "gists_url": "https://api.github.com/users/Isotr0py/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/Isotr0py/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/Isotr0py/subscriptions",
+      "organizations_url": "https://api.github.com/users/Isotr0py/orgs",
+      "repos_url": "https://api.github.com/users/Isotr0py/repos",
+      "events_url": "https://api.github.com/users/Isotr0py/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/Isotr0py/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "I feel `is_draft_model` is a bit redundant here, I think we can treat `draft_model_idx=None` as not a draft model here.",
+    "created_at": "2026-09-19T08:13:01Z",
+    "updated_at": "2026-09-19T08:13:27Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57312#discussion_r4052637380",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57312",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4052637380"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57312#discussion_r4052637380"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57312"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4052637380/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": 134,
+    "original_start_line": 172,
+    "start_side": "RIGHT",
+    "line": 149,
+    "original_line": 186,
+    "side": "RIGHT",
+    "author_association": "MEMBER",
+    "original_position": 87,
+    "position": 49,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4056818964",
+    "pull_request_review_id": 5260449802,
+    "id": 4056818964,
+    "node_id": "PRRC_kwDOI7xefs7xziUU",
+    "diff_hunk": "@@ -128,9 +128,62 @@ def get_socket_dir(socket_dir: str | None = None) -> str:\n     )\n \n \n-def get_socket_path(gpu_uuid: str, socket_dir: str | None = None) -> str:\n+# Speculative methods whose draft model the daemon caches in its own group.\n+# Other drafts keep loading from disk in the engine.\n+WEIGHT_CACHE_DRAFT_METHODS = frozenset({\"mtp\", \"eagle\", \"eagle3\"})\n+\n+# Python-side flags that weight loading sets on EAGLE-style drafts; the engine\n+# never runs load_weights for cached models, so the daemon ships them.\n+EXPORTED_MODEL_ATTRS = (\"has_own_embed_tokens\", \"has_own_lm_head\")\n+\n+\n+def export_model_attrs(model: Any) -> dict[str, bool]:\n+    return {\n+        name: bool(getattr(model, name))\n+        for name in EXPORTED_MODEL_ATTRS\n+        if hasattr(model, name)\n+    }\n+\n+\n+def caches_draft_model(\n+    speculative_config: SpeculativeConfig | None,\n+) -> TypeGuard[SpeculativeConfig]:\n+    \"\"\"Whether the daemon serves the speculative draft as a separate role.\"\"\"\n+    return (\n+        speculative_config is not None\n+        and speculative_config.method in WEIGHT_CACHE_DRAFT_METHODS\n+        and speculative_config.draft_model_config is not None\n+    )\n+\n+\n+def normalize_draft_model_idx(draft_model_idx: int | None) -> int:\n+    return -1 if draft_model_idx is None else draft_model_idx\n+\n+\n+def format_daemon_role(\n+    is_draft_model: bool = False, draft_model_idx: int | None = None\n+) -> str:\n+    \"\"\"Socket-name suffix distinguishing the draft daemon group from the target.\"\"\"\n+    if not is_draft_model:\n+        return \"\"\n+    return f\"_draft{draft_model_idx if draft_model_idx is not None else 0}\"\n+\n+\n+def get_socket_path(\n+    gpu_uuid: str,\n+    socket_dir: str | None = None,\n+    *,\n+    is_draft_model: bool = False,\n+    draft_model_idx: int | None = None,\n+) -> str:\n     directory = get_socket_dir(socket_dir)\n-    return os.path.join(directory, SOCKET_NAME_TEMPLATE.format(gpu_uuid=gpu_uuid))\n+    return os.path.join(\n+        directory,\n+        SOCKET_NAME_TEMPLATE.format(\n+            gpu_uuid=gpu_uuid,\n+            role=format_daemon_role(is_draft_model, draft_model_idx),\n+        ),\n+    )",
+    "path": "vllm/model_executor/model_loader/weight_cache/protocol.py",
+    "commit_id": "9d0ad0c0a68ecbeddf025150e0d991c796d29b40",
+    "original_commit_id": "e5d0102f88f019a921888ec22bbe6a36736e88af",
+    "user": {
+      "login": "liusy58",
+      "id": 45984215,
+      "node_id": "MDQ6VXNlcjQ1OTg0MjE1",
+      "avatar_url": "https://avatars.githubusercontent.com/u/45984215?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/liusy58",
+      "html_url": "https://github.com/liusy58",
+      "followers_url": "https://api.github.com/users/liusy58/followers",
+      "following_url": "https://api.github.com/users/liusy58/following{/other_user}",
+      "gists_url": "https://api.github.com/users/liusy58/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/liusy58/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/liusy58/subscriptions",
+      "organizations_url": "https://api.github.com/users/liusy58/orgs",
+      "repos_url": "https://api.github.com/users/liusy58/repos",
+      "events_url": "https://api.github.com/users/liusy58/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/liusy58/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "done",
+    "created_at": "2026-09-20T11:20:52Z",
+    "updated_at": "2026-09-20T11:20:52Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57312#discussion_r4056818964",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57312",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4056818964"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57312#discussion_r4056818964"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57312"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4056818964/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": 134,
+    "original_start_line": 172,
+    "start_side": "RIGHT",
+    "line": 149,
+    "original_line": 186,
+    "side": "RIGHT",
+    "in_reply_to_id": 4052637380,
+    "author_association": "CONTRIBUTOR",
+    "original_position": 87,
+    "position": 49,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4056819056",
+    "pull_request_review_id": 5260449883,
+    "id": 4056819056,
+    "node_id": "PRRC_kwDOI7xefs7xziVw",
+    "diff_hunk": "@@ -34,6 +40,35 @@\n logger = init_logger(__name__)\n \n \n+def get_draft_load_config(vllm_config: VllmConfig) -> LoadConfig:\n+    \"\"\"Load config for the speculative draft model.\n+\n+    An explicit ``draft_load_config`` always wins. Otherwise the draft inherits\n+    the target's load config, except under ``ipc_cache``: a cached draft\n+    (MTP, EAGLE, EAGLE3) is routed to the daemon's draft group, and any other\n+    draft falls back to disk loading instead of being sent to the target\n+    daemon with a mismatching fingerprint.\n+    \"\"\"\n+    from vllm.model_executor.model_loader.weight_cache.protocol import (\n+        caches_draft_model,\n+    )",
+    "path": "vllm/model_executor/model_loader/utils.py",
+    "commit_id": "42a33abaa13c649dc8bcd4e1bffa7db6d98727c4",
+    "original_commit_id": "e5d0102f88f019a921888ec22bbe6a36736e88af",
+    "user": {
+      "login": "liusy58",
+      "id": 45984215,
+      "node_id": "MDQ6VXNlcjQ1OTg0MjE1",
+      "avatar_url": "https://avatars.githubusercontent.com/u/45984215?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/liusy58",
+      "html_url": "https://github.com/liusy58",
+      "followers_url": "https://api.github.com/users/liusy58/followers",
+      "following_url": "https://api.github.com/users/liusy58/following{/other_user}",
+      "gists_url": "https://api.github.com/users/liusy58/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/liusy58/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/liusy58/subscriptions",
+      "organizations_url": "https://api.github.com/users/liusy58/orgs",
+      "repos_url": "https://api.github.com/users/liusy58/repos",
+      "events_url": "https://api.github.com/users/liusy58/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/liusy58/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "done",
+    "created_at": "2026-09-20T11:20:55Z",
+    "updated_at": "2026-09-20T11:20:55Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57312#discussion_r4056819056",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57312",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4056819056"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57312#discussion_r4056819056"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57312"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4056819056/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 54,
+    "side": "RIGHT",
+    "in_reply_to_id": 4052632577,
+    "author_association": "CONTRIBUTOR",
+    "original_position": 30,
+    "position": 1,
+    "subject_type": "line"
+  }
+]

@@ -1,0 +1,20 @@
+{
+  "structural_valid": true,
+  "visual_review_required": true,
+  "source_semantic_review_required_for_live_run": true,
+  "report_sha256": "e49f34c969700e9843ec4c57c092638f1066db22891c834fe87278e13a53e6e6",
+  "counts": {
+    "all_prs": 52,
+    "bugfix": 28,
+    "optimization": 18,
+    "feature_interface": 16
+  },
+  "five_category": {
+    "平台差异可借鉴": 9,
+    "收益不明确待验证": 5,
+    "直接继承": 2,
+    "收益明确待适配": 2
+  },
+  "sample_comparison": true,
+  "production_state_modified": false
+}

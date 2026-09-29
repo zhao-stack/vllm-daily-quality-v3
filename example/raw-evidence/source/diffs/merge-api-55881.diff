@@ -1,0 +1,784 @@
+diff --git a/.buildkite/intel_jobs/misc_intel.yaml b/.buildkite/intel_jobs/misc_intel.yaml
+index 39b61b3f7d90..5fa4d833d7f0 100644
+--- a/.buildkite/intel_jobs/misc_intel.yaml
++++ b/.buildkite/intel_jobs/misc_intel.yaml
+@@ -2,6 +2,34 @@ group: Miscellaneous Intel
+ depends_on:
+   - image-build-xpu
+ steps:
++- label: XPU Batch Invariance
++  key: xpu-batch-invariance
++  timeout_in_minutes: 60
++  num_devices: 2
++  device: intel_gpu
++  agent_tags:
++    label: production
++    gpu: 2+
++    mem: 24+
++  no_plugin: true
++  working_dir: "."
++  env:
++    REGISTRY: "public.ecr.aws/q9t5s3a7"
++    REPO: "vllm-ci-test-repo"
++    VLLM_TEST_DEVICE: "xpu"
++  source_file_dependencies:
++    - vllm/
++    - tests/v1/determinism/test_xpu_batch_invariant_ut.py
++    - .buildkite/scripts/hardware_ci/run-xpu-batch-invariance.sh
++    - .buildkite/intel_jobs/misc_intel.yaml
++  commands:
++    - >-
++      bash .buildkite/scripts/hardware_ci/run-intel-test.sh
++      'export VLLM_BATCH_INVARIANT=1 &&
++      cd tests &&
++      pytest -v -s v1/determinism/test_xpu_batch_invariant_ut.py &&
++      bash ../.buildkite/scripts/hardware_ci/run-xpu-batch-invariance.sh'
++
+ - label: V1 Core + KV + Metrics
+   key: v1-core-kv-metrics-intel
+   timeout_in_minutes: 45
+@@ -290,4 +318,4 @@ steps:
+     - >-
+       bash .buildkite/scripts/hardware_ci/run-intel-test.sh
+       'cd tests &&
+-      pytest -v -s compile/passes/test_qk_norm_rope_fusion.py'
+\ No newline at end of file
++      pytest -v -s compile/passes/test_qk_norm_rope_fusion.py'
+diff --git a/.buildkite/scripts/hardware_ci/run-xpu-batch-invariance.sh b/.buildkite/scripts/hardware_ci/run-xpu-batch-invariance.sh
+new file mode 100755
+index 000000000000..4a8e41d580b7
+--- /dev/null
++++ b/.buildkite/scripts/hardware_ci/run-xpu-batch-invariance.sh
+@@ -0,0 +1,243 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../../.." && pwd)"
++
++model="ibm-research/PowerMoE-3b"
++port=8000
++num_decode_tokens=128
++server_pid=
++server_log=
++
++# XPU MoE kernels may not safely handle the -1 routes emitted for padding.
++export VLLM_MOE_SKIP_PADDING=0
++
++cd "$repo_root"
++
++cleanup_server() {
++    local attempt
++
++    if [[ -n "$server_pid" ]] && kill -0 "$server_pid" 2>/dev/null; then
++        kill "$server_pid" 2>/dev/null || true
++
++        for ((attempt = 0; attempt < 30; attempt++)); do
++            if ! kill -0 "$server_pid" 2>/dev/null; then
++                break
++            fi
++            sleep 1
++        done
++
++        if kill -0 "$server_pid" 2>/dev/null; then
++            echo "vLLM did not stop after 30 seconds; sending SIGKILL" >&2
++            kill -KILL "$server_pid" 2>/dev/null || true
++        fi
++
++        wait "$server_pid" 2>/dev/null || true
++    fi
++
++    server_pid=
++}
++
++on_exit() {
++    local status=$?
++
++    cleanup_server
++    if [[ "$status" -ne 0 && -n "$server_log" && -f "$server_log" ]]; then
++        if command -v buildkite-agent >/dev/null 2>&1; then
++            buildkite-agent artifact upload "$server_log" ||
++                echo "Failed to upload $server_log as a Buildkite artifact" >&2
++        fi
++    fi
++    [[ -z "$server_log" ]] || rm -f "$server_log"
++    exit "$status"
++}
++trap on_exit EXIT
++
++wait_for_server() {
++    for _ in $(seq 1 600); do
++        if curl -sf "http://127.0.0.1:$port/health" >/dev/null; then
++            return
++        fi
++        if ! kill -0 "$server_pid" 2>/dev/null; then
++            echo "vLLM exited before becoming healthy; see the server log above." >&2
++            return 1
++        fi
++        sleep 1
++    done
++    echo "Timed out waiting for vLLM server health check" >&2
++    return 1
++}
++
++request_outputs() {
++    local prompts_json=$1
++    local expected_choices=$2
++    local response
++
++    response=$(printf \
++        '{"model":"%s","prompt":%s,"temperature":0.7,"top_p":0.95,"seed":0,"max_tokens":%s,"logprobs":64,"ignore_eos":true,"return_token_ids":true}' \
++        "$model" "$prompts_json" "$num_decode_tokens" |
++        curl --fail --silent --show-error \
++            --max-time 1200 \
++            "http://127.0.0.1:$port/v1/completions" \
++            -H "Content-Type: application/json" \
++            --data-binary @-)
++
++    local -a token_id_arrays logprob_arrays
++    mapfile -t token_id_arrays < <(
++        grep -o '"token_ids":\[[^]]*\]' <<<"$response" |
++            sed 's/^"token_ids":\[//; s/\]$//'
++    )
++    mapfile -t logprob_arrays < <(
++        grep -o '"token_logprobs":\[[^]]*\]' <<<"$response" |
++            sed 's/^"token_logprobs":\[//; s/\]$//'
++    )
++    if [[ "${#token_id_arrays[@]}" -ne "$expected_choices" ]] ||
++        [[ "${#logprob_arrays[@]}" -ne "$expected_choices" ]]; then
++        echo "Expected $expected_choices choices with token IDs and logits" >&2
++        return 1
++    fi
++    local index
++    local array
++    local value
++    local -a values
++    for index in "${!logprob_arrays[@]}"; do
++        array="${logprob_arrays[index]}"
++        IFS=, read -r -a values <<<"$array"
++        if [[ "${#values[@]}" -ne "$num_decode_tokens" ]]; then
++            echo "Completion returned an unexpected number of decode steps" >&2
++            return 1
++        fi
++        IFS=, read -r -a values <<<"${token_id_arrays[index]}"
++        if [[ "${#values[@]}" -ne "$num_decode_tokens" ]]; then
++            echo "Completion returned an unexpected number of generated tokens" >&2
++            return 1
++        fi
++        for value in "${values[@]}"; do
++            if [[ ! "$value" =~ ^[0-9]+$ ]]; then
++                echo "Completion returned an invalid token ID" >&2
++                return 1
++            fi
++        done
++        IFS=, read -r -a values <<<"$array"
++        for value in "${values[@]}"; do
++            if [[ ! "$value" =~ ^-?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?$ ]]; then
++                echo "Completion returned non-finite raw logits" >&2
++                return 1
++            fi
++        done
++        printf '%s|%s\n' "${token_id_arrays[index]}" "${logprob_arrays[index]}"
++    done
++}
++
++make_prompt() {
++    local length=$1
++    local offset=${2:-0}
++    local i
++    local prompt="Use the following system-design context to answer the question. Scenario $offset:"
++    for ((i = 0; i < length; i++)); do
++        prompt+=" context"
++    done
++    prompt+="\\n\\nQuestion: How should batch-invariant inference behave when this same request is decoded alongside unrelated requests?\\nAnswer:"
++    printf '"%s"' "$prompt"
++}
++
++first_difference() {
++    local actual=$1
++    local expected=$2
++    local position=$3
++    local actual_tokens=${actual%%|*}
++    local expected_tokens=${expected%%|*}
++    local actual_logits=${actual#*|}
++    local expected_logits=${expected#*|}
++    local -a actual_token_values
++    local -a expected_token_values
++    local -a actual_logit_values
++    local -a expected_logit_values
++    local step
++
++    IFS=, read -r -a actual_token_values <<<"$actual_tokens"
++    IFS=, read -r -a expected_token_values <<<"$expected_tokens"
++    IFS=, read -r -a actual_logit_values <<<"$actual_logits"
++    IFS=, read -r -a expected_logit_values <<<"$expected_logits"
++    for ((step = 0; step < num_decode_tokens; step++)); do
++        if [[ "${actual_token_values[step]}" != "${expected_token_values[step]}" ]]; then
++            printf 'batch position %s: step=%s, baseline token=%s, actual token=%s' \
++                "$position" \
++                "$step" \
++                "${expected_token_values[step]}" \
++                "${actual_token_values[step]}"
++            return
++        fi
++        if [[ "${actual_logit_values[step]}" != "${expected_logit_values[step]}" ]]; then
++            printf 'batch position %s: step=%s, token=%s, baseline logit=%s, actual logit=%s' \
++                "$position" \
++                "$step" \
++                "${expected_token_values[step]}" \
++                "${expected_logit_values[step]}" \
++                "${actual_logit_values[step]}"
++            return
++        fi
++    done
++}
++
++run_e2e() {
++    local needle
++    local batch
++    local baseline_output
++    local batch_response
++    local difference
++    local position
++    local -a fillers
++    local -a batch_outputs
++    local -a differences=()
++
++    echo "Testing PowerMoE-3b: TP=2, VLLM_BATCH_INVARIANT=1, VLLM_MOE_SKIP_PADDING=0"
++    server_log=$(mktemp "${TMPDIR:-/tmp}/xpu-batch-invariance.XXXXXX.log")
++    VLLM_BATCH_INVARIANT=1 vllm serve "$model" \
++        --tensor-parallel-size 2 \
++        --max-model-len 1024 \
++        --max-num-seqs 16 \
++        --max-num-batched-tokens 512 \
++        --enable-chunked-prefill \
++        --no-enable-prefix-caching \
++        --enforce-eager \
++        --seed 0 \
++        --max-logprobs 64 \
++        --logprobs-mode raw_logits \
++        --port "$port" > >(tee "$server_log") 2>&1 &
++    server_pid=$!
++    wait_for_server
++
++    needle=$(make_prompt 257)
++    local filler_lengths=(7 31 63 95 127 159 191 223 255 287 319 383 447)
++    for position in "${!filler_lengths[@]}"; do
++        fillers+=( "$(make_prompt "${filler_lengths[position]}" "$((position + 1))")" )
++    done
++    batch="[$needle,${fillers[0]},${fillers[1]},${fillers[2]},${fillers[3]},${fillers[4]},${fillers[5]},$needle,${fillers[6]},${fillers[7]},${fillers[8]},${fillers[9]},${fillers[10]},${fillers[11]},${fillers[12]},$needle]"
++
++    echo "Requesting BS=1 baseline ($num_decode_tokens decode tokens)..."
++    baseline_output=$(request_outputs "$needle" 1)
++    echo "Received BS=1 baseline."
++    echo "Requesting BS=16 batch ($((16 * num_decode_tokens)) decode tokens)..."
++    batch_response=$(request_outputs "$batch" 16)
++    mapfile -t batch_outputs <<<"$batch_response"
++    echo "Received BS=16 batch; comparing generated tokens and logits..."
++
++    for position in 0 7 15; do
++        difference=$(first_difference "${batch_outputs[position]}" "$baseline_output" "$position")
++        if [[ -n "$difference" ]]; then
++            differences+=("$difference")
++        fi
++    done
++
++    if [[ "${#differences[@]}" -ne 0 ]]; then
++        echo "Batch-invariant PowerMoE-3b output changed: ${differences[*]}" >&2
++        return 1
++    fi
++    echo "PowerMoE-3b batch invariance check passed"
++    cleanup_server
++    rm -f "$server_log"
++    server_log=
++}
++
++run_e2e
+diff --git a/tests/v1/determinism/test_xpu_batch_invariant_ut.py b/tests/v1/determinism/test_xpu_batch_invariant_ut.py
+new file mode 100644
+index 000000000000..53e778ac0dfd
+--- /dev/null
++++ b/tests/v1/determinism/test_xpu_batch_invariant_ut.py
+@@ -0,0 +1,228 @@
++# SPDX-License-Identifier: Apache-2.0
++# SPDX-FileCopyrightText: Copyright contributors to the vLLM project
++"""XPU-only batch-invariance tests for norm, collectives, and sampler behavior."""
++
++import pytest
++import torch
++
++from vllm import envs
++from vllm.config import CacheConfig, LoadConfig, ModelConfig, VllmConfig
++from vllm.distributed.device_communicators.xpu_communicator import XpuCommunicator
++from vllm.platforms import current_platform
++
++pytestmark = pytest.mark.skipif(
++    not current_platform.is_xpu(), reason="XPU batch-invariance tests"
++)
++
++
++@pytest.fixture
++def tiny_qwen3_moe_path(tmp_path):
++    """Create a local Qwen3-MoE config for dummy-loading tests."""
++    from transformers import Qwen3MoeConfig
++
++    config = Qwen3MoeConfig(
++        architectures=["Qwen3MoeForCausalLM"],
++        vocab_size=256,
++        hidden_size=512,
++        intermediate_size=1024,
++        moe_intermediate_size=512,
++        num_hidden_layers=2,
++        num_attention_heads=4,
++        num_key_value_heads=2,
++        head_dim=128,
++        num_experts=4,
++        num_experts_per_tok=2,
++        max_position_embeddings=512,
++        bos_token_id=1,
++        eos_token_id=2,
++        tie_word_embeddings=False,
++    )
++    config.save_pretrained(tmp_path)
++    return tmp_path
++
++
++@pytest.mark.parametrize("source", ["argument", "checkpoint"])
++def test_rejects_weight_quantization(tiny_qwen3_moe_path, source):
++    """Reject both explicit and checkpoint-inferred quantization before loading."""
++    from transformers import Qwen3MoeConfig
++
++    if source == "checkpoint":
++        config = Qwen3MoeConfig.from_pretrained(tiny_qwen3_moe_path)
++        config.quantization_config = {
++            "quant_method": "fp8",
++            "activation_scheme": "dynamic",
++        }
++        config.save_pretrained(tiny_qwen3_moe_path)
++
++    model_config = ModelConfig(
++        model=str(tiny_qwen3_moe_path),
++        skip_tokenizer_init=True,
++        dtype="bfloat16",
++        quantization="fp8" if source == "argument" else None,
++    )
++    assert model_config.quantization == "fp8"
++    with pytest.raises(ValueError, match="supports only unquantized models"):
++        VllmConfig(
++            model_config=model_config,
++            load_config=LoadConfig(load_format="dummy"),
++        )
++
++
++@pytest.mark.parametrize("cache_dtype", ["fp8", "int8_per_token_head", "nvfp4"])
++def test_rejects_quantized_kv_cache(cache_dtype):
++    with pytest.raises(ValueError, match="does not support quantized KV caches"):
++        VllmConfig(cache_config=CacheConfig(cache_dtype=cache_dtype))
++
++
++@pytest.mark.parametrize("cache_dtype", ["auto", "float16", "bfloat16"])
++def test_accepts_unquantized_kv_cache(cache_dtype):
++    config = VllmConfig(cache_config=CacheConfig(cache_dtype=cache_dtype))
++    assert config.cache_config.cache_dtype == cache_dtype
++
++
++def test_quantized_kv_cache_allowed_without_batch_invariance(monkeypatch):
++    monkeypatch.setattr(envs, "VLLM_BATCH_INVARIANT", False)
++    config = VllmConfig(cache_config=CacheConfig(cache_dtype="fp8"))
++    assert config.cache_config.cache_dtype == "fp8"
++
++
++# These dimensions and seeds locally reproduce non-invariant norm mismatches.
++# They make the invariant equality assertion exercise a discriminating case.
++@pytest.mark.parametrize(
++    (
++        "norm_name",
++        "batch_size",
++        "hidden_size",
++        "position",
++        "weight_seed",
++        "input_seed",
++        "input_pattern",
++    ),
++    [
++        ("rms", 1024, 16384, 512, 7, 42, "normal"),
++        ("gemma", 257, 8192, 255, 1, 2, "normal"),
++        ("rms", 5, 8192, 3, 7, 46, "scaled"),
++        ("gemma", 5, 8192, 3, 1, 46, "scaled"),
++    ],
++)
++def test_residual_norm_preserves_batch_invariance(
++    norm_name,
++    batch_size,
++    hidden_size,
++    position,
++    weight_seed,
++    input_seed,
++    input_pattern,
++    monkeypatch,
++    default_vllm_config,
++):
++    """Residual norm output must not change when its row changes batch position."""
++    from vllm.model_executor.determinism.batch_invariant import init_batch_invariance
++    from vllm.model_executor.layers.layernorm import GemmaRMSNorm, RMSNorm
++
++    monkeypatch.setattr(envs, "VLLM_BATCH_INVARIANT", True)
++    init_batch_invariance()
++    norm_cls = RMSNorm if norm_name == "rms" else GemmaRMSNorm
++    norm = norm_cls(hidden_size, eps=1e-6).to(device="xpu", dtype=torch.bfloat16)
++    with torch.no_grad():
++        torch.manual_seed(weight_seed)
++        norm.weight.uniform_(-0.5, 0.5)
++
++    if input_pattern == "scaled":
++        # Heterogeneous columns expose native mean's batch-dependent rounding.
++        generator = torch.Generator(device="cpu").manual_seed(input_seed)
++        scale = torch.randn(hidden_size, generator=generator).exp()
++        x = (torch.randn(batch_size, hidden_size, generator=generator) * scale).to(
++            device="xpu", dtype=torch.bfloat16
++        )
++        residual = (
++            torch.randn(batch_size, hidden_size, generator=generator) * scale
++        ).to(device="xpu", dtype=torch.bfloat16)
++    else:
++        torch.manual_seed(input_seed)
++        x = torch.randn(batch_size, hidden_size, device="xpu", dtype=torch.bfloat16)
++        residual = torch.randn_like(x)
++
++    single_output, single_residual = norm(
++        x[position : position + 1].clone(),
++        residual[position : position + 1].clone(),
++    )
++    batch_output, batch_residual = norm(x.clone(), residual.clone())
++
++    assert torch.equal(single_output, batch_output[position : position + 1])
++    assert torch.equal(single_residual, batch_residual[position : position + 1])
++
++
++@pytest.mark.parametrize(
++    "operation", ["all_reduce", "reduce_scatter", "reduce_scatterv"]
++)
++@pytest.mark.parametrize("rank", range(4))
++def test_collectives_preserve_rank_order_and_partition(monkeypatch, operation, rank):
++    """Cancellation exposes reordered sums; mock ranks require no extra XPUs."""
++    from vllm.distributed.device_communicators import xpu_communicator
++
++    inputs = [
++        torch.full((8, 3), value, dtype=torch.float32, device="xpu")
++        for value in (1e20, -1e20, 3.0, 0.0)
++    ]
++    inputs[2].add_(torch.arange(24, device="xpu").reshape(8, 3))
++
++    def all_gather_single(output, input_, group):
++        torch.testing.assert_close(input_, inputs[rank].reshape(-1), rtol=0, atol=0)
++        output.copy_(torch.stack(inputs).reshape(-1))
++
++    monkeypatch.setattr(xpu_communicator.dist, "all_gather_single", all_gather_single)
++    communicator = XpuCommunicator.__new__(XpuCommunicator)
++    communicator.world_size = 4
++    communicator.rank_in_group = rank
++    communicator.device_group = object()
++    expected = inputs[0].clone()
++    for value in inputs[1:]:
++        expected.add_(value)
++    assert torch.equal(expected, inputs[2])
++
++    if operation == "all_reduce":
++        actual = communicator.all_reduce(inputs[rank])
++    elif operation == "reduce_scatter":
++        actual = communicator.reduce_scatter(inputs[rank], dim=0)
++        expected = expected.chunk(4)[rank]
++    else:
++        sizes = [1, 3, 2, 2]
++        actual = communicator.reduce_scatterv(inputs[rank], dim=0, sizes=sizes)
++        expected = expected.split(sizes)[rank]
++    torch.testing.assert_close(actual, expected, rtol=0, atol=0)
++
++
++# This batch size, vocabulary size, and positions locally reproduce an
++# unseeded non-invariant XPU sampler mismatch.
++@pytest.mark.parametrize("position", [0, 128, 255])
++def test_seeded_sampler_preserves_full_distribution_and_rng(position, monkeypatch):
++    """Moving a request must preserve its distribution and per-request RNG."""
++    from vllm.triton_utils import HAS_TRITON
++    from vllm.v1.sample.ops.topk_topp_sampler import TopKTopPSampler
++
++    assert HAS_TRITON, "XPU sampling must exercise the Triton top-k/top-p path"
++    monkeypatch.setattr(envs, "VLLM_XPU_USE_SAMPLER_KERNEL", True)
++    sampler = TopKTopPSampler(logprobs_mode="processed_logprobs")
++    torch.manual_seed(42)
++    logits = torch.randn(256, 8192, device="xpu", dtype=torch.float32)
++    single_rng = torch.Generator(device="xpu").manual_seed(123)
++    batch_rng = torch.Generator(device="xpu").manual_seed(123)
++    k = torch.full((256,), 32, dtype=torch.int32, device="xpu")
++    p = torch.full((256,), 0.9, device="xpu")
++    for _ in range(3):
++        single_token, single_logprobs = sampler(
++            logits[position : position + 1].clone(),
++            {0: single_rng},
++            k[position : position + 1],
++            p[position : position + 1],
++        )
++        batch_tokens, batch_logprobs = sampler(
++            logits.clone(), {position: batch_rng}, k, p
++        )
++        assert single_logprobs is not None and batch_logprobs is not None
++        torch.testing.assert_close(
++            single_logprobs[0], batch_logprobs[position], rtol=0, atol=0
++        )
++        assert single_token.item() == batch_tokens[position].item()
++        assert torch.equal(single_rng.get_state(), batch_rng.get_state())
+diff --git a/vllm/distributed/device_communicators/xpu_communicator.py b/vllm/distributed/device_communicators/xpu_communicator.py
+index e094f6fd50f3..7a5913754fbd 100644
+--- a/vllm/distributed/device_communicators/xpu_communicator.py
++++ b/vllm/distributed/device_communicators/xpu_communicator.py
+@@ -6,6 +6,7 @@
+ import torch.distributed as dist
+ from torch.distributed import ProcessGroup
+ 
++import vllm.envs as envs
+ from vllm.logger import init_logger
+ 
+ from .base_device_communicator import DeviceCommunicatorBase
+@@ -45,7 +46,25 @@ def __init__(
+                 self.all2all_manager = AgRsAll2AllManager(self.cpu_group)
+                 logger.info("Using AgRs manager on XPU device.")
+ 
++    def _fixed_rank_sum(self, input_: torch.Tensor) -> torch.Tensor:
++        flat_input = input_.reshape(-1)
++        gathered = torch.empty(
++            (self.world_size, flat_input.numel()),
++            dtype=input_.dtype,
++            device=input_.device,
++        )
++        dist.all_gather_single(gathered.view(-1), flat_input, group=self.device_group)
++        output = gathered[0].clone()
++        for rank in range(1, self.world_size):
++            output.add_(gathered[rank])
++        return output.view(input_.shape)
++
+     def all_reduce(self, input_: torch.Tensor) -> torch.Tensor:
++        if envs.VLLM_BATCH_INVARIANT:
++            # XCCL changes its reduction order with message size. Gather first
++            # and accumulate in rank order, independent of the token batch.
++            return self._fixed_rank_sum(input_)
++
+         output = input_.clone()
+         dist.all_reduce(output, group=self.device_group)
+         return output
+@@ -69,7 +88,12 @@ def reduce_scatter(self, input_: torch.Tensor, dim: int = -1):
+             output_shape, dtype=input_tensor.dtype, device=input_tensor.device
+         )
+ 
+-        dist.reduce_scatter_tensor(output, input_tensor, group=self.device_group)
++        if envs.VLLM_BATCH_INVARIANT:
++            reduced = self._fixed_rank_sum(input_tensor)
++            start = self.rank_in_group * chunk_size
++            output.copy_(reduced.narrow(0, start, chunk_size))
++        else:
++            dist.reduce_scatter_tensor(output, input_tensor, group=self.device_group)
+ 
+         # Reshape before returning
+         return output.movedim(0, dim).contiguous()
+@@ -99,7 +123,15 @@ def reduce_scatterv(
+         output = torch.empty(
+             output_shape, dtype=input_tensor.dtype, device=input_tensor.device
+         )
+-        if sizes is None or sizes.count(sizes[0]) == len(sizes):
++        if envs.VLLM_BATCH_INVARIANT:
++            reduced = self._fixed_rank_sum(input_tensor)
++            start = (
++                self.rank_in_group * chunk_size
++                if sizes is None
++                else sum(sizes[: self.rank_in_group])
++            )
++            output.copy_(reduced.narrow(0, start, chunk_size))
++        elif sizes is None or sizes.count(sizes[0]) == len(sizes):
+             dist.reduce_scatter_tensor(output, input_tensor, group=self.device_group)
+         elif torch.xpu.device_count() < self.world_size:
+             # uneven reduce_scatter is not supported when the
+@@ -191,7 +223,7 @@ def gather(
+             (self.world_size,) + input_size, dtype=input_.dtype, device=input_.device
+         )
+         # All-gather.
+-        dist.all_gather_into_tensor(output_tensor, input_, group=self.device_group)
++        dist.all_gather_single(output_tensor, input_, group=self.device_group)
+         if self.rank_in_group == dst:
+             # Reshape
+             output_tensor = output_tensor.movedim(0, dim)
+diff --git a/vllm/model_executor/determinism/batch_invariant.py b/vllm/model_executor/determinism/batch_invariant.py
+index 4d7fdb903dc0..08035d0e3842 100644
+--- a/vllm/model_executor/determinism/batch_invariant.py
++++ b/vllm/model_executor/determinism/batch_invariant.py
+@@ -1104,7 +1104,10 @@ def _triton_alloc_fn(size: int, alignment: int, stream: int | None):
+ 
+         _fp16_block_size_n = 128
+ 
+-    # Softmax, log_softmax, mean, and bmm are already batch-invariant on XPU
++    # Native mean can change reduction order with the row count on XPU too.
++    _batch_invariant_LIB.impl("aten::mean.dim", mean_batch_invariant, key)
++
++    # Softmax, log_softmax, and bmm are already batch-invariant on XPU
+     # (oneDNN backend produces bitwise-identical results regardless of batch
+     # context). Only register these overrides on CUDA where they are needed.
+     if not current_platform.is_xpu():
+@@ -1113,7 +1116,6 @@ def _triton_alloc_fn(size: int, alignment: int, stream: int | None):
+         )
+         _batch_invariant_LIB.impl("aten::softmax", softmax_batch_invariant, key)
+         _batch_invariant_LIB.impl("aten::_softmax", softmax_batch_invariant, key)
+-        _batch_invariant_LIB.impl("aten::mean.dim", mean_batch_invariant, key)
+         # torch 2.12+ registers a built-in Triton bmm kernel for CUDA
+         # (torch._native.ops.bmm_outer_product), so we need allow_override
+         # to replace it at the dispatcher level.
+diff --git a/vllm/model_executor/layers/fused_moe/oracle/unquantized.py b/vllm/model_executor/layers/fused_moe/oracle/unquantized.py
+index b9f90012f49e..2c84e532cc87 100644
+--- a/vllm/model_executor/layers/fused_moe/oracle/unquantized.py
++++ b/vllm/model_executor/layers/fused_moe/oracle/unquantized.py
+@@ -94,7 +94,13 @@ def _move_to_back(
+             _move_to_back(_AVAILABLE_BACKENDS, UnquantizedMoeBackend.FLASHINFER_CUTLASS)
+ 
+     elif current_platform.is_xpu():
+-        _AVAILABLE_BACKENDS = [UnquantizedMoeBackend.XPU]
++        # XPUExperts does not support batch invariance; TRITON is kept as a
++        # fallback so VLLM_BATCH_INVARIANT=1 still resolves to a valid
++        # (batch-invariant) backend on XPU.
++        _AVAILABLE_BACKENDS = [
++            UnquantizedMoeBackend.XPU,
++            UnquantizedMoeBackend.TRITON,
++        ]
+     elif current_platform.is_cpu():
+         _AVAILABLE_BACKENDS = [UnquantizedMoeBackend.CPU]
+     return _AVAILABLE_BACKENDS
+diff --git a/vllm/model_executor/layers/layernorm.py b/vllm/model_executor/layers/layernorm.py
+index a83dd100e693..551cd05d3be3 100644
+--- a/vllm/model_executor/layers/layernorm.py
++++ b/vllm/model_executor/layers/layernorm.py
+@@ -119,6 +119,14 @@ def forward_xpu(
+         x: torch.Tensor,
+         residual: torch.Tensor | None = None,
+     ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
++        if envs.VLLM_BATCH_INVARIANT and residual is not None:
++            assert self.variance_size_override is None, (
++                "Batch invariance is not supported for variance_size_override"
++            )
++            weight = self.weight.data if self.pass_weight_add else None
++            return ir.ops.fused_add_rms_norm.impls["native"].impl_fn(
++                x, residual, weight, self.variance_epsilon
++            )
+         return self.forward_cuda(x, residual)
+ 
+     def extra_repr(self) -> str:
+@@ -171,6 +179,15 @@ def forward_xpu(
+         x: torch.Tensor,
+         residual: torch.Tensor | None = None,
+     ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
++        if envs.VLLM_BATCH_INVARIANT:
++            if residual is None:
++                return self.forward_cuda(x, residual)
++            return ir.ops.fused_add_rms_norm.impls["native"].impl_fn(
++                x,
++                residual,
++                self.weight.float() + 1.0,
++                self.variance_epsilon,
++            )
+         import vllm._xpu_ops  # noqa: F401 registers torch.ops.vllm.xpu_gemma_rms_norm
+ 
+         # Fall back to the native path if the fused gemma kernels are not
+diff --git a/vllm/platforms/xpu.py b/vllm/platforms/xpu.py
+index 483c41197e1c..ac8489599c43 100644
+--- a/vllm/platforms/xpu.py
++++ b/vllm/platforms/xpu.py
+@@ -162,6 +162,25 @@ def get_attn_backend_cls(
+         if selected_backend == AttentionBackendEnum.TRITON_ATTN:
+             logger.info_once("Using Triton backend.")
+             return AttentionBackendEnum.TRITON_ATTN.get_path()
++        elif attn_selector_config.use_batch_invariant:
++            # Flash Attention on XPU has not been validated for batch
++            # invariance. Honor an explicit Flash Attention request;
++            # otherwise fall back to Triton Attention, which implements
++            # batch-invariant kernels.
++            if selected_backend == AttentionBackendEnum.FLASH_ATTN:
++                logger.warning_once(
++                    "Using Flash Attention on XPU with batch invariance "
++                    "enabled because it was explicitly requested. This "
++                    "backend has not been validated for batch invariance "
++                    "on XPU and may produce non-deterministic results "
++                    "across batch sizes."
++                )
++                return AttentionBackendEnum.FLASH_ATTN.get_path()
++            logger.info_once(
++                "VLLM_BATCH_INVARIANT is enabled. Using Triton Attention "
++                "backend on XPU, which implements batch-invariant kernels."
++            )
++            return AttentionBackendEnum.TRITON_ATTN.get_path()
+         elif attn_selector_config.use_mm_prefix:
+             # Flash Attention on XPU has no FA4 kernel, so it cannot apply the
+             # multimodal prefix-LM bidirectional mask. Honor an explicit Flash
+@@ -283,6 +302,27 @@ def check_and_update_config(cls, vllm_config: VllmConfig) -> None:
+         # lazy import to avoid circular import
+         from vllm.config import CUDAGraphMode
+ 
++        if envs.VLLM_BATCH_INVARIANT:
++            model_config = vllm_config.model_config
++            if model_config is not None and (
++                model_config.quantization is not None
++                or vllm_config.quant_config is not None
++            ):
++                raise ValueError(
++                    "XPU batch invariance currently supports only unquantized "
++                    f"models; got quantization={model_config.quantization!r}. "
++                    "Use an unquantized model or disable VLLM_BATCH_INVARIANT."
++                )
++
++            cache_dtype = vllm_config.cache_config.cache_dtype
++            if cache_dtype not in ("auto", "float16", "bfloat16"):
++                raise ValueError(
++                    "XPU batch invariance currently does not support quantized "
++                    f"KV caches; got kv_cache_dtype={cache_dtype!r}. "
++                    "Use an unquantized KV cache dtype or disable "
++                    "VLLM_BATCH_INVARIANT."
++                )
++
+         compilation_config = vllm_config.compilation_config
+         if compilation_config.compile_sizes is None:
+             compilation_config.compile_sizes = []
+diff --git a/vllm/sampling_params.py b/vllm/sampling_params.py
+index b91d47d3dee5..77dd91b6b62c 100644
+--- a/vllm/sampling_params.py
++++ b/vllm/sampling_params.py
+@@ -526,6 +526,16 @@ def __post_init__(self) -> None:
+ 
+         self._verify_args()
+ 
++        if (
++            envs.VLLM_BATCH_INVARIANT
++            and self.temperature >= _SAMPLING_EPS
++            and self.seed is None
++        ):
++            logger.warning_once(
++                "Random sampling without an explicit seed may not be batch "
++                "invariant. Set seed in SamplingParams or use temperature=0."
++            )
++
+         if self.temperature < _SAMPLING_EPS:
+             # Zero temperature means greedy sampling.
+             self.top_p = 1.0
+diff --git a/vllm/v1/sample/ops/topk_topp_sampler.py b/vllm/v1/sample/ops/topk_topp_sampler.py
+index dac855456814..2f051b676818 100644
+--- a/vllm/v1/sample/ops/topk_topp_sampler.py
++++ b/vllm/v1/sample/ops/topk_topp_sampler.py
+@@ -224,9 +224,14 @@ def __init__(
+             else:
+                 self.forward = self.forward_cpu
+         elif current_platform.is_xpu():
+-            if xpu_sampler_supported():
++            if xpu_sampler_supported() and not envs.VLLM_BATCH_INVARIANT:
+                 self.forward = self.forward_xpu
+             else:
++                if envs.VLLM_BATCH_INVARIANT:
++                    logger.info_once(
++                        "VLLM_BATCH_INVARIANT is enabled. Using the "
++                        "PyTorch-native sampler on XPU."
++                    )
+                 self.forward = self.forward_native
+         elif (
+             logprobs_mode not in PROCESSED_LOGPROBS_MODES

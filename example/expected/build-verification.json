@@ -1,0 +1,81 @@
+{
+  "valid": true,
+  "output": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\vLLM上游质量与优化分析_main-lys_V3_20260922_010058-20260923_010154.xlsx",
+  "template": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\template.xlsx",
+  "sheets": [
+    "优化点总表",
+    "行动清单(P0-P1)",
+    "跳过清单",
+    "精确代码复核",
+    "测试与收益",
+    "Review证据",
+    "流水线与版本",
+    "统计看板",
+    "上游Bugfix",
+    "上游功能接口",
+    "全部PR分析"
+  ],
+  "sheet_last_rows": {
+    "优化点总表": 22,
+    "行动清单(P0-P1)": 6,
+    "跳过清单": 5,
+    "精确代码复核": 22,
+    "测试与收益": 22,
+    "Review证据": 22,
+    "流水线与版本": 32,
+    "统计看板": 19,
+    "上游Bugfix": 36,
+    "上游功能接口": 20,
+    "全部PR分析": 56
+  },
+  "counts": {
+    "all_prs": 52,
+    "optimization": 18,
+    "bugfix": 28,
+    "feature_interface": 16,
+    "v3": {
+      "P2": 16,
+      "P1": 2
+    },
+    "optimization_five_category": {
+      "平台差异可借鉴": 9,
+      "收益不明确待验证": 5,
+      "直接继承": 2,
+      "收益明确待适配": 2
+    },
+    "bugfix_final": {
+      "需要适配": 2,
+      "直接继承修复": 10,
+      "不受影响": 15,
+      "待确认": 1
+    },
+    "feature_final": {
+      "直接继承": 3,
+      "当前不适用": 3,
+      "需要适配": 4,
+      "待验证": 6
+    }
+  },
+  "formula_error_scan_pre": "{\"kind\":\"notice\",\"message\":\"Cell search matched 0 entries.\"}",
+  "formula_error_scan_saved": "{\"kind\":\"notice\",\"message\":\"Cell search matched 0 entries.\"}",
+  "schema_validation": {
+    "valid": true,
+    "errors": [],
+    "record_count": 18,
+    "schema": "UpstreamOptimizationRecordV3"
+  },
+  "main2main_report": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\direct-source-review.json",
+  "renders": {
+    "优化点总表": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\renders\\优化点总表.png",
+    "行动清单(P0-P1)": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\renders\\行动清单(P0-P1).png",
+    "跳过清单": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\renders\\跳过清单.png",
+    "精确代码复核": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\renders\\精确代码复核.png",
+    "测试与收益": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\renders\\测试与收益.png",
+    "Review证据": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\renders\\Review证据.png",
+    "流水线与版本": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\renders\\流水线与版本.png",
+    "统计看板": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\renders\\统计看板.png",
+    "上游Bugfix": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\renders\\上游Bugfix.png",
+    "上游功能接口": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\renders\\上游功能接口.png",
+    "全部PR分析": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\renders\\全部PR分析.png"
+  }
+}

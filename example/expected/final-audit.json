@@ -1,0 +1,42 @@
+{
+  "valid": true,
+  "report_path": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\20260922_010058-20260923_010154\\vLLM上游质量与优化分析_main-lys_V3_20260922_010058-20260923_010154.xlsx",
+  "report_sha256": "9DDDD8CBEBF6EC4A7A8E5FCBC6F23574C98254891197FB321570858EAF569518",
+  "sheets": [
+    "优化点总表",
+    "行动清单(P0-P1)",
+    "跳过清单",
+    "精确代码复核",
+    "测试与收益",
+    "Review证据",
+    "流水线与版本",
+    "统计看板",
+    "上游Bugfix",
+    "全部PR分析",
+    "上游功能接口"
+  ],
+  "all_pr_count": 52,
+  "bugfix_count": 28,
+  "optimization_count": 18,
+  "feature_interface_count": 16,
+  "excluded_ids": [
+    57910,
+    58050,
+    58084,
+    58166
+  ],
+  "formula_count": 21,
+  "errors": 0,
+  "warnings": 0,
+  "checks": [
+    "exact mergedAt [start,cutoff)",
+    "unique PR coverage and contiguous main chain",
+    "all reviews collected",
+    "official pinned schema assertions with negative tests",
+    "quality skill strict validator",
+    "11-sheet and row-ID reconciliation",
+    "forbidden Bugfix columns absent",
+    "formula cache values and dashboard reconciliation",
+    "no Excel error cells or object serialization artifacts"
+  ]
+}

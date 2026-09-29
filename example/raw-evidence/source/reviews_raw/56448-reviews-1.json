@@ -1,0 +1,162 @@
+[
+  {
+    "id": 5181268403,
+    "node_id": "PRR_kwDOI7xefs8AAAABNNPhsw",
+    "user": {
+      "login": "claude[bot]",
+      "id": 209825114,
+      "node_id": "BOT_kgDODIGtWg",
+      "avatar_url": "https://avatars.githubusercontent.com/in/1236702?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/claude%5Bbot%5D",
+      "html_url": "https://github.com/apps/claude",
+      "followers_url": "https://api.github.com/users/claude%5Bbot%5D/followers",
+      "following_url": "https://api.github.com/users/claude%5Bbot%5D/following{/other_user}",
+      "gists_url": "https://api.github.com/users/claude%5Bbot%5D/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/claude%5Bbot%5D/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/claude%5Bbot%5D/subscriptions",
+      "organizations_url": "https://api.github.com/users/claude%5Bbot%5D/orgs",
+      "repos_url": "https://api.github.com/users/claude%5Bbot%5D/repos",
+      "events_url": "https://api.github.com/users/claude%5Bbot%5D/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/claude%5Bbot%5D/received_events",
+      "type": "Bot",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "## Claude Code Review\n\nThis pull request is from a fork — automated review is disabled. A repository maintainer can comment `@claude review` to run a one-time review.",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/56448#pullrequestreview-5181268403",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/56448",
+    "author_association": "NONE",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/56448#pullrequestreview-5181268403"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/56448"
+      }
+    },
+    "submitted_at": "2026-09-11T16:48:08Z",
+    "commit_id": null
+  },
+  {
+    "id": 5253280532,
+    "node_id": "PRR_kwDOI7xefs8AAAABOR6zFA",
+    "user": {
+      "login": "TheEpicDolphin",
+      "id": 32987265,
+      "node_id": "MDQ6VXNlcjMyOTg3MjY1",
+      "avatar_url": "https://avatars.githubusercontent.com/u/32987265?u=d7b16af6b44ca71acf8be1d158ece27e137fea6f&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/TheEpicDolphin",
+      "html_url": "https://github.com/TheEpicDolphin",
+      "followers_url": "https://api.github.com/users/TheEpicDolphin/followers",
+      "following_url": "https://api.github.com/users/TheEpicDolphin/following{/other_user}",
+      "gists_url": "https://api.github.com/users/TheEpicDolphin/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/TheEpicDolphin/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/TheEpicDolphin/subscriptions",
+      "organizations_url": "https://api.github.com/users/TheEpicDolphin/orgs",
+      "repos_url": "https://api.github.com/users/TheEpicDolphin/repos",
+      "events_url": "https://api.github.com/users/TheEpicDolphin/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/TheEpicDolphin/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "I like the direction of this fix. Ultimately, it's a dummy run problem. It's creating an invalid combination of `num_tokens` and `num_reqs` that would never be scheduled in practice. However, I think the fix can be scoped further to just `_dummy_run`. It has all the information it needs to re-derive a valid `num_reqs` for the given speculator. For example:\n\n```\nnum_reqs = min(num_tokens, self.max_num_reqs)\nif uniform_decode:\n    ...\nelif not skip_attn and self.speculator is not None:\n    num_reqs = min(\n        num_reqs, self.max_num_tokens // self.speculator.num_query_per_req\n    )\n```\n\nWhat are your thoughts on this approach instead?",
+    "state": "CHANGES_REQUESTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/56448#pullrequestreview-5253280532",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/56448",
+    "author_association": "COLLABORATOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/56448#pullrequestreview-5253280532"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/56448"
+      }
+    },
+    "submitted_at": "2026-09-18T22:50:40Z",
+    "commit_id": "f0968e1e21db5ac62fb6a4afc4dc3fd2752cf933"
+  },
+  {
+    "id": 5269978718,
+    "node_id": "PRR_kwDOI7xefs8AAAABOh1-Xg",
+    "user": {
+      "login": "TheEpicDolphin",
+      "id": 32987265,
+      "node_id": "MDQ6VXNlcjMyOTg3MjY1",
+      "avatar_url": "https://avatars.githubusercontent.com/u/32987265?u=d7b16af6b44ca71acf8be1d158ece27e137fea6f&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/TheEpicDolphin",
+      "html_url": "https://github.com/TheEpicDolphin",
+      "followers_url": "https://api.github.com/users/TheEpicDolphin/followers",
+      "following_url": "https://api.github.com/users/TheEpicDolphin/following{/other_user}",
+      "gists_url": "https://api.github.com/users/TheEpicDolphin/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/TheEpicDolphin/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/TheEpicDolphin/subscriptions",
+      "organizations_url": "https://api.github.com/users/TheEpicDolphin/orgs",
+      "repos_url": "https://api.github.com/users/TheEpicDolphin/repos",
+      "events_url": "https://api.github.com/users/TheEpicDolphin/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/TheEpicDolphin/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Thanks for the fix! LGTM",
+    "state": "APPROVED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/56448#pullrequestreview-5269978718",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/56448",
+    "author_association": "COLLABORATOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/56448#pullrequestreview-5269978718"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/56448"
+      }
+    },
+    "submitted_at": "2026-09-21T17:48:10Z",
+    "commit_id": "b054cb5386bddf3c31ce883ded7b3b5979ae5d96"
+  },
+  {
+    "id": 5274178983,
+    "node_id": "PRR_kwDOI7xefs8AAAABOl2Vpw",
+    "user": {
+      "login": "Isotr0py",
+      "id": 41363108,
+      "node_id": "MDQ6VXNlcjQxMzYzMTA4",
+      "avatar_url": "https://avatars.githubusercontent.com/u/41363108?u=cf740eef87baa3f65ebaa44f84e4c334ee4641cf&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/Isotr0py",
+      "html_url": "https://github.com/Isotr0py",
+      "followers_url": "https://api.github.com/users/Isotr0py/followers",
+      "following_url": "https://api.github.com/users/Isotr0py/following{/other_user}",
+      "gists_url": "https://api.github.com/users/Isotr0py/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/Isotr0py/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/Isotr0py/subscriptions",
+      "organizations_url": "https://api.github.com/users/Isotr0py/orgs",
+      "repos_url": "https://api.github.com/users/Isotr0py/repos",
+      "events_url": "https://api.github.com/users/Isotr0py/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/Isotr0py/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "APPROVED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/56448#pullrequestreview-5274178983",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/56448",
+    "author_association": "MEMBER",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/56448#pullrequestreview-5274178983"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/56448"
+      }
+    },
+    "submitted_at": "2026-09-22T04:36:22Z",
+    "commit_id": "b054cb5386bddf3c31ce883ded7b3b5979ae5d96"
+  }
+]

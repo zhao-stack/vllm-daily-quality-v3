@@ -1,0 +1,12 @@
+diff --git a/vllm/v1/worker/gpu/model_runner.py b/vllm/v1/worker/gpu/model_runner.py
+index 92a37008cebe8d3c38acc2ede852160f718f0a34..8be523d3de155946648c2f785063c1b1f442eddd 100644
+--- a/vllm/v1/worker/gpu/model_runner.py
++++ b/vllm/v1/worker/gpu/model_runner.py
+@@ -2245,6 +2245,7 @@ class GPUModelRunner(LoRAModelRunnerMixin):
+             self.aux_output_connector.close()
+         self.cudagraph_manager = None
+         self.fast_prefill = None
++        self.pooling_runner = None
+         if hasattr(self, "kv_caches"):
+             self.kv_caches.clear()
+         if hasattr(self, "attn_groups"):

@@ -1,0 +1,122 @@
+[
+  {
+    "id": 4891677131,
+    "node_id": "PRR_kwDOI7xefs8AAAABI5ERyw",
+    "user": {
+      "login": "claude[bot]",
+      "id": 209825114,
+      "node_id": "BOT_kgDODIGtWg",
+      "avatar_url": "https://avatars.githubusercontent.com/in/1236702?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/claude%5Bbot%5D",
+      "html_url": "https://github.com/apps/claude",
+      "followers_url": "https://api.github.com/users/claude%5Bbot%5D/followers",
+      "following_url": "https://api.github.com/users/claude%5Bbot%5D/following{/other_user}",
+      "gists_url": "https://api.github.com/users/claude%5Bbot%5D/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/claude%5Bbot%5D/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/claude%5Bbot%5D/subscriptions",
+      "organizations_url": "https://api.github.com/users/claude%5Bbot%5D/orgs",
+      "repos_url": "https://api.github.com/users/claude%5Bbot%5D/repos",
+      "events_url": "https://api.github.com/users/claude%5Bbot%5D/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/claude%5Bbot%5D/received_events",
+      "type": "Bot",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "## Claude Code Review\n\nThis pull request is from a fork — automated review is disabled. A repository maintainer can comment `@claude review` to run a one-time review.",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/51565#pullrequestreview-4891677131",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/51565",
+    "author_association": "NONE",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/51565#pullrequestreview-4891677131"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/51565"
+      }
+    },
+    "submitted_at": "2026-08-09T15:04:22Z",
+    "commit_id": null
+  },
+  {
+    "id": 4891687411,
+    "node_id": "PRR_kwDOI7xefs8AAAABI5E58w",
+    "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "node_id": "BOT_kgDOC98s_g",
+      "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+      "html_url": "https://github.com/apps/chatgpt-codex-connector",
+      "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+      "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+      "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+      "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+      "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+      "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+      "type": "Bot",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "\n### 💡 Codex Review\n\nHere are some automated review suggestions for this pull request.\n\n**Reviewed commit:** `dd47075673`\n    \n\n<details> <summary>ℹ️ About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\".\n\nIf Codex has suggestions, it will comment; otherwise it will react with 👍.\n\n\n\n\nCodex can also answer questions or update the PR. Try commenting \"@codex address that feedback\".\n            \n</details>",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/51565#pullrequestreview-4891687411",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/51565",
+    "author_association": "NONE",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/51565#pullrequestreview-4891687411"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/51565"
+      }
+    },
+    "submitted_at": "2026-08-09T15:09:38Z",
+    "commit_id": null
+  },
+  {
+    "id": 5269410396,
+    "node_id": "PRR_kwDOI7xefs8AAAABOhTSXA",
+    "user": {
+      "login": "ZJY0516",
+      "id": 86695626,
+      "node_id": "MDQ6VXNlcjg2Njk1NjI2",
+      "avatar_url": "https://avatars.githubusercontent.com/u/86695626?u=1b5a8599c7680ac60edf2fcdca3bc53b3ba12bb4&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/ZJY0516",
+      "html_url": "https://github.com/ZJY0516",
+      "followers_url": "https://api.github.com/users/ZJY0516/followers",
+      "following_url": "https://api.github.com/users/ZJY0516/following{/other_user}",
+      "gists_url": "https://api.github.com/users/ZJY0516/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/ZJY0516/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/ZJY0516/subscriptions",
+      "organizations_url": "https://api.github.com/users/ZJY0516/orgs",
+      "repos_url": "https://api.github.com/users/ZJY0516/repos",
+      "events_url": "https://api.github.com/users/ZJY0516/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/ZJY0516/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "LGTM after my change",
+    "state": "APPROVED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/51565#pullrequestreview-5269410396",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/51565",
+    "author_association": "MEMBER",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/51565#pullrequestreview-5269410396"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/51565"
+      }
+    },
+    "submitted_at": "2026-09-21T16:53:58Z",
+    "commit_id": "7398cfc9c0244b0f778cc609a8b4f13392473381"
+  }
+]

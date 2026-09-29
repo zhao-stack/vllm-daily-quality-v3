@@ -1,0 +1,71 @@
+[
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4024459517",
+    "pull_request_review_id": 5220856040,
+    "id": 4024459517,
+    "node_id": "PRRC_kwDOI7xefs7v4GD9",
+    "diff_hunk": "@@ -79,8 +80,29 @@ impl UnifiedParser for CombinedParser {\n             || self.tool.as_ref().is_some_and(|parser| parser.preserve_special_tokens())\n     }\n \n-    fn structural_tag_builder(&self) -> Option<&dyn StructuralTagBuilder> {\n-        self.tool.as_ref().and_then(|parser| parser.structural_tag_builder())\n+    fn build_output_grammar(\n+        &self,\n+        ctx: &OutputGrammarContext<'_>,\n+    ) -> output_grammar::Result<Option<BuiltOutputGrammar>> {\n+        let Some(tool) = self.tool.as_ref() else {\n+            return Ok(None);\n+        };\n+        let Some(visible) = tool.build_visible_format(ctx)? else {\n+            return Ok(None);\n+        };\n+        // The reasoning parser may wrap that language with the reasoning phase\n+        // implied by its initialized (prompt-derived) state. If it does, the\n+        // grammar describes the stream from the first generated token and the\n+        // engine can skip its own reasoning gate; if it declines, the grammar\n+        // covers only the final output and the engine gate stays in charge.\n+        let wrapped = match self.reasoning.as_ref() {\n+            Some(reasoning) => reasoning.wrap_visible_format(ctx, &visible)?,\n+            None => None,\n+        };\n+        Ok(Some(match wrapped {\n+            Some(full) => BuiltOutputGrammar::from_token_zero(full),\n+            None => BuiltOutputGrammar::final_output_only(visible),\n+        }))",
+    "path": "rust/src/parser/src/unified/combined.rs",
+    "commit_id": "d536f9ca7beaa47b3b9dd00a8201b55f87ffdd25",
+    "original_commit_id": "3137549a7eedb21c0c9823e08e820594ec7b9086",
+    "user": {
+      "login": "BugenZhao",
+      "id": 25862682,
+      "node_id": "MDQ6VXNlcjI1ODYyNjgy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/25862682?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/BugenZhao",
+      "html_url": "https://github.com/BugenZhao",
+      "followers_url": "https://api.github.com/users/BugenZhao/followers",
+      "following_url": "https://api.github.com/users/BugenZhao/following{/other_user}",
+      "gists_url": "https://api.github.com/users/BugenZhao/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/BugenZhao/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/BugenZhao/subscriptions",
+      "organizations_url": "https://api.github.com/users/BugenZhao/orgs",
+      "repos_url": "https://api.github.com/users/BugenZhao/repos",
+      "events_url": "https://api.github.com/users/BugenZhao/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/BugenZhao/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "In this PR, `reasoning.wrap_visible_format` always returns `None`, so we always return `BuiltOutputGrammar::final_output_only(visible)`, which is lowered to `reasoning_ended: None`. The backend therefore retains its current behavior of activating grammar masking only after detecting that reasoning has ended.",
+    "created_at": "2026-09-16T09:24:48Z",
+    "updated_at": "2026-09-16T09:24:48Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/55269#discussion_r4024459517",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/55269",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4024459517"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/55269#discussion_r4024459517"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/55269"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4024459517/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": 93,
+    "original_start_line": 93,
+    "start_side": "RIGHT",
+    "line": 105,
+    "original_line": 105,
+    "side": "RIGHT",
+    "author_association": "MEMBER",
+    "original_position": 39,
+    "position": 39,
+    "subject_type": "line"
+  }
+]

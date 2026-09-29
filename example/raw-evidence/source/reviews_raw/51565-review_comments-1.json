@@ -1,0 +1,71 @@
+[
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3744232754",
+    "pull_request_review_id": 4891687411,
+    "id": 3744232754,
+    "node_id": "PRRC_kwDOI7xefs7fLHUy",
+    "diff_hunk": "@@ -209,8 +209,26 @@ def build(  # type: ignore[override]\n                 )\n \n         if spec_sequence_masks is None:\n+            # A one-token first chunk has no GDN state and must take the\n+            # prefill path, which masks recycled state pages. Resumed short\n+            # prefills already own state and can stay on the decode path.\n+            assert m.seq_lens_cpu_upper_bound is not None\n+            query_lens_cpu = query_start_loc_cpu.diff()\n+            no_prior_state = (query_lens_cpu > 0) & (\n+                m.seq_lens_cpu_upper_bound <= query_lens_cpu\n+            )\n+            if m.is_prefilling is not None:\n+                no_prior_state &= m.is_prefilling\n+            else:\n+                # Metadata without this runner flag is indistinguishable from\n+                # the dummy batch used for cudagraph capture.\n+                no_prior_state = torch.zeros_like(no_prior_state)\n             num_decodes, num_prefills, num_decode_tokens, num_prefill_tokens = (\n-                split_decodes_and_prefills(m, decode_threshold=1)\n+                split_decodes_and_prefills(\n+                    m.replace(is_prefilling=no_prior_state),\n+                    decode_threshold=1,\n+                    treat_short_extends_as_decodes=False,\n+                )",
+    "path": "vllm/v1/attention/backends/gdn_attn.py",
+    "commit_id": "7398cfc9c0244b0f778cc609a8b4f13392473381",
+    "original_commit_id": "dd470756737ded43fea8f7f266919fff196dc4fd",
+    "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "node_id": "BOT_kgDOC98s_g",
+      "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+      "html_url": "https://github.com/apps/chatgpt-codex-connector",
+      "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+      "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+      "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+      "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+      "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+      "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+      "type": "Bot",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Exclude padded rows from the new prefill region**\n\nWhen FULL CUDA graphs pad a real batch to the captured request count, the zero-query padding rows follow the real requests. If any real one-token first chunk sets `no_prior_state=True`, `split_decodes_and_prefills()` finds that first row and counts the entire remaining suffix as prefills, including the trailing rows whose query length is zero. Those rows then enter `has_initial_state`, causal-convolution metadata, and `prefill_state_indices` as real sequences, exposing the chunk kernels to duplicate cu-seqlens and null state slots. The non-speculative path needs to exclude zero-length padding from the prefill count/metadata, as the speculative branch already does.\n\nUseful? React with 👍 / 👎.",
+    "created_at": "2026-08-09T15:09:38Z",
+    "updated_at": "2026-08-09T15:09:39Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/51565#discussion_r3744232754",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/51565",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3744232754"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/51565#discussion_r3744232754"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/51565"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3744232754/reactions",
+      "total_count": 1,
+      "+1": 1,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": 265,
+    "original_start_line": 227,
+    "start_side": "RIGHT",
+    "line": 269,
+    "original_line": 231,
+    "side": "RIGHT",
+    "author_association": "NONE",
+    "original_position": 24,
+    "position": 24,
+    "subject_type": "line"
+  }
+]

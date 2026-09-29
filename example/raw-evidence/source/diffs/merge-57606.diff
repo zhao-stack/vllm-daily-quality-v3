@@ -1,0 +1,15 @@
+diff --git a/docker/Dockerfile b/docker/Dockerfile
+index 5fd25f538855d5a1af53946b64495cbf573f6966..0628e3f86aad95c8b6cada9da0bd9069c936ffa5 100644
+--- a/docker/Dockerfile
++++ b/docker/Dockerfile
+@@ -1063,6 +1063,10 @@ RUN --mount=type=bind,from=build,src=/workspace/dist,target=/vllm-workspace/dist
+         --extra-index-url ${PYTORCH_CUDA_INDEX_BASE_URL}/cu$(echo $CUDA_VERSION | cut -d. -f1,2 | tr -d '.'); \
+     fi
+ 
++# Expose the Rust frontend bundled in the wheel on the container's PATH.
++RUN ln -s "$(python3 -c 'import sysconfig; print(sysconfig.get_path("platlib"))')/vllm/vllm-rs" /usr/local/bin/vllm-rs \
++    && vllm-rs --version
++
+ RUN --mount=type=cache,target=/opt/uv/cache \
+ . /etc/environment && \
+ uv pip list

@@ -1,0 +1,767 @@
+[
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3894503149",
+    "pull_request_review_id": 5066541913,
+    "id": 3894503149,
+    "node_id": "PRRC_kwDOI7xefs7oIWbt",
+    "diff_hunk": "@@ -973,6 +973,25 @@ def _validate_structured_outputs(\n                 \"structured_outputs.json_object must be True if set; omit \"\n                 \"structured_outputs to disable structured outputs\"\n             )\n+        # Reject empty string regex early. xgrammar tolerates compile_regex(\"\")\n+        # without crashing, but an empty regex provides no constraint and is a\n+        # degenerate request; reject at the API layer for consistency.",
+    "path": "vllm/sampling_params.py",
+    "commit_id": "942b598a689a53fd869a8c7f3c36c5b5262a70dc",
+    "original_commit_id": "942b598a689a53fd869a8c7f3c36c5b5262a70dc",
+    "user": {
+      "login": "arpera",
+      "id": 263378612,
+      "node_id": "U_kgDOD7LWtA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/263378612?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arpera",
+      "html_url": "https://github.com/arpera",
+      "followers_url": "https://api.github.com/users/arpera/followers",
+      "following_url": "https://api.github.com/users/arpera/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arpera/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arpera/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arpera/subscriptions",
+      "organizations_url": "https://api.github.com/users/arpera/orgs",
+      "repos_url": "https://api.github.com/users/arpera/repos",
+      "events_url": "https://api.github.com/users/arpera/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arpera/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Remove this comment for clarity please",
+    "created_at": "2026-08-31T12:36:42Z",
+    "updated_at": "2026-09-07T09:47:16Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/47450#discussion_r3894503149",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/47450",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3894503149"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/47450#discussion_r3894503149"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/47450"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3894503149/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": 976,
+    "start_side": "RIGHT",
+    "line": null,
+    "original_line": 978,
+    "side": "RIGHT",
+    "author_association": "COLLABORATOR",
+    "original_position": 6,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3894505123",
+    "pull_request_review_id": 5066541913,
+    "id": 3894505123,
+    "node_id": "PRRC_kwDOI7xefs7oIW6j",
+    "diff_hunk": "@@ -973,6 +973,25 @@ def _validate_structured_outputs(\n                 \"structured_outputs.json_object must be True if set; omit \"\n                 \"structured_outputs to disable structured outputs\"\n             )\n+        # Reject empty string regex early. xgrammar tolerates compile_regex(\"\")\n+        # without crashing, but an empty regex provides no constraint and is a\n+        # degenerate request; reject at the API layer for consistency.\n+        if (\n+            isinstance(self.structured_outputs.regex, str)\n+            and self.structured_outputs.regex.strip() == \"\"\n+        ):\n+            raise ValueError(\"structured_outputs.regex cannot be an empty string\")\n+        # Reject empty string structural_tag early to avoid engine-side crashes.\n+        # `get_structured_output_key` checks `is not None`, so an empty string\n+        # would otherwise reach `json.loads(\"\")` in `compile_grammar` and raise\n+        # JSONDecodeError -> EngineDeadError.",
+    "path": "vllm/sampling_params.py",
+    "commit_id": "942b598a689a53fd869a8c7f3c36c5b5262a70dc",
+    "original_commit_id": "942b598a689a53fd869a8c7f3c36c5b5262a70dc",
+    "user": {
+      "login": "arpera",
+      "id": 263378612,
+      "node_id": "U_kgDOD7LWtA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/263378612?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arpera",
+      "html_url": "https://github.com/arpera",
+      "followers_url": "https://api.github.com/users/arpera/followers",
+      "following_url": "https://api.github.com/users/arpera/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arpera/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arpera/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arpera/subscriptions",
+      "organizations_url": "https://api.github.com/users/arpera/orgs",
+      "repos_url": "https://api.github.com/users/arpera/repos",
+      "events_url": "https://api.github.com/users/arpera/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arpera/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "The same thing applies here",
+    "created_at": "2026-08-31T12:37:01Z",
+    "updated_at": "2026-09-07T09:47:16Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/47450#discussion_r3894505123",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/47450",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3894505123"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/47450#discussion_r3894505123"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/47450"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3894505123/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": 984,
+    "start_side": "RIGHT",
+    "line": null,
+    "original_line": 987,
+    "side": "RIGHT",
+    "author_association": "COLLABORATOR",
+    "original_position": 15,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069249132",
+    "pull_request_review_id": 5275096697,
+    "id": 4069249132,
+    "node_id": "PRRC_kwDOI7xefs7yi9Bs",
+    "diff_hunk": "@@ -1144,6 +1144,28 @@ def _validate_structured_outputs(\n             raise VLLMValidationError(\n                 \"structured_outputs.regex must not contain a NUL character ('\\\\x00')\"\n             )\n+        # Reject empty string regex early. xgrammar tolerates compile_regex(\"\")\n+        # without crashing, but an empty regex provides no constraint and is a\n+        # degenerate request; reject at the API layer for consistency with the\n+        # json/grammar guards above.",
+    "path": "vllm/sampling_params.py",
+    "commit_id": "83874d9d6219c9fbaf2025a7931d1c97eee68741",
+    "original_commit_id": "83874d9d6219c9fbaf2025a7931d1c97eee68741",
+    "user": {
+      "login": "arpera",
+      "id": 263378612,
+      "node_id": "U_kgDOD7LWtA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/263378612?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arpera",
+      "html_url": "https://github.com/arpera",
+      "followers_url": "https://api.github.com/users/arpera/followers",
+      "following_url": "https://api.github.com/users/arpera/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arpera/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arpera/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arpera/subscriptions",
+      "organizations_url": "https://api.github.com/users/arpera/orgs",
+      "repos_url": "https://api.github.com/users/arpera/repos",
+      "events_url": "https://api.github.com/users/arpera/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arpera/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Please, remove this comment at all",
+    "created_at": "2026-09-22T07:15:44Z",
+    "updated_at": "2026-09-22T07:16:19Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/47450#discussion_r4069249132",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/47450",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069249132"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/47450#discussion_r4069249132"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/47450"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069249132/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": 1147,
+    "start_side": "RIGHT",
+    "line": null,
+    "original_line": 1150,
+    "side": "RIGHT",
+    "author_association": "COLLABORATOR",
+    "original_position": 7,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069250234",
+    "pull_request_review_id": 5275096697,
+    "id": 4069250234,
+    "node_id": "PRRC_kwDOI7xefs7yi9S6",
+    "diff_hunk": "@@ -1144,6 +1144,28 @@ def _validate_structured_outputs(\n             raise VLLMValidationError(\n                 \"structured_outputs.regex must not contain a NUL character ('\\\\x00')\"\n             )\n+        # Reject empty string regex early. xgrammar tolerates compile_regex(\"\")\n+        # without crashing, but an empty regex provides no constraint and is a\n+        # degenerate request; reject at the API layer for consistency with the\n+        # json/grammar guards above.\n+        if (\n+            isinstance(self.structured_outputs.regex, str)\n+            and self.structured_outputs.regex.strip() == \"\"\n+        ):\n+            raise VLLMValidationError(\n+                \"structured_outputs.regex cannot be an empty string\"\n+            )\n+        # Reject empty string structural_tag early: it passes the `is not None`\n+        # exclusivity check and would otherwise reach json.loads(\"\") inside\n+        # compile_grammar and raise JSONDecodeError, surfacing as a per-request\n+        # engine error instead of a clean 400 at request validation.",
+    "path": "vllm/sampling_params.py",
+    "commit_id": "83874d9d6219c9fbaf2025a7931d1c97eee68741",
+    "original_commit_id": "83874d9d6219c9fbaf2025a7931d1c97eee68741",
+    "user": {
+      "login": "arpera",
+      "id": 263378612,
+      "node_id": "U_kgDOD7LWtA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/263378612?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arpera",
+      "html_url": "https://github.com/arpera",
+      "followers_url": "https://api.github.com/users/arpera/followers",
+      "following_url": "https://api.github.com/users/arpera/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arpera/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arpera/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arpera/subscriptions",
+      "organizations_url": "https://api.github.com/users/arpera/orgs",
+      "repos_url": "https://api.github.com/users/arpera/repos",
+      "events_url": "https://api.github.com/users/arpera/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arpera/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "And this as well",
+    "created_at": "2026-09-22T07:15:54Z",
+    "updated_at": "2026-09-22T07:16:19Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/47450#discussion_r4069250234",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/47450",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069250234"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/47450#discussion_r4069250234"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/47450"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069250234/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": 1158,
+    "start_side": "RIGHT",
+    "line": null,
+    "original_line": 1161,
+    "side": "RIGHT",
+    "author_association": "COLLABORATOR",
+    "original_position": 18,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069601188",
+    "pull_request_review_id": 5275532012,
+    "id": 4069601188,
+    "node_id": "PRRC_kwDOI7xefs7ykS-k",
+    "diff_hunk": "@@ -1144,6 +1144,20 @@ def _validate_structured_outputs(\n             raise VLLMValidationError(\n                 \"structured_outputs.regex must not contain a NUL character ('\\\\x00')\"\n             )\n+        if (\n+            isinstance(self.structured_outputs.regex, str)\n+            and self.structured_outputs.regex.strip() == \"\"",
+    "path": "vllm/sampling_params.py",
+    "commit_id": "48c593a03d56e45872578ddd5a1afdf999e96314",
+    "original_commit_id": "48c593a03d56e45872578ddd5a1afdf999e96314",
+    "user": {
+      "login": "arpera",
+      "id": 263378612,
+      "node_id": "U_kgDOD7LWtA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/263378612?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arpera",
+      "html_url": "https://github.com/arpera",
+      "followers_url": "https://api.github.com/users/arpera/followers",
+      "following_url": "https://api.github.com/users/arpera/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arpera/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arpera/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arpera/subscriptions",
+      "organizations_url": "https://api.github.com/users/arpera/orgs",
+      "repos_url": "https://api.github.com/users/arpera/repos",
+      "events_url": "https://api.github.com/users/arpera/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arpera/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "This `regex.strip()` breaks valid patterns such as `regex=\"\\n\"` or `regex=\" \"`, we cannot fail these legitimate requests. I believe you copied this guard from the same guard above for json. In case of json string that consists of whitespaces only is not a valid json object. But in case of regex this is not true. So, we definitely need to remove this guard for regex.",
+    "created_at": "2026-09-22T08:06:55Z",
+    "updated_at": "2026-09-22T08:21:46Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/47450#discussion_r4069601188",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/47450",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069601188"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/47450#discussion_r4069601188"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/47450"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069601188/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 1149,
+    "side": "RIGHT",
+    "author_association": "COLLABORATOR",
+    "original_position": 6,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069853547",
+    "pull_request_review_id": 5275859901,
+    "id": 4069853547,
+    "node_id": "PRRC_kwDOI7xefs7ylQlr",
+    "diff_hunk": "@@ -1144,6 +1144,20 @@ def _validate_structured_outputs(\n             raise VLLMValidationError(\n                 \"structured_outputs.regex must not contain a NUL character ('\\\\x00')\"\n             )\n+        if (\n+            isinstance(self.structured_outputs.regex, str)\n+            and self.structured_outputs.regex.strip() == \"\"",
+    "path": "vllm/sampling_params.py",
+    "commit_id": "48c593a03d56e45872578ddd5a1afdf999e96314",
+    "original_commit_id": "48c593a03d56e45872578ddd5a1afdf999e96314",
+    "user": {
+      "login": "arpera",
+      "id": 263378612,
+      "node_id": "U_kgDOD7LWtA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/263378612?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arpera",
+      "html_url": "https://github.com/arpera",
+      "followers_url": "https://api.github.com/users/arpera/followers",
+      "following_url": "https://api.github.com/users/arpera/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arpera/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arpera/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arpera/subscriptions",
+      "organizations_url": "https://api.github.com/users/arpera/orgs",
+      "repos_url": "https://api.github.com/users/arpera/repos",
+      "events_url": "https://api.github.com/users/arpera/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arpera/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Moreover, I encourage you to remove this guard for regex completly and put this comment to explain the reason:\r\n```\r\n# Note(arpera):\r\n# We do NOT check here structured output regex on emptiness because\r\n# empty regex is indeed compiles to a valid grammar as well as\r\n# whitespace-only regexps, for instance, regex=\"\\n\" or regex=\" \"\r\n# are valid patterns and we MUST process them.\r\n```",
+    "created_at": "2026-09-22T08:43:16Z",
+    "updated_at": "2026-09-22T08:43:22Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/47450#discussion_r4069853547",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/47450",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069853547"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/47450#discussion_r4069853547"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/47450"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069853547/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 1149,
+    "side": "RIGHT",
+    "in_reply_to_id": 4069601188,
+    "author_association": "COLLABORATOR",
+    "original_position": 6,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069861470",
+    "pull_request_review_id": 5275870592,
+    "id": 4069861470,
+    "node_id": "PRRC_kwDOI7xefs7ylShe",
+    "diff_hunk": "@@ -973,6 +973,25 @@ def _validate_structured_outputs(\n                 \"structured_outputs.json_object must be True if set; omit \"\n                 \"structured_outputs to disable structured outputs\"\n             )\n+        # Reject empty string regex early. xgrammar tolerates compile_regex(\"\")\n+        # without crashing, but an empty regex provides no constraint and is a\n+        # degenerate request; reject at the API layer for consistency.",
+    "path": "vllm/sampling_params.py",
+    "commit_id": "942b598a689a53fd869a8c7f3c36c5b5262a70dc",
+    "original_commit_id": "942b598a689a53fd869a8c7f3c36c5b5262a70dc",
+    "user": {
+      "login": "arpera",
+      "id": 263378612,
+      "node_id": "U_kgDOD7LWtA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/263378612?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arpera",
+      "html_url": "https://github.com/arpera",
+      "followers_url": "https://api.github.com/users/arpera/followers",
+      "following_url": "https://api.github.com/users/arpera/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arpera/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arpera/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arpera/subscriptions",
+      "organizations_url": "https://api.github.com/users/arpera/orgs",
+      "repos_url": "https://api.github.com/users/arpera/repos",
+      "events_url": "https://api.github.com/users/arpera/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arpera/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Done",
+    "created_at": "2026-09-22T08:44:12Z",
+    "updated_at": "2026-09-22T08:44:12Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/47450#discussion_r4069861470",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/47450",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069861470"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/47450#discussion_r4069861470"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/47450"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069861470/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": 976,
+    "start_side": "RIGHT",
+    "line": null,
+    "original_line": 978,
+    "side": "RIGHT",
+    "in_reply_to_id": 3894503149,
+    "author_association": "COLLABORATOR",
+    "original_position": 6,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069862470",
+    "pull_request_review_id": 5275871826,
+    "id": 4069862470,
+    "node_id": "PRRC_kwDOI7xefs7ylSxG",
+    "diff_hunk": "@@ -973,6 +973,25 @@ def _validate_structured_outputs(\n                 \"structured_outputs.json_object must be True if set; omit \"\n                 \"structured_outputs to disable structured outputs\"\n             )\n+        # Reject empty string regex early. xgrammar tolerates compile_regex(\"\")\n+        # without crashing, but an empty regex provides no constraint and is a\n+        # degenerate request; reject at the API layer for consistency.\n+        if (\n+            isinstance(self.structured_outputs.regex, str)\n+            and self.structured_outputs.regex.strip() == \"\"\n+        ):\n+            raise ValueError(\"structured_outputs.regex cannot be an empty string\")\n+        # Reject empty string structural_tag early to avoid engine-side crashes.\n+        # `get_structured_output_key` checks `is not None`, so an empty string\n+        # would otherwise reach `json.loads(\"\")` in `compile_grammar` and raise\n+        # JSONDecodeError -> EngineDeadError.",
+    "path": "vllm/sampling_params.py",
+    "commit_id": "942b598a689a53fd869a8c7f3c36c5b5262a70dc",
+    "original_commit_id": "942b598a689a53fd869a8c7f3c36c5b5262a70dc",
+    "user": {
+      "login": "arpera",
+      "id": 263378612,
+      "node_id": "U_kgDOD7LWtA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/263378612?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arpera",
+      "html_url": "https://github.com/arpera",
+      "followers_url": "https://api.github.com/users/arpera/followers",
+      "following_url": "https://api.github.com/users/arpera/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arpera/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arpera/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arpera/subscriptions",
+      "organizations_url": "https://api.github.com/users/arpera/orgs",
+      "repos_url": "https://api.github.com/users/arpera/repos",
+      "events_url": "https://api.github.com/users/arpera/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arpera/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Done",
+    "created_at": "2026-09-22T08:44:19Z",
+    "updated_at": "2026-09-22T08:44:19Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/47450#discussion_r4069862470",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/47450",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069862470"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/47450#discussion_r4069862470"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/47450"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069862470/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": 984,
+    "start_side": "RIGHT",
+    "line": null,
+    "original_line": 987,
+    "side": "RIGHT",
+    "in_reply_to_id": 3894505123,
+    "author_association": "COLLABORATOR",
+    "original_position": 15,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069863469",
+    "pull_request_review_id": 5275873212,
+    "id": 4069863469,
+    "node_id": "PRRC_kwDOI7xefs7ylTAt",
+    "diff_hunk": "@@ -1144,6 +1144,28 @@ def _validate_structured_outputs(\n             raise VLLMValidationError(\n                 \"structured_outputs.regex must not contain a NUL character ('\\\\x00')\"\n             )\n+        # Reject empty string regex early. xgrammar tolerates compile_regex(\"\")\n+        # without crashing, but an empty regex provides no constraint and is a\n+        # degenerate request; reject at the API layer for consistency with the\n+        # json/grammar guards above.",
+    "path": "vllm/sampling_params.py",
+    "commit_id": "83874d9d6219c9fbaf2025a7931d1c97eee68741",
+    "original_commit_id": "83874d9d6219c9fbaf2025a7931d1c97eee68741",
+    "user": {
+      "login": "arpera",
+      "id": 263378612,
+      "node_id": "U_kgDOD7LWtA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/263378612?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arpera",
+      "html_url": "https://github.com/arpera",
+      "followers_url": "https://api.github.com/users/arpera/followers",
+      "following_url": "https://api.github.com/users/arpera/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arpera/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arpera/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arpera/subscriptions",
+      "organizations_url": "https://api.github.com/users/arpera/orgs",
+      "repos_url": "https://api.github.com/users/arpera/repos",
+      "events_url": "https://api.github.com/users/arpera/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arpera/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Done",
+    "created_at": "2026-09-22T08:44:26Z",
+    "updated_at": "2026-09-22T08:44:27Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/47450#discussion_r4069863469",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/47450",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069863469"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/47450#discussion_r4069863469"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/47450"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069863469/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": 1147,
+    "start_side": "RIGHT",
+    "line": null,
+    "original_line": 1150,
+    "side": "RIGHT",
+    "in_reply_to_id": 4069249132,
+    "author_association": "COLLABORATOR",
+    "original_position": 7,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069864391",
+    "pull_request_review_id": 5275874488,
+    "id": 4069864391,
+    "node_id": "PRRC_kwDOI7xefs7ylTPH",
+    "diff_hunk": "@@ -1144,6 +1144,28 @@ def _validate_structured_outputs(\n             raise VLLMValidationError(\n                 \"structured_outputs.regex must not contain a NUL character ('\\\\x00')\"\n             )\n+        # Reject empty string regex early. xgrammar tolerates compile_regex(\"\")\n+        # without crashing, but an empty regex provides no constraint and is a\n+        # degenerate request; reject at the API layer for consistency with the\n+        # json/grammar guards above.\n+        if (\n+            isinstance(self.structured_outputs.regex, str)\n+            and self.structured_outputs.regex.strip() == \"\"\n+        ):\n+            raise VLLMValidationError(\n+                \"structured_outputs.regex cannot be an empty string\"\n+            )\n+        # Reject empty string structural_tag early: it passes the `is not None`\n+        # exclusivity check and would otherwise reach json.loads(\"\") inside\n+        # compile_grammar and raise JSONDecodeError, surfacing as a per-request\n+        # engine error instead of a clean 400 at request validation.",
+    "path": "vllm/sampling_params.py",
+    "commit_id": "83874d9d6219c9fbaf2025a7931d1c97eee68741",
+    "original_commit_id": "83874d9d6219c9fbaf2025a7931d1c97eee68741",
+    "user": {
+      "login": "arpera",
+      "id": 263378612,
+      "node_id": "U_kgDOD7LWtA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/263378612?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arpera",
+      "html_url": "https://github.com/arpera",
+      "followers_url": "https://api.github.com/users/arpera/followers",
+      "following_url": "https://api.github.com/users/arpera/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arpera/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arpera/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arpera/subscriptions",
+      "organizations_url": "https://api.github.com/users/arpera/orgs",
+      "repos_url": "https://api.github.com/users/arpera/repos",
+      "events_url": "https://api.github.com/users/arpera/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arpera/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Done",
+    "created_at": "2026-09-22T08:44:33Z",
+    "updated_at": "2026-09-22T08:44:34Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/47450#discussion_r4069864391",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/47450",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069864391"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/47450#discussion_r4069864391"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/47450"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4069864391/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": 1158,
+    "start_side": "RIGHT",
+    "line": null,
+    "original_line": 1161,
+    "side": "RIGHT",
+    "in_reply_to_id": 4069250234,
+    "author_association": "COLLABORATOR",
+    "original_position": 18,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4070965697",
+    "pull_request_review_id": 5277195727,
+    "id": 4070965697,
+    "node_id": "PRRC_kwDOI7xefs7ypgHB",
+    "diff_hunk": "@@ -1144,6 +1144,20 @@ def _validate_structured_outputs(\n             raise VLLMValidationError(\n                 \"structured_outputs.regex must not contain a NUL character ('\\\\x00')\"\n             )\n+        if (\n+            isinstance(self.structured_outputs.regex, str)\n+            and self.structured_outputs.regex.strip() == \"\"",
+    "path": "vllm/sampling_params.py",
+    "commit_id": "48c593a03d56e45872578ddd5a1afdf999e96314",
+    "original_commit_id": "48c593a03d56e45872578ddd5a1afdf999e96314",
+    "user": {
+      "login": "arpera",
+      "id": 263378612,
+      "node_id": "U_kgDOD7LWtA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/263378612?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arpera",
+      "html_url": "https://github.com/arpera",
+      "followers_url": "https://api.github.com/users/arpera/followers",
+      "following_url": "https://api.github.com/users/arpera/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arpera/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arpera/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arpera/subscriptions",
+      "organizations_url": "https://api.github.com/users/arpera/orgs",
+      "repos_url": "https://api.github.com/users/arpera/repos",
+      "events_url": "https://api.github.com/users/arpera/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arpera/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Done",
+    "created_at": "2026-09-22T11:12:17Z",
+    "updated_at": "2026-09-22T11:12:17Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/47450#discussion_r4070965697",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/47450",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4070965697"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/47450#discussion_r4070965697"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/47450"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4070965697/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 1149,
+    "side": "RIGHT",
+    "in_reply_to_id": 4069601188,
+    "author_association": "COLLABORATOR",
+    "original_position": 6,
+    "position": 1,
+    "subject_type": "line"
+  }
+]

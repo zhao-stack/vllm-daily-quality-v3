@@ -1,0 +1,3260 @@
+{
+  "schema_version": 1,
+  "generated_from": {
+    "vllm_root": "D:\\codex-vllm\\vllm",
+    "vllm_ascend_root": "D:\\codex-vllm\\vllm-ascend",
+    "scope": "Ascend classes inheriting directly from classes imported from vllm.*; overridden methods detected by static method-name comparison",
+    "limitations": [
+      "static regex parser, not a full Python AST",
+      "direct vLLM base classes only; indirect local inheritance is not expanded",
+      "dynamic class construction and runtime monkey patches are excluded"
+    ]
+  },
+  "summary": {
+    "inheritance_edges": 129,
+    "edges_with_overrides": 76,
+    "upstream_files": 65,
+    "ascend_files": 76,
+    "risk_counts": {
+      "critical": 58,
+      "high": 39,
+      "medium": 23,
+      "low": 9
+    }
+  },
+  "mappings": [
+    {
+      "upstream_file": "vllm/model_executor/layers/activation.py",
+      "upstream_class": "QuickGELU",
+      "upstream_module": "vllm.model_executor.layers.activation",
+      "ascend_file": "vllm_ascend/ops/activation.py",
+      "ascend_class": "AscendQuickGELU",
+      "ascend_class_line": 24,
+      "base_expression": "QuickGELU",
+      "child_methods": [
+        "forward_oot"
+      ],
+      "upstream_methods_found": 4,
+      "overridden_methods": [],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/activation.py",
+      "upstream_class": "SiluAndMul",
+      "upstream_module": "vllm.model_executor.layers.activation",
+      "ascend_file": "vllm_ascend/ops/activation.py",
+      "ascend_class": "AscendSiluAndMul",
+      "ascend_class_line": 32,
+      "base_expression": "SiluAndMul",
+      "child_methods": [
+        "forward_oot"
+      ],
+      "upstream_methods_found": 4,
+      "overridden_methods": [],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/attention/mla_attention.py",
+      "upstream_class": "MLACommonMetadataBuilder",
+      "upstream_module": "vllm.model_executor.layers.attention.mla_attention",
+      "ascend_file": "vllm_ascend/attention/mla_v1.py",
+      "ascend_class": "AscendMLAMetadataBuilder",
+      "ascend_class_line": 229,
+      "base_expression": "MLACommonMetadataBuilder[AscendMLAMetadata]",
+      "child_methods": [
+        "__init__",
+        "build",
+        "build_chunked_metadata",
+        "build_decode_metadata",
+        "build_for_graph_capture",
+        "build_prefill_metadata",
+        "determine_chunked_prefill_workspace_size",
+        "get_block_table_size",
+        "get_cudagraph_support",
+        "pad_actual_seq_len_q_mtp_disable_pad",
+        "pad_actual_seq_len_q_mtp_enable_pad",
+        "reorder_batch",
+        "set_num_actual_tokens"
+      ],
+      "upstream_methods_found": 7,
+      "overridden_methods": [
+        "__init__",
+        "build",
+        "determine_chunked_prefill_workspace_size"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/attention"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/attention/mla_attention.py",
+      "upstream_class": "MLACommonMetadataBuilder",
+      "upstream_module": "vllm.model_executor.layers.attention.mla_attention",
+      "ascend_file": "vllm_ascend/attention/sfa_v1.py",
+      "ascend_class": "AscendSFAMetadataBuilder",
+      "ascend_class_line": 163,
+      "base_expression": "MLACommonMetadataBuilder[AscendSFAMetadata]",
+      "child_methods": [
+        "__init__",
+        "build",
+        "build_for_graph_capture",
+        "determine_chunked_prefill_workspace_size",
+        "get_cudagraph_support",
+        "reorder_batch"
+      ],
+      "upstream_methods_found": 7,
+      "overridden_methods": [
+        "__init__",
+        "build",
+        "determine_chunked_prefill_workspace_size"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/attention"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/attention/mm_encoder_attention.py",
+      "upstream_class": "MMEncoderAttention",
+      "upstream_module": "vllm.model_executor.layers.attention.mm_encoder_attention",
+      "ascend_file": "vllm_ascend/_310p/ops/mm_encoder_attention.py",
+      "ascend_class": "AscendMMEncoderAttention310",
+      "ascend_class_line": 38,
+      "base_expression": "MMEncoderAttention",
+      "child_methods": [
+        "__init__",
+        "_reshape_qkv_to_3d",
+        "forward_oot"
+      ],
+      "upstream_methods_found": 14,
+      "overridden_methods": [
+        "__init__"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/attention"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/attention/mm_encoder_attention.py",
+      "upstream_class": "MMEncoderAttention",
+      "upstream_module": "vllm.model_executor.layers.attention.mm_encoder_attention",
+      "ascend_file": "vllm_ascend/ops/mm_encoder_attention.py",
+      "ascend_class": "AscendMMEncoderAttention",
+      "ascend_class_line": 41,
+      "base_expression": "MMEncoderAttention",
+      "child_methods": [
+        "__init__",
+        "_maybe_compute_cu_seqlens",
+        "_reshape_qkv_to_3d",
+        "forward_oot",
+        "maybe_compute_seq_lens"
+      ],
+      "upstream_methods_found": 14,
+      "overridden_methods": [
+        "__init__",
+        "maybe_compute_seq_lens"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/attention"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/conv.py",
+      "upstream_class": "Conv3dLayer",
+      "upstream_module": "vllm.model_executor.layers.conv",
+      "ascend_file": "vllm_ascend/ops/conv.py",
+      "ascend_class": "AscendConv3dLayer",
+      "ascend_class_line": 23,
+      "base_expression": "Conv3dLayer",
+      "child_methods": [
+        "forward_oot"
+      ],
+      "upstream_methods_found": 4,
+      "overridden_methods": [],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/fused_moe/__init__.py",
+      "upstream_class": "FusedMoEMethodBase",
+      "upstream_module": "vllm.model_executor.layers.fused_moe",
+      "ascend_file": "vllm_ascend/quantization/method_adapters.py",
+      "ascend_class": "AscendFusedMoEMethod",
+      "ascend_class_line": 193,
+      "base_expression": "FusedMoEMethodBase",
+      "child_methods": [
+        "__init__",
+        "apply",
+        "create_weights",
+        "get_fused_moe_quant_config",
+        "process_weights_after_loading",
+        "supports_eplb"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/quantization"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/fused_moe/layer.py",
+      "upstream_class": "UnquantizedFusedMoEMethod",
+      "upstream_module": "vllm.model_executor.layers.fused_moe.layer",
+      "ascend_file": "vllm_ascend/_310p/fused_moe/fused_moe.py",
+      "ascend_class": "AscendUnquantizedFusedMoEMethod310",
+      "ascend_class_line": 34,
+      "base_expression": "UnquantizedFusedMoEMethod",
+      "child_methods": [
+        "__init__",
+        "apply",
+        "is_monolithic",
+        "maybe_make_prepare_finalize",
+        "process_weights_after_loading"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/quantization"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/fused_moe/layer.py",
+      "upstream_class": "FusedMoE",
+      "upstream_module": "vllm.model_executor.layers.fused_moe.layer",
+      "ascend_file": "vllm_ascend/_310p/fused_moe/fused_moe.py",
+      "ascend_class": "AscendFusedMoE310",
+      "ascend_class_line": 122,
+      "base_expression": "FusedMoE",
+      "child_methods": [
+        "__init__",
+        "_forward_shared_experts",
+        "forward_impl",
+        "get_quant_type",
+        "init_experts_map",
+        "is_internal_router",
+        "shared_forward_impl"
+      ],
+      "upstream_methods_found": 44,
+      "overridden_methods": [
+        "__init__",
+        "is_internal_router"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/quantization"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/fused_moe/layer.py",
+      "upstream_class": "UnquantizedFusedMoEMethod",
+      "upstream_module": "vllm.model_executor.layers.fused_moe.layer",
+      "ascend_file": "vllm_ascend/ops/fused_moe/fused_moe.py",
+      "ascend_class": "AscendUnquantizedFusedMoEMethod",
+      "ascend_class_line": 76,
+      "base_expression": "UnquantizedFusedMoEMethod",
+      "child_methods": [
+        "__init__",
+        "apply",
+        "is_monolithic",
+        "maybe_make_prepare_finalize",
+        "process_weights_after_loading"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/quantization"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/fused_moe/layer.py",
+      "upstream_class": "FusedMoE",
+      "upstream_module": "vllm.model_executor.layers.fused_moe.layer",
+      "ascend_file": "vllm_ascend/ops/fused_moe/fused_moe.py",
+      "ascend_class": "AscendFusedMoE",
+      "ascend_class_line": 288,
+      "base_expression": "FusedMoE",
+      "child_methods": [
+        "__init__",
+        "_forward_shared_experts",
+        "_get_quant_type",
+        "_shared_experts_part1",
+        "_shared_experts_part2",
+        "_validate_shared_expert_consistency",
+        "clear_moe_load",
+        "forward",
+        "forward_impl",
+        "gate",
+        "get_log2phy_map",
+        "is_internal_router",
+        "maybe_all_reduce_tensor_model_parallel",
+        "maybe_wait_event",
+        "shared_forward_impl",
+        "update_expert_map",
+        "use_dp_chunking",
+        "wrapped_process_weights"
+      ],
+      "upstream_methods_found": 44,
+      "overridden_methods": [
+        "__init__",
+        "forward",
+        "is_internal_router",
+        "maybe_all_reduce_tensor_model_parallel",
+        "update_expert_map"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/quantization"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/fused_moe/runner/default_moe_runner.py",
+      "upstream_class": "DefaultMoERunner",
+      "upstream_module": "vllm.model_executor.layers.fused_moe.runner.default_moe_runner",
+      "ascend_file": "vllm_ascend/ops/fused_moe/fused_moe.py",
+      "ascend_class": "AscendMoERunner",
+      "ascend_class_line": 235,
+      "base_expression": "DefaultMoERunner",
+      "child_methods": [
+        "forward_dispatch",
+        "forward_impl",
+        "use_dp_chunking"
+      ],
+      "upstream_methods_found": 5,
+      "overridden_methods": [],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/quantization"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/layernorm.py",
+      "upstream_class": "RMSNormGated",
+      "upstream_module": "vllm.model_executor.layers.layernorm",
+      "ascend_file": "vllm_ascend/_310p/ops/layernorm.py",
+      "ascend_class": "AscendRMSNormGated310",
+      "ascend_class_line": 43,
+      "base_expression": "RMSNormGated",
+      "child_methods": [
+        "forward_oot"
+      ],
+      "upstream_methods_found": 5,
+      "overridden_methods": [],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/layernorm.py",
+      "upstream_class": "RMSNorm",
+      "upstream_module": "vllm.model_executor.layers.layernorm",
+      "ascend_file": "vllm_ascend/ops/layernorm.py",
+      "ascend_class": "AscendRMSNorm",
+      "ascend_class_line": 27,
+      "base_expression": "RMSNorm",
+      "child_methods": [
+        "__init__",
+        "_bias_weight_loader",
+        "forward_oot"
+      ],
+      "upstream_methods_found": 7,
+      "overridden_methods": [
+        "__init__"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/layernorm.py",
+      "upstream_class": "GemmaRMSNorm",
+      "upstream_module": "vllm.model_executor.layers.layernorm",
+      "ascend_file": "vllm_ascend/ops/layernorm.py",
+      "ascend_class": "AscendGemmaRMSNorm",
+      "ascend_class_line": 90,
+      "base_expression": "GemmaRMSNorm",
+      "child_methods": [
+        "forward_oot"
+      ],
+      "upstream_methods_found": 3,
+      "overridden_methods": [],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/layernorm.py",
+      "upstream_class": "RMSNormGated",
+      "upstream_module": "vllm.model_executor.layers.layernorm",
+      "ascend_file": "vllm_ascend/ops/layernorm.py",
+      "ascend_class": "AscendRMSNormGated",
+      "ascend_class_line": 160,
+      "base_expression": "RMSNormGated",
+      "child_methods": [
+        "__init__",
+        "forward_oot",
+        "reset_parameters"
+      ],
+      "upstream_methods_found": 5,
+      "overridden_methods": [
+        "__init__",
+        "reset_parameters"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/linear.py",
+      "upstream_class": "UnquantizedLinearMethod",
+      "upstream_module": "vllm.model_executor.layers.linear",
+      "ascend_file": "vllm_ascend/ops/linear.py",
+      "ascend_class": "AscendUnquantizedLinearMethod",
+      "ascend_class_line": 73,
+      "base_expression": "UnquantizedLinearMethod",
+      "child_methods": [
+        "apply",
+        "process_weights_after_loading"
+      ],
+      "upstream_methods_found": 3,
+      "overridden_methods": [
+        "apply",
+        "process_weights_after_loading"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/quantization"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/linear.py",
+      "upstream_class": "LinearBase",
+      "upstream_module": "vllm.model_executor.layers.linear",
+      "ascend_file": "vllm_ascend/ops/linear.py",
+      "ascend_class": "AscendLinearBase",
+      "ascend_class_line": 91,
+      "base_expression": "LinearBase",
+      "child_methods": [
+        "__init__"
+      ],
+      "upstream_methods_found": 2,
+      "overridden_methods": [
+        "__init__"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/quantization"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/linear.py",
+      "upstream_class": "QKVParallelLinear",
+      "upstream_module": "vllm.model_executor.layers.linear",
+      "ascend_file": "vllm_ascend/ops/linear.py",
+      "ascend_class": "AscendQKVParallelLinear",
+      "ascend_class_line": 123,
+      "base_expression": "QKVParallelLinear",
+      "child_methods": [
+        "__init__",
+        "forward"
+      ],
+      "upstream_methods_found": 7,
+      "overridden_methods": [
+        "__init__"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/quantization"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/linear.py",
+      "upstream_class": "MergedColumnParallelLinear",
+      "upstream_module": "vllm.model_executor.layers.linear",
+      "ascend_file": "vllm_ascend/ops/linear.py",
+      "ascend_class": "AscendMergedColumnParallelLinear",
+      "ascend_class_line": 199,
+      "base_expression": "MergedColumnParallelLinear",
+      "child_methods": [
+        "__init__",
+        "forward"
+      ],
+      "upstream_methods_found": 5,
+      "overridden_methods": [
+        "__init__"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/quantization"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/linear.py",
+      "upstream_class": "RowParallelLinear",
+      "upstream_module": "vllm.model_executor.layers.linear",
+      "ascend_file": "vllm_ascend/ops/linear.py",
+      "ascend_class": "AscendRowParallelLinear",
+      "ascend_class_line": 253,
+      "base_expression": "RowParallelLinear",
+      "child_methods": [
+        "__init__",
+        "forward"
+      ],
+      "upstream_methods_found": 5,
+      "overridden_methods": [
+        "__init__",
+        "forward"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/quantization"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/linear.py",
+      "upstream_class": "ColumnParallelLinear",
+      "upstream_module": "vllm.model_executor.layers.linear",
+      "ascend_file": "vllm_ascend/ops/linear.py",
+      "ascend_class": "AscendColumnParallelLinear",
+      "ascend_class_line": 353,
+      "base_expression": "ColumnParallelLinear",
+      "child_methods": [
+        "__init__",
+        "forward"
+      ],
+      "upstream_methods_found": 6,
+      "overridden_methods": [
+        "__init__",
+        "forward"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/quantization"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/linear.py",
+      "upstream_class": "ReplicatedLinear",
+      "upstream_module": "vllm.model_executor.layers.linear",
+      "ascend_file": "vllm_ascend/ops/linear.py",
+      "ascend_class": "AscendReplicatedLinear",
+      "ascend_class_line": 442,
+      "base_expression": "ReplicatedLinear",
+      "child_methods": [
+        "__init__",
+        "forward"
+      ],
+      "upstream_methods_found": 4,
+      "overridden_methods": [
+        "__init__",
+        "forward"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/quantization"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/linear.py",
+      "upstream_class": "LinearMethodBase",
+      "upstream_module": "vllm.model_executor.layers.linear",
+      "ascend_file": "vllm_ascend/quantization/method_adapters.py",
+      "ascend_class": "AscendLinearMethod",
+      "ascend_class_line": 37,
+      "base_expression": "LinearMethodBase",
+      "child_methods": [
+        "__init__",
+        "apply",
+        "create_weights",
+        "get_computed_params",
+        "process_weights_after_loading"
+      ],
+      "upstream_methods_found": 2,
+      "overridden_methods": [
+        "apply",
+        "create_weights"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/quantization"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/logits_processor.py",
+      "upstream_class": "LogitsProcessor",
+      "upstream_module": "vllm.model_executor.layers.logits_processor",
+      "ascend_file": "vllm_ascend/ops/vocab_parallel_embedding.py",
+      "ascend_class": "AscendLogitsProcessor",
+      "ascend_class_line": 241,
+      "base_expression": "LogitsProcessor",
+      "child_methods": [
+        "_get_logits",
+        "_get_logits_lmheadtp",
+        "_get_logits_normal"
+      ],
+      "upstream_methods_found": 6,
+      "overridden_methods": [
+        "_get_logits"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/mamba/gdn_linear_attn.py",
+      "upstream_class": "GatedDeltaNetAttention",
+      "upstream_module": "vllm.model_executor.layers.mamba.gdn_linear_attn",
+      "ascend_file": "vllm_ascend/_310p/ops/fla/gdn_310.py",
+      "ascend_class": "AscendGatedDeltaNetAttention310",
+      "ascend_class_line": 41,
+      "base_expression": "GatedDeltaNetAttention",
+      "child_methods": [
+        "_forward_core"
+      ],
+      "upstream_methods_found": 14,
+      "overridden_methods": [
+        "_forward_core"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/quantization"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/mamba/gdn_linear_attn.py",
+      "upstream_class": "GatedDeltaNetAttention",
+      "upstream_module": "vllm.model_executor.layers.mamba.gdn_linear_attn",
+      "ascend_file": "vllm_ascend/ops/gdn.py",
+      "ascend_class": "AscendGatedDeltaNetAttention",
+      "ascend_class_line": 68,
+      "base_expression": "GatedDeltaNetAttention",
+      "child_methods": [
+        "_forward_core",
+        "forward"
+      ],
+      "upstream_methods_found": 14,
+      "overridden_methods": [
+        "_forward_core",
+        "forward"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/quantization"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/mla.py",
+      "upstream_class": "MultiHeadLatentAttentionWrapper",
+      "upstream_module": "vllm.model_executor.layers.mla",
+      "ascend_file": "vllm_ascend/ops/mla.py",
+      "ascend_class": "AscendMultiHeadLatentAttention",
+      "ascend_class_line": 67,
+      "base_expression": "MultiHeadLatentAttentionWrapper",
+      "child_methods": [
+        "__init__",
+        "forward",
+        "wrapped_process_weights"
+      ],
+      "upstream_methods_found": 2,
+      "overridden_methods": [
+        "__init__",
+        "forward"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/quantization/base_config.py",
+      "upstream_class": "QuantizationConfig",
+      "upstream_module": "vllm.model_executor.layers.quantization.base_config",
+      "ascend_file": "vllm_ascend/quantization/compressed_tensors_config.py",
+      "ascend_class": "AscendCompressedTensorsConfig",
+      "ascend_class_line": 53,
+      "base_expression": "QuantizationConfig",
+      "child_methods": [
+        "__init__",
+        "_add_fused_moe_to_target_scheme_map",
+        "_create_scheme_for_layer_type",
+        "_detect_quant_type",
+        "_get_linear_scheme",
+        "_get_moe_scheme",
+        "_get_quant_args",
+        "_is_dynamic_token_w4a8",
+        "_is_dynamic_token_w8a8",
+        "_is_static_tensor_w8a8",
+        "_is_w4a16",
+        "_quantization_scheme_map_from_config",
+        "apply_vllm_mapper",
+        "from_config",
+        "get_config_filenames",
+        "get_min_capability",
+        "get_name",
+        "get_quant_method",
+        "get_scheme_dict",
+        "get_supported_act_dtypes"
+      ],
+      "upstream_methods_found": 14,
+      "overridden_methods": [
+        "__init__",
+        "apply_vllm_mapper",
+        "from_config",
+        "get_config_filenames",
+        "get_min_capability",
+        "get_name",
+        "get_quant_method",
+        "get_supported_act_dtypes"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/quantization"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/quantization/base_config.py",
+      "upstream_class": "QuantizationConfig",
+      "upstream_module": "vllm.model_executor.layers.quantization.base_config",
+      "ascend_file": "vllm_ascend/quantization/modelslim_config.py",
+      "ascend_class": "AscendModelSlimConfig",
+      "ascend_class_line": 370,
+      "base_expression": "QuantizationConfig",
+      "child_methods": [
+        "__init__",
+        "__repr__",
+        "_add_kvcache_quant_metadata",
+        "_apply_extra_quant_adaptations",
+        "apply_vllm_mapper",
+        "enabling_fa_quant",
+        "from_config",
+        "get_cache_scale",
+        "get_config_filenames",
+        "get_kv_quant_dtype",
+        "get_kv_quant_split_factor",
+        "get_min_capability",
+        "get_name",
+        "get_quant_method",
+        "get_supported_act_dtypes",
+        "is_fa_quant_layer",
+        "is_indexer_quant_layer",
+        "is_layer_skipped_ascend",
+        "maybe_update_config",
+        "override_quantization_method",
+        "quant_prefix_mapper"
+      ],
+      "upstream_methods_found": 14,
+      "overridden_methods": [
+        "__init__",
+        "apply_vllm_mapper",
+        "from_config",
+        "get_cache_scale",
+        "get_config_filenames",
+        "get_min_capability",
+        "get_name",
+        "get_quant_method",
+        "get_supported_act_dtypes",
+        "maybe_update_config",
+        "override_quantization_method"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/quantization"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/quantization/kv_cache.py",
+      "upstream_class": "BaseKVCacheMethod",
+      "upstream_module": "vllm.model_executor.layers.quantization.kv_cache",
+      "ascend_file": "vllm_ascend/quantization/method_adapters.py",
+      "ascend_class": "AscendKVCacheMethod",
+      "ascend_class_line": 157,
+      "base_expression": "BaseKVCacheMethod",
+      "child_methods": [
+        "__init__",
+        "apply",
+        "create_weights",
+        "process_weights_after_loading"
+      ],
+      "upstream_methods_found": 4,
+      "overridden_methods": [
+        "__init__",
+        "apply",
+        "create_weights",
+        "process_weights_after_loading"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/quantization"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/rotary_embedding/__init__.py",
+      "upstream_class": "RotaryEmbedding",
+      "upstream_module": "vllm.model_executor.layers.rotary_embedding",
+      "ascend_file": "vllm_ascend/ops/rotary_embedding.py",
+      "ascend_class": "AscendRotaryEmbedding",
+      "ascend_class_line": 216,
+      "base_expression": "RotaryEmbedding",
+      "child_methods": [
+        "__init__",
+        "forward_oot"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/rotary_embedding/__init__.py",
+      "upstream_class": "YaRNScalingRotaryEmbedding",
+      "upstream_module": "vllm.model_executor.layers.rotary_embedding",
+      "ascend_file": "vllm_ascend/ops/rotary_embedding.py",
+      "ascend_class": "AscendYaRNRotaryEmbedding",
+      "ascend_class_line": 253,
+      "base_expression": "YaRNScalingRotaryEmbedding",
+      "child_methods": [
+        "__init__",
+        "forward_oot"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/rotary_embedding/__init__.py",
+      "upstream_class": "DeepseekScalingRotaryEmbedding",
+      "upstream_module": "vllm.model_executor.layers.rotary_embedding",
+      "ascend_file": "vllm_ascend/ops/rotary_embedding.py",
+      "ascend_class": "AscendDeepseekScalingRotaryEmbedding",
+      "ascend_class_line": 298,
+      "base_expression": "DeepseekScalingRotaryEmbedding",
+      "child_methods": [
+        "__init__",
+        "_apply_rotary_pos_emb",
+        "_rotate_half",
+        "_set_cos_sin_cache",
+        "_yarn_find_correction_dim",
+        "_yarn_find_correction_range",
+        "_yarn_get_mscale",
+        "_yarn_linear_ramp_mask",
+        "forward"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/rotary_embedding/__init__.py",
+      "upstream_class": "MRotaryEmbedding",
+      "upstream_module": "vllm.model_executor.layers.rotary_embedding",
+      "ascend_file": "vllm_ascend/ops/rotary_embedding.py",
+      "ascend_class": "AscendMRotaryEmbedding",
+      "ascend_class_line": 472,
+      "base_expression": "MRotaryEmbedding",
+      "child_methods": [
+        "forward_oot",
+        "forward_triton"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/rotary_embedding/common.py",
+      "upstream_class": "ApplyRotaryEmb",
+      "upstream_module": "vllm.model_executor.layers.rotary_embedding.common",
+      "ascend_file": "vllm_ascend/ops/rotary_embedding.py",
+      "ascend_class": "AscendApplyRotaryEmb",
+      "ascend_class_line": 557,
+      "base_expression": "ApplyRotaryEmb",
+      "child_methods": [
+        "__init__",
+        "forward_oot"
+      ],
+      "upstream_methods_found": 9,
+      "overridden_methods": [
+        "__init__"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/vocab_parallel_embedding.py",
+      "upstream_class": "UnquantizedEmbeddingMethod",
+      "upstream_module": "vllm.model_executor.layers.vocab_parallel_embedding",
+      "ascend_file": "vllm_ascend/_310p/ops/vocab_parallel_embedding.py",
+      "ascend_class": "AscendUnquantizedEmbeddingMethod310",
+      "ascend_class_line": 30,
+      "base_expression": "UnquantizedEmbeddingMethod",
+      "child_methods": [
+        "apply",
+        "process_weights_after_loading"
+      ],
+      "upstream_methods_found": 4,
+      "overridden_methods": [
+        "apply",
+        "process_weights_after_loading"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/vocab_parallel_embedding.py",
+      "upstream_class": "VocabParallelEmbedding",
+      "upstream_module": "vllm.model_executor.layers.vocab_parallel_embedding",
+      "ascend_file": "vllm_ascend/ops/vocab_parallel_embedding.py",
+      "ascend_class": "AscendVocabParallelEmbedding",
+      "ascend_class_line": 43,
+      "base_expression": "VocabParallelEmbedding",
+      "child_methods": [
+        "__init__",
+        "_forward_embed_tp",
+        "_forward_origin",
+        "_get_masked_input_and_mask",
+        "forward"
+      ],
+      "upstream_methods_found": 6,
+      "overridden_methods": [
+        "__init__",
+        "forward"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/model_executor/layers/vocab_parallel_embedding.py",
+      "upstream_class": "ParallelLMHead",
+      "upstream_module": "vllm.model_executor.layers.vocab_parallel_embedding",
+      "ascend_file": "vllm_ascend/ops/vocab_parallel_embedding.py",
+      "ascend_class": "AscendParallelLMHead",
+      "ascend_class_line": 208,
+      "base_expression": "ParallelLMHead",
+      "child_methods": [
+        "__init__"
+      ],
+      "upstream_methods_found": 3,
+      "overridden_methods": [
+        "__init__"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/model_executor/model_loader/__init__.py",
+      "upstream_class": "ShardedStateLoader",
+      "upstream_module": "vllm.model_executor.model_loader",
+      "ascend_file": "vllm_ascend/_310p/sharded_state_loader_310p.py",
+      "ascend_class": "ShardedStateLoader310",
+      "ascend_class_line": 27,
+      "base_expression": "ShardedStateLoader",
+      "child_methods": [
+        "__init__",
+        "generate_quant_description",
+        "save_model"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/model_executor/model_loader/base_loader.py",
+      "upstream_class": "BaseModelLoader",
+      "upstream_module": "vllm.model_executor.model_loader.base_loader",
+      "ascend_file": "vllm_ascend/model_loader/netloader/netloader.py",
+      "ascend_class": "ModelNetLoaderElastic",
+      "ascend_class_line": 38,
+      "base_expression": "BaseModelLoader",
+      "child_methods": [
+        "__init__",
+        "download_model",
+        "load_model",
+        "load_weights",
+        "revert_to_default"
+      ],
+      "upstream_methods_found": 4,
+      "overridden_methods": [
+        "__init__",
+        "download_model",
+        "load_model",
+        "load_weights"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/model_executor/model_loader/base_loader.py",
+      "upstream_class": "BaseModelLoader",
+      "upstream_module": "vllm.model_executor.model_loader.base_loader",
+      "ascend_file": "vllm_ascend/model_loader/rfork/rfork_loader.py",
+      "ascend_class": "RForkModelLoader",
+      "ascend_class_line": 39,
+      "base_expression": "BaseModelLoader",
+      "child_methods": [
+        "__init__",
+        "_ensure_rfork_worker",
+        "_get_extra_config",
+        "_get_extra_config_float",
+        "download_model",
+        "load_model",
+        "load_weights"
+      ],
+      "upstream_methods_found": 4,
+      "overridden_methods": [
+        "__init__",
+        "download_model",
+        "load_model",
+        "load_weights"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/model_executor/models/deepencoder.py",
+      "upstream_class": "RelPosAttention",
+      "upstream_module": "vllm.model_executor.models.deepencoder",
+      "ascend_file": "vllm_ascend/ops/rel_pos_attention.py",
+      "ascend_class": "AscendRelPosAttention",
+      "ascend_class_line": 6,
+      "base_expression": "RelPosAttention",
+      "child_methods": [
+        "__init__",
+        "forward"
+      ],
+      "upstream_methods_found": 2,
+      "overridden_methods": [
+        "__init__",
+        "forward"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/e2e/singlecard/test_models.py",
+        "tests/ut/attention"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/models/deepencoder2.py",
+      "upstream_class": "CustomQwen2Decoder",
+      "upstream_module": "vllm.model_executor.models.deepencoder2",
+      "ascend_file": "vllm_ascend/ops/qwen2_decoder.py",
+      "ascend_class": "AscendCustomQwen2Decoder",
+      "ascend_class_line": 23,
+      "base_expression": "CustomQwen2Decoder",
+      "child_methods": [
+        "__init__",
+        "_create_npu_optimized_mask",
+        "_create_optimized_custom_model",
+        "_create_standard_causal_mask",
+        "forward"
+      ],
+      "upstream_methods_found": 6,
+      "overridden_methods": [
+        "__init__",
+        "forward"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/singlecard/test_models.py"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/models/deepseek_mtp.py",
+      "upstream_class": "DeepSeekMultiTokenPredictorLayer",
+      "upstream_module": "vllm.model_executor.models.deepseek_mtp",
+      "ascend_file": "vllm_ascend/patch/worker/patch_deepseek_mtp.py",
+      "ascend_class": "AscendDeepSeekMultiTokenPredictorLayer",
+      "ascend_class_line": 20,
+      "base_expression": "DeepSeekMultiTokenPredictorLayer",
+      "child_methods": [
+        "__init__",
+        "forward"
+      ],
+      "upstream_methods_found": 2,
+      "overridden_methods": [
+        "__init__",
+        "forward"
+      ],
+      "risk": "critical",
+      "is_patch_file": true,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/e2e/singlecard/test_models.py",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/models/deepseek_mtp.py",
+      "upstream_class": "DeepSeekMTP",
+      "upstream_module": "vllm.model_executor.models.deepseek_mtp",
+      "ascend_file": "vllm_ascend/patch/worker/patch_deepseek_mtp.py",
+      "ascend_class": "AscendDeepSeekMTP",
+      "ascend_class_line": 52,
+      "base_expression": "DeepSeekMTP",
+      "child_methods": [
+        "_rewrite_spec_layer_name"
+      ],
+      "upstream_methods_found": 7,
+      "overridden_methods": [
+        "_rewrite_spec_layer_name"
+      ],
+      "risk": "critical",
+      "is_patch_file": true,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/e2e/singlecard/test_models.py",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/models/qwen3_5.py",
+      "upstream_class": "Qwen3_5DecoderLayer",
+      "upstream_module": "vllm.model_executor.models.qwen3_5",
+      "ascend_file": "vllm_ascend/patch/worker/patch_qwen3_5.py",
+      "ascend_class": "AscendQwen3_5DecoderLayer",
+      "ascend_class_line": 77,
+      "base_expression": "Qwen3_5DecoderLayer",
+      "child_methods": [
+        "forward"
+      ],
+      "upstream_methods_found": 1,
+      "overridden_methods": [],
+      "risk": "critical",
+      "is_patch_file": true,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/e2e/singlecard/test_models.py",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/model_executor/models/qwen3_next.py",
+      "upstream_class": "Qwen3NextAttention",
+      "upstream_module": "vllm.model_executor.models.qwen3_next",
+      "ascend_file": "vllm_ascend/patch/worker/patch_qwen3_5.py",
+      "ascend_class": "AscendQwen3NextAttention",
+      "ascend_class_line": 28,
+      "base_expression": "Qwen3NextAttention",
+      "child_methods": [
+        "forward"
+      ],
+      "upstream_methods_found": 2,
+      "overridden_methods": [
+        "forward"
+      ],
+      "risk": "critical",
+      "is_patch_file": true,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/e2e/singlecard/test_models.py",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/core/sched/async_scheduler.py",
+      "upstream_class": "AsyncScheduler",
+      "upstream_module": "vllm.v1.core.sched.async_scheduler",
+      "ascend_file": "vllm_ascend/core/recompute_scheduler.py",
+      "ascend_class": "AsyncRecomputeScheduler",
+      "ascend_class_line": 1037,
+      "base_expression": "AsyncScheduler",
+      "child_methods": [
+        "__init__"
+      ],
+      "upstream_methods_found": 3,
+      "overridden_methods": [
+        "__init__"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/core/sched/scheduler.py",
+      "upstream_class": "Scheduler",
+      "upstream_module": "vllm.v1.core.sched.scheduler",
+      "ascend_file": "vllm_ascend/core/recompute_scheduler.py",
+      "ascend_class": "RecomputeScheduler",
+      "ascend_class_line": 107,
+      "base_expression": "Scheduler",
+      "child_methods": [
+        "__init__",
+        "_update_waiting_for_remote_kv",
+        "add_request",
+        "schedule",
+        "update_from_output"
+      ],
+      "upstream_methods_found": 42,
+      "overridden_methods": [
+        "__init__",
+        "_update_waiting_for_remote_kv",
+        "add_request",
+        "schedule",
+        "update_from_output"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/core/sched/scheduler.py",
+      "upstream_class": "Scheduler",
+      "upstream_module": "vllm.v1.core.sched.scheduler",
+      "ascend_file": "vllm_ascend/core/scheduler_dynamic_batch.py",
+      "ascend_class": "SchedulerDynamicBatch",
+      "ascend_class_line": 122,
+      "base_expression": "Scheduler",
+      "child_methods": [
+        "__init__",
+        "schedule"
+      ],
+      "upstream_methods_found": 42,
+      "overridden_methods": [
+        "__init__",
+        "schedule"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/core/sched/scheduler.py",
+      "upstream_class": "Scheduler",
+      "upstream_module": "vllm.v1.core.sched.scheduler",
+      "ascend_file": "vllm_ascend/core/scheduler_profiling_chunk.py",
+      "ascend_class": "ProfilingChunkScheduler",
+      "ascend_class_line": 46,
+      "base_expression": "Scheduler",
+      "child_methods": [
+        "__init__",
+        "_build_rpc_kwargs",
+        "_extract_latency",
+        "run_profiling_chunk_init",
+        "schedule"
+      ],
+      "upstream_methods_found": 42,
+      "overridden_methods": [
+        "__init__",
+        "schedule"
+      ],
+      "risk": "critical",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/core/sched/scheduler.py",
+      "upstream_class": "Scheduler",
+      "upstream_module": "vllm.v1.core.sched.scheduler",
+      "ascend_file": "vllm_ascend/patch/platform/patch_balance_schedule.py",
+      "ascend_class": "BalanceScheduler",
+      "ascend_class_line": 28,
+      "base_expression": "Scheduler",
+      "child_methods": [
+        "__init__",
+        "balance_gather",
+        "schedule"
+      ],
+      "upstream_methods_found": 42,
+      "overridden_methods": [
+        "__init__",
+        "schedule"
+      ],
+      "risk": "critical",
+      "is_patch_file": true,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/engine/core.py",
+      "upstream_class": "DPEngineCoreProc",
+      "upstream_module": "vllm.v1.engine.core",
+      "ascend_file": "vllm_ascend/patch/platform/patch_balance_schedule.py",
+      "ascend_class": "BalanceDPEngineCoreProc",
+      "ascend_class_line": 607,
+      "base_expression": "DPEngineCoreProc",
+      "child_methods": [
+        "run_busy_loop"
+      ],
+      "upstream_methods_found": 13,
+      "overridden_methods": [
+        "run_busy_loop"
+      ],
+      "risk": "critical",
+      "is_patch_file": true,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/executor/multiproc_executor.py",
+      "upstream_class": "MultiprocExecutor",
+      "upstream_module": "vllm.v1.executor.multiproc_executor",
+      "ascend_file": "vllm_ascend/patch/platform/patch_multiproc_executor.py",
+      "ascend_class": "AscendMultiprocExecutor",
+      "ascend_class_line": 24,
+      "base_expression": "MultiprocExecutor",
+      "child_methods": [
+        "_get_parallel_sizes",
+        "_init_executor",
+        "_is_driver_worker",
+        "_post_init_executor"
+      ],
+      "upstream_methods_found": 21,
+      "overridden_methods": [
+        "_get_parallel_sizes",
+        "_init_executor",
+        "_is_driver_worker",
+        "_post_init_executor"
+      ],
+      "risk": "critical",
+      "is_patch_file": true,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/v1/executor/multiproc_executor.py",
+      "upstream_class": "WorkerProc",
+      "upstream_module": "vllm.v1.executor.multiproc_executor",
+      "ascend_file": "vllm_ascend/patch/platform/patch_multiproc_executor.py",
+      "ascend_class": "AscendWorkerProc",
+      "ascend_class_line": 161,
+      "base_expression": "WorkerProc",
+      "child_methods": [
+        "make_worker_process"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "critical",
+      "is_patch_file": true,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/v1/kv_cache_interface.py",
+      "upstream_class": "MLAAttentionSpec",
+      "upstream_module": "vllm.v1.kv_cache_interface",
+      "ascend_file": "vllm_ascend/patch/platform/patch_kv_cache_interface.py",
+      "ascend_class": "AscendMLAAttentionSpec",
+      "ascend_class_line": 15,
+      "base_expression": "MLAAttentionSpec",
+      "child_methods": [
+        "get_sparse_head_dim_virtual",
+        "merge",
+        "page_size_bytes",
+        "sparse_kv_cache_ratio"
+      ],
+      "upstream_methods_found": 2,
+      "overridden_methods": [
+        "merge"
+      ],
+      "risk": "critical",
+      "is_patch_file": true,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/config/__init__.py",
+      "upstream_class": "SchedulerConfig",
+      "upstream_module": "vllm.config",
+      "ascend_file": "vllm_ascend/core/recompute_scheduler.py",
+      "ascend_class": "RecomputeSchedulerConfig",
+      "ascend_class_line": 75,
+      "base_expression": "SchedulerConfig",
+      "child_methods": [
+        "initialize_from_config"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/distributed/device_communicators/base_device_communicator.py",
+      "upstream_class": "DeviceCommunicatorBase",
+      "upstream_module": "vllm.distributed.device_communicators.base_device_communicator",
+      "ascend_file": "vllm_ascend/distributed/device_communicators/npu_communicator.py",
+      "ascend_class": "NPUCommunicator",
+      "ascend_class_line": 23,
+      "base_expression": "DeviceCommunicatorBase",
+      "child_methods": [
+        "__init__",
+        "all_to_all"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/multicard",
+        "tests/ut/distributed"
+      ]
+    },
+    {
+      "upstream_file": "vllm/distributed/kv_events.py",
+      "upstream_class": "KVConnectorKVEvents",
+      "upstream_module": "vllm.distributed.kv_events",
+      "ascend_file": "vllm_ascend/distributed/kv_transfer/kv_pool/ascend_store/ascend_store_connector.py",
+      "ascend_class": "AscendStoreKVEvents",
+      "ascend_class_line": 32,
+      "base_expression": "KVConnectorKVEvents",
+      "child_methods": [
+        "__init__",
+        "__repr__",
+        "add_events",
+        "aggregate",
+        "clear_events",
+        "get_all_events",
+        "get_number_of_workers",
+        "increment_workers"
+      ],
+      "upstream_methods_found": 7,
+      "overridden_methods": [
+        "add_events",
+        "aggregate",
+        "clear_events",
+        "get_all_events",
+        "get_number_of_workers",
+        "increment_workers"
+      ],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/multicard",
+        "tests/ut/distributed"
+      ]
+    },
+    {
+      "upstream_file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+      "upstream_class": "KVConnectorMetadata",
+      "upstream_module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+      "ascend_file": "vllm_ascend/distributed/kv_transfer/kv_p2p/mooncake_connector.py",
+      "ascend_class": "MooncakeConnectorMetadata",
+      "ascend_class_line": 820,
+      "base_expression": "KVConnectorMetadata",
+      "child_methods": [
+        "__init__",
+        "add_new_req"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/multicard",
+        "tests/ut/distributed"
+      ]
+    },
+    {
+      "upstream_file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+      "upstream_class": "KVConnectorBase_V1",
+      "upstream_module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+      "ascend_file": "vllm_ascend/distributed/kv_transfer/kv_p2p/mooncake_connector.py",
+      "ascend_class": "MooncakeConnector",
+      "ascend_class_line": 849,
+      "base_expression": "KVConnectorBase_V1",
+      "child_methods": [
+        "__init__",
+        "build_connector_meta",
+        "get_block_ids_with_load_errors",
+        "get_finished",
+        "get_handshake_metadata",
+        "get_num_new_matched_tokens",
+        "register_kv_caches",
+        "request_finished",
+        "save_kv_layer",
+        "set_xfer_handshake_metadata",
+        "start_load_kv",
+        "update_state_after_alloc",
+        "wait_for_layer_load",
+        "wait_for_save"
+      ],
+      "upstream_methods_found": 35,
+      "overridden_methods": [
+        "__init__",
+        "build_connector_meta",
+        "get_block_ids_with_load_errors",
+        "get_finished",
+        "get_handshake_metadata",
+        "get_num_new_matched_tokens",
+        "register_kv_caches",
+        "request_finished",
+        "save_kv_layer",
+        "set_xfer_handshake_metadata",
+        "start_load_kv",
+        "update_state_after_alloc",
+        "wait_for_layer_load",
+        "wait_for_save"
+      ],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/multicard",
+        "tests/ut/distributed"
+      ]
+    },
+    {
+      "upstream_file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+      "upstream_class": "KVConnectorMetadata",
+      "upstream_module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+      "ascend_file": "vllm_ascend/distributed/kv_transfer/kv_p2p/mooncake_layerwise_connector.py",
+      "ascend_class": "MooncakeLayerwiseConnectorMetadata",
+      "ascend_class_line": 633,
+      "base_expression": "KVConnectorMetadata",
+      "child_methods": [
+        "__init__",
+        "add_new_req"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/multicard",
+        "tests/ut/distributed"
+      ]
+    },
+    {
+      "upstream_file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+      "upstream_class": "KVConnectorBase_V1",
+      "upstream_module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+      "ascend_file": "vllm_ascend/distributed/kv_transfer/kv_p2p/mooncake_layerwise_connector.py",
+      "ascend_class": "MooncakeLayerwiseConnector",
+      "ascend_class_line": 674,
+      "base_expression": "KVConnectorBase_V1",
+      "child_methods": [
+        "__init__",
+        "build_connector_meta",
+        "get_block_ids_with_load_errors",
+        "get_finished",
+        "get_num_new_matched_tokens",
+        "register_kv_caches",
+        "request_finished",
+        "request_finished_all_groups",
+        "save_kv_layer",
+        "start_load_kv",
+        "update_state_after_alloc",
+        "wait_for_layer_load",
+        "wait_for_save"
+      ],
+      "upstream_methods_found": 35,
+      "overridden_methods": [
+        "__init__",
+        "build_connector_meta",
+        "get_block_ids_with_load_errors",
+        "get_finished",
+        "get_num_new_matched_tokens",
+        "register_kv_caches",
+        "request_finished",
+        "save_kv_layer",
+        "start_load_kv",
+        "update_state_after_alloc",
+        "wait_for_layer_load",
+        "wait_for_save"
+      ],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/multicard",
+        "tests/ut/distributed"
+      ]
+    },
+    {
+      "upstream_file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+      "upstream_class": "SupportsHMA",
+      "upstream_module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+      "ascend_file": "vllm_ascend/distributed/kv_transfer/kv_p2p/mooncake_layerwise_connector.py",
+      "ascend_class": "MooncakeLayerwiseConnector",
+      "ascend_class_line": 674,
+      "base_expression": "SupportsHMA",
+      "child_methods": [
+        "__init__",
+        "build_connector_meta",
+        "get_block_ids_with_load_errors",
+        "get_finished",
+        "get_num_new_matched_tokens",
+        "register_kv_caches",
+        "request_finished",
+        "request_finished_all_groups",
+        "save_kv_layer",
+        "start_load_kv",
+        "update_state_after_alloc",
+        "wait_for_layer_load",
+        "wait_for_save"
+      ],
+      "upstream_methods_found": 1,
+      "overridden_methods": [
+        "request_finished_all_groups"
+      ],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/multicard",
+        "tests/ut/distributed"
+      ]
+    },
+    {
+      "upstream_file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+      "upstream_class": "KVConnectorBase_V1",
+      "upstream_module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+      "ascend_file": "vllm_ascend/distributed/kv_transfer/kv_pool/ascend_store/ascend_store_connector.py",
+      "ascend_class": "AscendStoreConnector",
+      "ascend_class_line": 66,
+      "base_expression": "KVConnectorBase_V1",
+      "child_methods": [
+        "__init__",
+        "build_connector_meta",
+        "get_finished",
+        "get_kv_connector_kv_cache_events",
+        "get_num_new_matched_tokens",
+        "register_kv_caches",
+        "request_finished",
+        "requires_piecewise_for_cudagraph",
+        "save_kv_layer",
+        "start_load_kv",
+        "take_events",
+        "update_connector_output",
+        "update_state_after_alloc",
+        "wait_for_layer_load",
+        "wait_for_save"
+      ],
+      "upstream_methods_found": 35,
+      "overridden_methods": [
+        "__init__",
+        "build_connector_meta",
+        "get_finished",
+        "get_kv_connector_kv_cache_events",
+        "get_num_new_matched_tokens",
+        "register_kv_caches",
+        "request_finished",
+        "requires_piecewise_for_cudagraph",
+        "save_kv_layer",
+        "start_load_kv",
+        "take_events",
+        "update_connector_output",
+        "update_state_after_alloc",
+        "wait_for_layer_load",
+        "wait_for_save"
+      ],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/multicard",
+        "tests/ut/distributed"
+      ]
+    },
+    {
+      "upstream_file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+      "upstream_class": "KVConnectorMetadata",
+      "upstream_module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+      "ascend_file": "vllm_ascend/distributed/kv_transfer/kv_pool/ascend_store/config_data.py",
+      "ascend_class": "AscendConnectorMetadata",
+      "ascend_class_line": 385,
+      "base_expression": "KVConnectorMetadata",
+      "child_methods": [
+        "__init__",
+        "add_request"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/multicard",
+        "tests/ut/distributed"
+      ]
+    },
+    {
+      "upstream_file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+      "upstream_class": "KVConnectorMetadata",
+      "upstream_module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+      "ascend_file": "vllm_ascend/distributed/kv_transfer/kv_pool/cpu_offload/cpu_offload_connector.py",
+      "ascend_class": "CPUOffloadingConnectorMetadata",
+      "ascend_class_line": 59,
+      "base_expression": "KVConnectorMetadata",
+      "child_methods": [],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/multicard",
+        "tests/ut/distributed"
+      ]
+    },
+    {
+      "upstream_file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+      "upstream_class": "KVConnectorBase_V1",
+      "upstream_module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+      "ascend_file": "vllm_ascend/distributed/kv_transfer/kv_pool/cpu_offload/cpu_offload_connector.py",
+      "ascend_class": "CPUOffloadingConnector",
+      "ascend_class_line": 64,
+      "base_expression": "KVConnectorBase_V1",
+      "child_methods": [
+        "__init__",
+        "bind_connector_metadata",
+        "build_connector_meta",
+        "clear_connector_metadata",
+        "get_finished",
+        "get_num_new_matched_tokens",
+        "register_kv_caches",
+        "request_finished",
+        "save_kv_layer",
+        "start_load_kv",
+        "update_state_after_alloc",
+        "wait_for_layer_load",
+        "wait_for_save"
+      ],
+      "upstream_methods_found": 35,
+      "overridden_methods": [
+        "__init__",
+        "bind_connector_metadata",
+        "build_connector_meta",
+        "clear_connector_metadata",
+        "get_finished",
+        "get_num_new_matched_tokens",
+        "register_kv_caches",
+        "request_finished",
+        "save_kv_layer",
+        "start_load_kv",
+        "update_state_after_alloc",
+        "wait_for_layer_load",
+        "wait_for_save"
+      ],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/multicard",
+        "tests/ut/distributed"
+      ]
+    },
+    {
+      "upstream_file": "vllm/distributed/kv_transfer/kv_connector/v1/base.py",
+      "upstream_class": "KVConnectorBase_V1",
+      "upstream_module": "vllm.distributed.kv_transfer.kv_connector.v1.base",
+      "ascend_file": "vllm_ascend/distributed/kv_transfer/kv_pool/ucm_connector.py",
+      "ascend_class": "UCMConnectorV1",
+      "ascend_class_line": 26,
+      "base_expression": "KVConnectorBase_V1",
+      "child_methods": [
+        "__init__",
+        "bind_connector_metadata",
+        "build_connector_meta",
+        "build_kv_connector_stats",
+        "build_prom_metrics",
+        "clear_connector_metadata",
+        "get_block_ids_with_load_errors",
+        "get_num_new_matched_tokens",
+        "has_connector_metadata",
+        "register_kv_caches",
+        "request_finished",
+        "save_kv_layer",
+        "start_load_kv",
+        "update_state_after_alloc",
+        "wait_for_layer_load",
+        "wait_for_save"
+      ],
+      "upstream_methods_found": 35,
+      "overridden_methods": [
+        "__init__",
+        "bind_connector_metadata",
+        "build_connector_meta",
+        "build_kv_connector_stats",
+        "build_prom_metrics",
+        "clear_connector_metadata",
+        "get_block_ids_with_load_errors",
+        "get_num_new_matched_tokens",
+        "has_connector_metadata",
+        "register_kv_caches",
+        "request_finished",
+        "save_kv_layer",
+        "start_load_kv",
+        "update_state_after_alloc",
+        "wait_for_layer_load",
+        "wait_for_save"
+      ],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/multicard",
+        "tests/ut/distributed"
+      ]
+    },
+    {
+      "upstream_file": "vllm/distributed/kv_transfer/kv_connector/v1/multi_connector.py",
+      "upstream_class": "MultiConnector",
+      "upstream_module": "vllm.distributed.kv_transfer.kv_connector.v1.multi_connector",
+      "ascend_file": "vllm_ascend/distributed/kv_transfer/ascend_multi_connector.py",
+      "ascend_class": "AscendMultiConnector",
+      "ascend_class_line": 12,
+      "base_expression": "MultiConnector",
+      "child_methods": [
+        "update_state_after_alloc"
+      ],
+      "upstream_methods_found": 32,
+      "overridden_methods": [
+        "update_state_after_alloc"
+      ],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/multicard",
+        "tests/ut/distributed"
+      ]
+    },
+    {
+      "upstream_file": "vllm/distributed/parallel_state.py",
+      "upstream_class": "GroupCoordinator",
+      "upstream_module": "vllm.distributed.parallel_state",
+      "ascend_file": "vllm_ascend/patch/worker/patch_distributed.py",
+      "ascend_class": "GroupCoordinatorPatch",
+      "ascend_class_line": 100,
+      "base_expression": "GroupCoordinator",
+      "child_methods": [
+        "__init__",
+        "all_to_all",
+        "destroy"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "high",
+      "is_patch_file": true,
+      "suggested_tests": [
+        "tests/e2e/multicard",
+        "tests/e2e/singlecard",
+        "tests/ut/distributed",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/entrypoints/openai/engine/__init__.py",
+      "upstream_class": "protocol",
+      "upstream_module": "vllm.entrypoints.openai.engine",
+      "ascend_file": "vllm_ascend/patch/platform/patch_minimax_usage_accounting.py",
+      "ascend_class": "CompletionTokenUsageInfo",
+      "ascend_class_line": 34,
+      "base_expression": "engine_protocol.OpenAIBaseModel",
+      "child_methods": [],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "high",
+      "is_patch_file": true,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/entrypoints/openai/engine/__init__.py",
+      "upstream_class": "protocol",
+      "upstream_module": "vllm.entrypoints.openai.engine",
+      "ascend_file": "vllm_ascend/patch/platform/patch_minimax_usage_accounting.py",
+      "ascend_class": "UsageInfo",
+      "ascend_class_line": 41,
+      "base_expression": "engine_protocol.UsageInfo",
+      "child_methods": [],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "high",
+      "is_patch_file": true,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/lora/punica_wrapper/punica_base.py",
+      "upstream_class": "PunicaWrapperBase",
+      "upstream_module": "vllm.lora.punica_wrapper.punica_base",
+      "ascend_file": "vllm_ascend/lora/punica_npu.py",
+      "ascend_class": "PunicaWrapperNPU",
+      "ascend_class_line": 14,
+      "base_expression": "PunicaWrapperBase",
+      "child_methods": [
+        "__init__",
+        "_apply_expand",
+        "_apply_shrink",
+        "_expand_decode",
+        "_expand_prefill",
+        "_expand_slice_decode",
+        "_expand_slice_prefill",
+        "_shrink_decode",
+        "_shrink_prefill",
+        "add_expand",
+        "add_lora_embedding",
+        "add_lora_linear",
+        "add_lora_logits",
+        "add_shrink"
+      ],
+      "upstream_methods_found": 16,
+      "overridden_methods": [
+        "__init__",
+        "add_expand",
+        "add_lora_embedding",
+        "add_lora_linear",
+        "add_lora_logits",
+        "add_shrink"
+      ],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/v1/attention/backend.py",
+      "upstream_class": "AttentionBackend",
+      "upstream_module": "vllm.v1.attention.backend",
+      "ascend_file": "vllm_ascend/attention/attention_v1.py",
+      "ascend_class": "AscendAttentionBackend",
+      "ascend_class_line": 73,
+      "base_expression": "AttentionBackend",
+      "child_methods": [
+        "copy_blocks",
+        "get_builder_cls",
+        "get_impl_cls",
+        "get_kv_cache_shape",
+        "get_name",
+        "get_supported_kernel_block_sizes",
+        "swap_blocks"
+      ],
+      "upstream_methods_found": 27,
+      "overridden_methods": [
+        "get_builder_cls",
+        "get_impl_cls",
+        "get_kv_cache_shape",
+        "get_name",
+        "get_supported_kernel_block_sizes"
+      ],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/attention"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/attention/backend.py",
+      "upstream_class": "AttentionMetadataBuilder",
+      "upstream_module": "vllm.v1.attention.backend",
+      "ascend_file": "vllm_ascend/attention/attention_v1.py",
+      "ascend_class": "AscendAttentionMetadataBuilder",
+      "ascend_class_line": 213,
+      "base_expression": "AttentionMetadataBuilder[AscendMetadata]",
+      "child_methods": [
+        "__init__",
+        "build",
+        "build_for_graph_capture",
+        "get_cudagraph_support",
+        "reorder_batch"
+      ],
+      "upstream_methods_found": 8,
+      "overridden_methods": [
+        "__init__",
+        "build",
+        "get_cudagraph_support"
+      ],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/attention"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/attention/backend.py",
+      "upstream_class": "AttentionImpl",
+      "upstream_module": "vllm.v1.attention.backend",
+      "ascend_file": "vllm_ascend/attention/attention_v1.py",
+      "ascend_class": "AscendAttentionBackendImpl",
+      "ascend_class_line": 357,
+      "base_expression": "AttentionImpl",
+      "child_methods": [
+        "__init__",
+        "_forward_encoder_attention",
+        "_forward_fia_slidingwindow",
+        "_get_fia_params",
+        "do_kv_cache_update",
+        "forward",
+        "forward_fused_infer_attention",
+        "forward_impl",
+        "forward_paged_attention",
+        "full_graph_fia",
+        "full_graph_pa",
+        "process_weights_after_loading",
+        "reshape_and_cache",
+        "update_graph_params"
+      ],
+      "upstream_methods_found": 6,
+      "overridden_methods": [
+        "__init__",
+        "forward"
+      ],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/attention"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/attention/backend.py",
+      "upstream_class": "AttentionBackend",
+      "upstream_module": "vllm.v1.attention.backend",
+      "ascend_file": "vllm_ascend/attention/mla_v1.py",
+      "ascend_class": "AscendMLABackend",
+      "ascend_class_line": 76,
+      "base_expression": "AttentionBackend",
+      "child_methods": [
+        "get_builder_cls",
+        "get_impl_cls",
+        "get_kv_cache_shape",
+        "get_name",
+        "get_supported_kernel_block_sizes"
+      ],
+      "upstream_methods_found": 27,
+      "overridden_methods": [
+        "get_builder_cls",
+        "get_impl_cls",
+        "get_kv_cache_shape",
+        "get_name",
+        "get_supported_kernel_block_sizes"
+      ],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/attention"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/attention/backend.py",
+      "upstream_class": "MLAAttentionImpl",
+      "upstream_module": "vllm.v1.attention.backend",
+      "ascend_file": "vllm_ascend/attention/mla_v1.py",
+      "ascend_class": "AscendMLAImpl",
+      "ascend_class_line": 698,
+      "base_expression": "MLAAttentionImpl",
+      "child_methods": [
+        "__init__",
+        "_compute_prefill_context",
+        "_forward_decode",
+        "_forward_prefill",
+        "_mla_preprocess",
+        "_process_weights_for_fused_fa_quant",
+        "_process_weights_for_fused_mlapo",
+        "_process_weights_for_fused_mlapo_a5",
+        "_q_proj_and_k_up_proj",
+        "_reorg_kvcache",
+        "_v_up_proj",
+        "exec_kv_decode",
+        "exec_kv_prefill",
+        "forward",
+        "forward_mha",
+        "forward_mqa",
+        "get_context_seq_len_npu",
+        "get_num_actual_tokens",
+        "mla_preprocess_decode",
+        "mla_preprocess_prefill",
+        "process_weights_after_loading",
+        "reorg_decode_q",
+        "rope_single",
+        "update_graph_params"
+      ],
+      "upstream_methods_found": 5,
+      "overridden_methods": [
+        "__init__",
+        "forward_mha",
+        "forward_mqa"
+      ],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/attention"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/attention/backend.py",
+      "upstream_class": "AttentionBackend",
+      "upstream_module": "vllm.v1.attention.backend",
+      "ascend_file": "vllm_ascend/attention/sfa_v1.py",
+      "ascend_class": "AscendSFABackend",
+      "ascend_class_line": 68,
+      "base_expression": "AttentionBackend",
+      "child_methods": [
+        "get_builder_cls",
+        "get_impl_cls",
+        "get_kv_cache_shape",
+        "get_name",
+        "get_supported_kernel_block_sizes"
+      ],
+      "upstream_methods_found": 27,
+      "overridden_methods": [
+        "get_builder_cls",
+        "get_impl_cls",
+        "get_kv_cache_shape",
+        "get_name",
+        "get_supported_kernel_block_sizes"
+      ],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/attention"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/attention/backend.py",
+      "upstream_class": "MLAAttentionImpl",
+      "upstream_module": "vllm.v1.attention.backend",
+      "ascend_file": "vllm_ascend/attention/sfa_v1.py",
+      "ascend_class": "AscendSFAImpl",
+      "ascend_class_line": 367,
+      "base_expression": "MLAAttentionImpl",
+      "child_methods": [
+        "__init__",
+        "_execute_sparse_flash_attention_process",
+        "_get_full_kv",
+        "_get_indexcache_topk_indices",
+        "_handle_o_proj_weight_switch_and_forward",
+        "_init_o_proj_tp_full_params",
+        "_process_weights_for_fused_mlapo",
+        "_q_proj_and_k_up_proj",
+        "_sfa_preprocess_with_mlapo",
+        "_update_indexcache_topk_indices",
+        "_v_up_proj",
+        "exec_kv",
+        "forward",
+        "forward_mha",
+        "forward_mqa",
+        "indexer_select_post_process",
+        "indexer_select_pre_process",
+        "process_weights_after_loading",
+        "rope_single",
+        "update_graph_params"
+      ],
+      "upstream_methods_found": 5,
+      "overridden_methods": [
+        "__init__",
+        "forward_mha",
+        "forward_mqa"
+      ],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/attention"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/attention/backends/utils.py",
+      "upstream_class": "CommonAttentionMetadata",
+      "upstream_module": "vllm.v1.attention.backends.utils",
+      "ascend_file": "vllm_ascend/attention/utils.py",
+      "ascend_class": "AscendCommonAttentionMetadata",
+      "ascend_class_line": 148,
+      "base_expression": "CommonAttentionMetadata",
+      "child_methods": [
+        "_slice_reqs",
+        "unpadded"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/attention"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/kv_offload/spec.py",
+      "upstream_class": "OffloadingSpec",
+      "upstream_module": "vllm.v1.kv_offload.spec",
+      "ascend_file": "vllm_ascend/kv_offload/npu.py",
+      "ascend_class": "NPUOffloadingSpec",
+      "ascend_class_line": 16,
+      "base_expression": "OffloadingSpec",
+      "child_methods": [
+        "__init__",
+        "get_handlers",
+        "get_manager"
+      ],
+      "upstream_methods_found": 3,
+      "overridden_methods": [
+        "__init__",
+        "get_handlers",
+        "get_manager"
+      ],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/v1/kv_offload/worker/worker.py",
+      "upstream_class": "OffloadingHandler",
+      "upstream_module": "vllm.v1.kv_offload.worker.worker",
+      "ascend_file": "vllm_ascend/kv_offload/cpu_npu.py",
+      "ascend_class": "CpuNpuOffloadingHandler",
+      "ascend_class_line": 54,
+      "base_expression": "OffloadingHandler",
+      "child_methods": [
+        "__init__",
+        "_get_event",
+        "_recycle_event",
+        "get_finished",
+        "transfer_async",
+        "wait"
+      ],
+      "upstream_methods_found": 4,
+      "overridden_methods": [
+        "get_finished",
+        "transfer_async",
+        "wait"
+      ],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/worker/gpu_input_batch.py",
+      "upstream_class": "InputBatch",
+      "upstream_module": "vllm.v1.worker.gpu_input_batch",
+      "ascend_file": "vllm_ascend/worker/npu_input_batch.py",
+      "ascend_class": "NPUInputBatch",
+      "ascend_class_line": 32,
+      "base_expression": "InputBatch",
+      "child_methods": [
+        "__init__"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/worker/gpu/block_table.py",
+      "upstream_class": "BlockTables",
+      "upstream_module": "vllm.v1.worker.gpu.block_table",
+      "ascend_file": "vllm_ascend/worker/v2/block_table.py",
+      "ascend_class": "AscendBlockTables",
+      "ascend_class_line": 26,
+      "base_expression": "BlockTables",
+      "child_methods": [
+        "__init__",
+        "compute_slot_mappings"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/worker/gpu/cudagraph_utils.py",
+      "upstream_class": "ModelCudaGraphManager",
+      "upstream_module": "vllm.v1.worker.gpu.cudagraph_utils",
+      "ascend_file": "vllm_ascend/worker/v2/aclgraph_utils.py",
+      "ascend_class": "ModelAclGraphManager",
+      "ascend_class_line": 40,
+      "base_expression": "ModelCudaGraphManager",
+      "child_methods": [
+        "__init__",
+        "capture",
+        "run_fullgraph"
+      ],
+      "upstream_methods_found": 5,
+      "overridden_methods": [
+        "__init__",
+        "capture",
+        "run_fullgraph"
+      ],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/worker/gpu/input_batch.py",
+      "upstream_class": "InputBuffers",
+      "upstream_module": "vllm.v1.worker.gpu.input_batch",
+      "ascend_file": "vllm_ascend/worker/v2/input_batch.py",
+      "ascend_class": "AscendInputBuffers",
+      "ascend_class_line": 31,
+      "base_expression": "InputBuffers",
+      "child_methods": [
+        "__init__"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/worker/gpu/input_batch.py",
+      "upstream_class": "InputBatch",
+      "upstream_module": "vllm.v1.worker.gpu.input_batch",
+      "ascend_file": "vllm_ascend/worker/v2/input_batch.py",
+      "ascend_class": "AscendInputBatch",
+      "ascend_class_line": 68,
+      "base_expression": "InputBatch",
+      "child_methods": [
+        "make_dummy"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/worker/gpu/model_runner.py",
+      "upstream_class": "GPUModelRunner",
+      "upstream_module": "vllm.v1.worker.gpu.model_runner",
+      "ascend_file": "vllm_ascend/worker/v2/model_runner.py",
+      "ascend_class": "NPUModelRunner",
+      "ascend_class_line": 58,
+      "base_expression": "GPUModelRunner",
+      "child_methods": [
+        "__init__",
+        "_pad_query_start_loc_for_fia",
+        "_update_seq_lens_cpu",
+        "eplb_warmup",
+        "initialize_kv_cache",
+        "postprocess",
+        "prepare_inputs",
+        "profile_run"
+      ],
+      "upstream_methods_found": 37,
+      "overridden_methods": [
+        "__init__",
+        "initialize_kv_cache",
+        "postprocess",
+        "prepare_inputs",
+        "profile_run"
+      ],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/worker/gpu/model_states/default.py",
+      "upstream_class": "DefaultModelState",
+      "upstream_module": "vllm.v1.worker.gpu.model_states.default",
+      "ascend_file": "vllm_ascend/worker/v2/model_states/default.py",
+      "ascend_class": "AscendModelState",
+      "ascend_class_line": 32,
+      "base_expression": "DefaultModelState",
+      "child_methods": [
+        "prepare_attn"
+      ],
+      "upstream_methods_found": 8,
+      "overridden_methods": [
+        "prepare_attn"
+      ],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/worker/gpu/spec_decode/eagle/cudagraph.py",
+      "upstream_class": "EagleCudaGraphManager",
+      "upstream_module": "vllm.v1.worker.gpu.spec_decode.eagle.cudagraph",
+      "ascend_file": "vllm_ascend/worker/v2/spec_decode/eagle/aclgraph.py",
+      "ascend_class": "EagleAclGraphManager",
+      "ascend_class_line": 30,
+      "base_expression": "EagleCudaGraphManager",
+      "child_methods": [
+        "__init__",
+        "capture",
+        "run_fullgraph"
+      ],
+      "upstream_methods_found": 3,
+      "overridden_methods": [
+        "__init__",
+        "capture"
+      ],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/worker/gpu/spec_decode/eagle/speculator.py",
+      "upstream_class": "EagleSpeculator",
+      "upstream_module": "vllm.v1.worker.gpu.spec_decode.eagle.speculator",
+      "ascend_file": "vllm_ascend/worker/v2/spec_decode/eagle/speculator.py",
+      "ascend_class": "AscendEagleSpeculator",
+      "ascend_class_line": 43,
+      "base_expression": "EagleSpeculator",
+      "child_methods": [
+        "__init__",
+        "_calc_next_seq_lens_cpu",
+        "_get_seq_lens_cpu",
+        "_increment_decode_attn_metadata",
+        "_init_decode_attn_metadata",
+        "_init_decode_draft_attn_metadatas",
+        "_update_decode_attn_metadata",
+        "build_draft_attn_metadatas",
+        "generate_draft",
+        "init_cudagraph_manager",
+        "propose",
+        "run_model",
+        "set_attn"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/worker/gpu/states.py",
+      "upstream_class": "RequestState",
+      "upstream_module": "vllm.v1.worker.gpu.states",
+      "ascend_file": "vllm_ascend/worker/v2/states.py",
+      "ascend_class": "AscendRequestState",
+      "ascend_class_line": 24,
+      "base_expression": "RequestState",
+      "child_methods": [
+        "__init__",
+        "add_request"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/worker/worker_base.py",
+      "upstream_class": "WorkerBase",
+      "upstream_module": "vllm.v1.worker.worker_base",
+      "ascend_file": "vllm_ascend/worker/worker.py",
+      "ascend_class": "NPUWorker",
+      "ascend_class_line": 81,
+      "base_expression": "WorkerBase",
+      "child_methods": [
+        "__init__",
+        "_create_profiler",
+        "_init_device",
+        "_init_worker_distributed_environment",
+        "_warm_up_atb",
+        "add_lora",
+        "check_health",
+        "compile_or_warm_up_model",
+        "determine_available_memory",
+        "execute_dummy_batch",
+        "execute_model",
+        "get_kv_cache_spec",
+        "get_kv_connector_handshake_metadata",
+        "get_model",
+        "get_supported_pooling_tasks",
+        "get_supported_tasks",
+        "init_device",
+        "initialize_cache",
+        "initialize_from_config",
+        "list_loras",
+        "load_model",
+        "pin_lora",
+        "profile",
+        "profile_prefill_latency",
+        "remove_lora",
+        "reset_encoder_cache",
+        "sample_tokens",
+        "signal_handler",
+        "sleep",
+        "take_draft_token_ids",
+        "uninstall_static_kernel",
+        "update_max_model_len",
+        "wake_up"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "high",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/compilation/compiler_interface.py",
+      "upstream_class": "CompilerInterface",
+      "upstream_module": "vllm.compilation.compiler_interface",
+      "ascend_file": "vllm_ascend/compilation/compiler_interface.py",
+      "ascend_class": "AscendCompiler",
+      "ascend_class_line": 118,
+      "base_expression": "CompilerInterface",
+      "child_methods": [
+        "compile",
+        "compute_hash"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/compilation/passes/vllm_inductor_pass.py",
+      "upstream_class": "VllmInductorPass",
+      "upstream_module": "vllm.compilation.passes.vllm_inductor_pass",
+      "ascend_file": "vllm_ascend/compilation/passes/allgather_chunk_noop_pass.py",
+      "ascend_class": "AllGatherChunkNoOpCleanupPass",
+      "ascend_class_line": 10,
+      "base_expression": "VllmInductorPass",
+      "child_methods": [
+        "__call__",
+        "__init__",
+        "_all_gather",
+        "_empty",
+        "_register_patterns",
+        "pattern",
+        "replacement"
+      ],
+      "upstream_methods_found": 6,
+      "overridden_methods": [
+        "__init__"
+      ],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/compilation/passes/vllm_inductor_pass.py",
+      "upstream_class": "VllmInductorPass",
+      "upstream_module": "vllm.compilation.passes.vllm_inductor_pass",
+      "ascend_file": "vllm_ascend/compilation/passes/allreduce_rmsnorm_fusion_pass.py",
+      "ascend_class": "MatmulAllReduceAddRMSNormPass",
+      "ascend_class_line": 134,
+      "base_expression": "VllmInductorPass",
+      "child_methods": [
+        "__call__",
+        "__init__",
+        "is_applicable_for_range"
+      ],
+      "upstream_methods_found": 6,
+      "overridden_methods": [
+        "__init__"
+      ],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/compilation/passes/vllm_inductor_pass.py",
+      "upstream_class": "VllmInductorPass",
+      "upstream_module": "vllm.compilation.passes.vllm_inductor_pass",
+      "ascend_file": "vllm_ascend/compilation/passes/muls_add_pass.py",
+      "ascend_class": "MulsAddFusionPass",
+      "ascend_class_line": 76,
+      "base_expression": "VllmInductorPass",
+      "child_methods": [
+        "__call__",
+        "__init__",
+        "is_applicable_for_range"
+      ],
+      "upstream_methods_found": 6,
+      "overridden_methods": [
+        "__init__"
+      ],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/compilation/passes/vllm_inductor_pass.py",
+      "upstream_class": "VllmInductorPass",
+      "upstream_module": "vllm.compilation.passes.vllm_inductor_pass",
+      "ascend_file": "vllm_ascend/compilation/passes/noop_elimination.py",
+      "ascend_class": "NoOpEliminationPass",
+      "ascend_class_line": 11,
+      "base_expression": "VllmInductorPass",
+      "child_methods": [
+        "__call__",
+        "_all_dims_equivalent",
+        "_dims_equivalent",
+        "_is_view_like"
+      ],
+      "upstream_methods_found": 6,
+      "overridden_methods": [],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/compilation/passes/vllm_inductor_pass.py",
+      "upstream_class": "VllmInductorPass",
+      "upstream_module": "vllm.compilation.passes.vllm_inductor_pass",
+      "ascend_file": "vllm_ascend/compilation/passes/norm_quant_fusion_pass.py",
+      "ascend_class": "AddRMSNormQuantFusionPass",
+      "ascend_class_line": 477,
+      "base_expression": "VllmInductorPass",
+      "child_methods": [
+        "__call__",
+        "__init__",
+        "is_applicable_for_range"
+      ],
+      "upstream_methods_found": 6,
+      "overridden_methods": [
+        "__init__"
+      ],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/compilation/passes/vllm_inductor_pass.py",
+      "upstream_class": "VllmInductorPass",
+      "upstream_module": "vllm.compilation.passes.vllm_inductor_pass",
+      "ascend_file": "vllm_ascend/compilation/passes/qknorm_rope_fusion_pass.py",
+      "ascend_class": "QKNormRopeFusionPass",
+      "ascend_class_line": 186,
+      "base_expression": "VllmInductorPass",
+      "child_methods": [
+        "__call__",
+        "__init__",
+        "is_applicable_for_range"
+      ],
+      "upstream_methods_found": 6,
+      "overridden_methods": [
+        "__init__"
+      ],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/compilation/passes/vllm_inductor_pass.py",
+      "upstream_class": "VllmInductorPass",
+      "upstream_module": "vllm.compilation.passes.vllm_inductor_pass",
+      "ascend_file": "vllm_ascend/compilation/passes/sequence_parallelism_moe.py",
+      "ascend_class": "SequenceParallelismMoePass",
+      "ascend_class_line": 165,
+      "base_expression": "VllmInductorPass",
+      "child_methods": [
+        "__call__",
+        "__init__",
+        "is_applicable_for_range"
+      ],
+      "upstream_methods_found": 6,
+      "overridden_methods": [
+        "__init__"
+      ],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/compilation/passes/vllm_inductor_pass.py",
+      "upstream_class": "VllmInductorPass",
+      "upstream_module": "vllm.compilation.passes.vllm_inductor_pass",
+      "ascend_file": "vllm_ascend/compilation/passes/sequence_parallelism.py",
+      "ascend_class": "SequenceParallelismPass",
+      "ascend_class_line": 187,
+      "base_expression": "VllmInductorPass",
+      "child_methods": [
+        "__call__",
+        "__init__",
+        "is_applicable_for_range"
+      ],
+      "upstream_methods_found": 6,
+      "overridden_methods": [
+        "__init__"
+      ],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/lora/layers/__init__.py",
+      "upstream_class": "ColumnParallelLinearWithLoRA",
+      "upstream_module": "vllm.lora.layers",
+      "ascend_file": "vllm_ascend/lora/utils.py",
+      "ascend_class": "AscendColumnParallelLinearWithLoRA",
+      "ascend_class_line": 31,
+      "base_expression": "ColumnParallelLinearWithLoRA",
+      "child_methods": [
+        "can_replace_layer"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/lora/layers/__init__.py",
+      "upstream_class": "MergedColumnParallelLinearWithLoRA",
+      "upstream_module": "vllm.lora.layers",
+      "ascend_file": "vllm_ascend/lora/utils.py",
+      "ascend_class": "AscendMergedColumnParallelLinearWithLoRA",
+      "ascend_class_line": 44,
+      "base_expression": "MergedColumnParallelLinearWithLoRA",
+      "child_methods": [
+        "can_replace_layer"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/lora/layers/__init__.py",
+      "upstream_class": "RowParallelLinearWithLoRA",
+      "upstream_module": "vllm.lora.layers",
+      "ascend_file": "vllm_ascend/lora/utils.py",
+      "ascend_class": "AscendRowParallelLinearWithLoRA",
+      "ascend_class_line": 57,
+      "base_expression": "RowParallelLinearWithLoRA",
+      "child_methods": [
+        "can_replace_layer"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/lora/layers/__init__.py",
+      "upstream_class": "VocabParallelEmbeddingWithLoRA",
+      "upstream_module": "vllm.lora.layers",
+      "ascend_file": "vllm_ascend/lora/utils.py",
+      "ascend_class": "AscendVocabParallelEmbeddingWithLoRA",
+      "ascend_class_line": 70,
+      "base_expression": "VocabParallelEmbeddingWithLoRA",
+      "child_methods": [
+        "can_replace_layer"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/lora/layers/__init__.py",
+      "upstream_class": "QKVParallelLinearWithLoRA",
+      "upstream_module": "vllm.lora.layers",
+      "ascend_file": "vllm_ascend/lora/utils.py",
+      "ascend_class": "AscendQKVParallelLinearWithLoRA",
+      "ascend_class_line": 82,
+      "base_expression": "QKVParallelLinearWithLoRA",
+      "child_methods": [
+        "can_replace_layer"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/lora/layers/__init__.py",
+      "upstream_class": "MergedQKVParallelLinearWithLoRA",
+      "upstream_module": "vllm.lora.layers",
+      "ascend_file": "vllm_ascend/lora/utils.py",
+      "ascend_class": "AscendMergedQKVParallelLinearWithLoRA",
+      "ascend_class_line": 95,
+      "base_expression": "MergedQKVParallelLinearWithLoRA",
+      "child_methods": [
+        "can_replace_layer"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/lora/layers/__init__.py",
+      "upstream_class": "ColumnParallelLinearWithShardedLoRA",
+      "upstream_module": "vllm.lora.layers",
+      "ascend_file": "vllm_ascend/lora/utils.py",
+      "ascend_class": "AscendColumnParallelLinearWithShardedLoRA",
+      "ascend_class_line": 122,
+      "base_expression": "ColumnParallelLinearWithShardedLoRA",
+      "child_methods": [
+        "can_replace_layer"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/lora/layers/__init__.py",
+      "upstream_class": "MergedColumnParallelLinearWithShardedLoRA",
+      "upstream_module": "vllm.lora.layers",
+      "ascend_file": "vllm_ascend/lora/utils.py",
+      "ascend_class": "AscendMergedColumnParallelLinearWithShardedLoRA",
+      "ascend_class_line": 135,
+      "base_expression": "MergedColumnParallelLinearWithShardedLoRA",
+      "child_methods": [
+        "can_replace_layer"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/lora/layers/__init__.py",
+      "upstream_class": "MergedQKVParallelLinearWithShardedLoRA",
+      "upstream_module": "vllm.lora.layers",
+      "ascend_file": "vllm_ascend/lora/utils.py",
+      "ascend_class": "AscendMergedQKVParallelLinearWithShardedLoRA",
+      "ascend_class_line": 148,
+      "base_expression": "MergedQKVParallelLinearWithShardedLoRA",
+      "child_methods": [
+        "can_replace_layer"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/lora/layers/__init__.py",
+      "upstream_class": "QKVParallelLinearWithShardedLoRA",
+      "upstream_module": "vllm.lora.layers",
+      "ascend_file": "vllm_ascend/lora/utils.py",
+      "ascend_class": "AscendQKVParallelLinearWithShardedLoRA",
+      "ascend_class_line": 161,
+      "base_expression": "QKVParallelLinearWithShardedLoRA",
+      "child_methods": [
+        "can_replace_layer"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/lora/layers/__init__.py",
+      "upstream_class": "RowParallelLinearWithShardedLoRA",
+      "upstream_module": "vllm.lora.layers",
+      "ascend_file": "vllm_ascend/lora/utils.py",
+      "ascend_class": "AscendRowParallelLinearWithShardedLoRA",
+      "ascend_class_line": 174,
+      "base_expression": "RowParallelLinearWithShardedLoRA",
+      "child_methods": [
+        "can_replace_layer"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/lora/layers/replicated_linear.py",
+      "upstream_class": "ReplicatedLinearWithLoRA",
+      "upstream_module": "vllm.lora.layers.replicated_linear",
+      "ascend_file": "vllm_ascend/lora/utils.py",
+      "ascend_class": "AscendReplicatedLinearWithLoRA",
+      "ascend_class_line": 108,
+      "base_expression": "ReplicatedLinearWithLoRA",
+      "child_methods": [
+        "can_replace_layer"
+      ],
+      "upstream_methods_found": 5,
+      "overridden_methods": [
+        "can_replace_layer"
+      ],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/nightly/single_node/ops",
+        "tests/ut/quantization"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/sample/ops/topk_topp_sampler.py",
+      "upstream_class": "TopKTopPSampler",
+      "upstream_module": "vllm.v1.sample.ops.topk_topp_sampler",
+      "ascend_file": "vllm_ascend/sample/sampler.py",
+      "ascend_class": "AscendTopKTopPSampler",
+      "ascend_class_line": 89,
+      "base_expression": "TopKTopPSampler",
+      "child_methods": [
+        "__init__",
+        "forward_native",
+        "set_q_event"
+      ],
+      "upstream_methods_found": 6,
+      "overridden_methods": [
+        "__init__",
+        "forward_native"
+      ],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/v1/sample/sampler.py",
+      "upstream_class": "Sampler",
+      "upstream_module": "vllm.v1.sample.sampler",
+      "ascend_file": "vllm_ascend/sample/sampler.py",
+      "ascend_class": "AscendSampler",
+      "ascend_class_line": 41,
+      "base_expression": "Sampler",
+      "child_methods": [
+        "__init__",
+        "apply_penalties",
+        "do_async_exponential",
+        "set_q_event"
+      ],
+      "upstream_methods_found": 11,
+      "overridden_methods": [
+        "__init__",
+        "apply_penalties"
+      ],
+      "risk": "medium",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/platforms/__init__.py",
+      "upstream_class": "Platform",
+      "upstream_module": "vllm.platforms",
+      "ascend_file": "vllm_ascend/platform.py",
+      "ascend_class": "NPUPlatform",
+      "ascend_class_line": 94,
+      "base_expression": "Platform",
+      "child_methods": [
+        "_fix_incompatible_config",
+        "_get_default_max_cudagraph_capture_size",
+        "_validate_layer_sharding_config",
+        "apply_config_platform_defaults",
+        "check_and_update_config",
+        "get_attn_backend_cls",
+        "get_compile_backend",
+        "get_current_memory_usage",
+        "get_device_capability",
+        "get_device_communicator_cls",
+        "get_device_name",
+        "get_device_uuid",
+        "get_pass_manager_cls",
+        "get_punica_wrapper",
+        "get_static_graph_wrapper_cls",
+        "import_kernels",
+        "inference_mode",
+        "is_pin_memory_available",
+        "is_sleep_mode_available",
+        "manual_seed_all",
+        "num_compute_units",
+        "opaque_attention_op",
+        "pass_key",
+        "pre_register_and_update",
+        "set_additional_forward_context",
+        "set_device",
+        "support_hybrid_kv_cache",
+        "support_static_graph_mode",
+        "update_block_size_for_backend",
+        "use_custom_op_collectives"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "low",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/v1/core/sched/output.py",
+      "upstream_class": "SchedulerOutput",
+      "upstream_module": "vllm.v1.core.sched.output",
+      "ascend_file": "vllm_ascend/core/recompute_scheduler.py",
+      "ascend_class": "RecomputeSchedulerOutput",
+      "ascend_class_line": 103,
+      "base_expression": "SchedulerOutput",
+      "child_methods": [],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "low",
+      "is_patch_file": false,
+      "suggested_tests": [
+        "tests/e2e/singlecard",
+        "tests/ut/worker"
+      ]
+    },
+    {
+      "upstream_file": "vllm/v1/spec_decode/draft_model.py",
+      "upstream_class": "DraftModelProposer",
+      "upstream_module": "vllm.v1.spec_decode.draft_model",
+      "ascend_file": "vllm_ascend/spec_decode/draft_proposer.py",
+      "ascend_class": "AscendDraftModelProposer",
+      "ascend_class_line": 8,
+      "base_expression": "DraftModelProposer",
+      "child_methods": [
+        "__init__"
+      ],
+      "upstream_methods_found": 7,
+      "overridden_methods": [
+        "__init__"
+      ],
+      "risk": "low",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/v1/spec_decode/eagle.py",
+      "upstream_class": "SpecDecodeBaseProposer",
+      "upstream_module": "vllm.v1.spec_decode.eagle",
+      "ascend_file": "vllm_ascend/spec_decode/eagle_proposer.py",
+      "ascend_class": "AscendSpecDecodeBaseProposer",
+      "ascend_class_line": 90,
+      "base_expression": "SpecDecodeBaseProposer",
+      "child_methods": [
+        "__init__",
+        "_adjust_tensor",
+        "_get_model",
+        "_maybe_share_embeddings",
+        "_maybe_share_lm_head",
+        "_pcp_pad_and_split",
+        "_propose",
+        "_run_merged_draft",
+        "_split_pcp_input",
+        "_update_full_graph_params",
+        "_update_full_graph_params_if_needed",
+        "attn_update_stack_num_spec_norm",
+        "dummy_run",
+        "get_model",
+        "load_model",
+        "maybe_all_gather_and_unpad",
+        "maybe_pad_and_reduce",
+        "model_returns_tuple",
+        "prepare_inputs",
+        "prepare_inputs_padded",
+        "prepare_next_token_ids_padded",
+        "set_inputs_first_pass",
+        "shallow_copy_metadata"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "low",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/v1/spec_decode/eagle.py",
+      "upstream_class": "EagleProposer",
+      "upstream_module": "vllm.v1.spec_decode.eagle",
+      "ascend_file": "vllm_ascend/spec_decode/eagle_proposer.py",
+      "ascend_class": "AscendEagleProposer",
+      "ascend_class_line": 1859,
+      "base_expression": "EagleProposer",
+      "child_methods": [
+        "__init__"
+      ],
+      "upstream_methods_found": 1,
+      "overridden_methods": [
+        "__init__"
+      ],
+      "risk": "low",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/v1/spec_decode/extract_hidden_states.py",
+      "upstream_class": "ExtractHiddenStatesProposer",
+      "upstream_module": "vllm.v1.spec_decode.extract_hidden_states",
+      "ascend_file": "vllm_ascend/spec_decode/extract_hidden_states_proposer.py",
+      "ascend_class": "AscendExtractHiddenStatesProposer",
+      "ascend_class_line": 25,
+      "base_expression": "ExtractHiddenStatesProposer",
+      "child_methods": [
+        "__init__",
+        "dummy_run",
+        "prepare_next_token_ids_padded"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "low",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/v1/spec_decode/medusa.py",
+      "upstream_class": "MedusaProposer",
+      "upstream_module": "vllm.v1.spec_decode.medusa",
+      "ascend_file": "vllm_ascend/spec_decode/medusa_proposer.py",
+      "ascend_class": "AscendMedusaProposer",
+      "ascend_class_line": 10,
+      "base_expression": "MedusaProposer",
+      "child_methods": [
+        "dummy_run",
+        "propose"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "low",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/v1/spec_decode/ngram_proposer.py",
+      "upstream_class": "NgramProposer",
+      "upstream_module": "vllm.v1.spec_decode.ngram_proposer",
+      "ascend_file": "vllm_ascend/spec_decode/ngram_proposer.py",
+      "ascend_class": "AscendNgramProposer",
+      "ascend_class_line": 5,
+      "base_expression": "NgramProposer",
+      "child_methods": [
+        "__init__",
+        "dummy_run",
+        "load_model",
+        "propose"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "low",
+      "is_patch_file": false,
+      "suggested_tests": []
+    },
+    {
+      "upstream_file": "vllm/v1/spec_decode/suffix_decoding.py",
+      "upstream_class": "SuffixDecodingProposer",
+      "upstream_module": "vllm.v1.spec_decode.suffix_decoding",
+      "ascend_file": "vllm_ascend/spec_decode/suffix_proposer.py",
+      "ascend_class": "AscendSuffixDecodingProposer",
+      "ascend_class_line": 4,
+      "base_expression": "SuffixDecodingProposer",
+      "child_methods": [
+        "__init__",
+        "dummy_run",
+        "propose"
+      ],
+      "upstream_methods_found": 0,
+      "overridden_methods": [],
+      "risk": "low",
+      "is_patch_file": false,
+      "suggested_tests": []
+    }
+  ]
+}

@@ -1,0 +1,138 @@
+diff --git a/.buildkite/test_areas/lm_eval.yaml b/.buildkite/test_areas/lm_eval.yaml
+index 5a284d172ab3f908da1ab7bbc1449a5442502c24..3450b70c280205217cc5653fdf8895b9c8644986 100644
+--- a/.buildkite/test_areas/lm_eval.yaml
++++ b/.buildkite/test_areas/lm_eval.yaml
+@@ -343,29 +343,66 @@ steps:
+   commands:
+   - pytest -s -v evals/gsm8k/test_gsm8k_correctness.py --config-list-file=configs/models-qwen35-blackwell.txt
+ 
+-- label: ":nvidia: (H200) LM Eval Large Models"
+-  key: lm-eval-large-models-8xh200
+-  timeout_in_minutes: 120
++- label: ":nvidia: (H200) LM Eval DeepSeek R1 TP"
++  key: lm-eval-deepseek-r1-tp-8xh200
++  timeout_in_minutes: 35
+   device: h200
+   optional: true
+   num_devices: 8
+   commands:
+-    - pytest -s -v evals/gsm8k/test_gsm8k_correctness.py --config-list-file=configs/models-h200.txt
+-  mirror:
+-    amd:
+-      label: ":amd: (MI300) LM Eval Large Models"
+-      dind: false
+-      device: mi300_8
+-      timeout_in_minutes: 65
+-      depends_on:
+-      - image-build-amd
+-      commands:
+-      - export VLLM_WORKER_MULTIPROC_METHOD=spawn
+-      - export PYTORCH_ROCM_ARCH=gfx942 # Limit Quark compilation to save time
+-      - pytest -s -v evals/gsm8k/test_gsm8k_correctness.py --config-list-file=configs/models-mi3xx.txt
+-      source_file_dependencies:
+-      - vllm/_aiter_ops.py
+-      - vllm/platforms/rocm.py
++    - pytest -s -v evals/gsm8k/test_gsm8k_correctness.py --config-list-file=configs/models-h200-deepseek-r1-tp.txt
++
++- label: ":nvidia: (H200) LM Eval DeepSeek R1 DP"
++  key: lm-eval-deepseek-r1-dp-8xh200
++  timeout_in_minutes: 35
++  device: h200
++  optional: true
++  num_devices: 8
++  commands:
++    - pytest -s -v evals/gsm8k/test_gsm8k_correctness.py --config-list-file=configs/models-h200-deepseek-r1-dp.txt
++
++- label: ":nvidia: (H200) LM Eval DeepSeek V3.2 TP"
++  key: lm-eval-deepseek-v32-tp-8xh200
++  timeout_in_minutes: 35
++  device: h200
++  optional: true
++  num_devices: 8
++  commands:
++    - pytest -s -v evals/gsm8k/test_gsm8k_correctness.py --config-list-file=configs/models-h200-deepseek-v32-tp.txt
++
++- label: ":nvidia: (H200) LM Eval DeepSeek V3.2 DP"
++  key: lm-eval-deepseek-v32-dp-8xh200
++  timeout_in_minutes: 35
++  device: h200
++  optional: true
++  num_devices: 8
++  commands:
++    - pytest -s -v evals/gsm8k/test_gsm8k_correctness.py --config-list-file=configs/models-h200-deepseek-v32-dp.txt
++
++- label: ":nvidia: (H200) LM Eval Nemotron 3 Super"
++  key: lm-eval-nemotron-3-super-8xh200
++  timeout_in_minutes: 35
++  device: h200
++  optional: true
++  num_devices: 8
++  commands:
++    - pytest -s -v evals/gsm8k/test_gsm8k_correctness.py --config-list-file=configs/models-h200-nemotron-3-super.txt
++
++- label: ":amd: (MI300) LM Eval Large Models"
++  key: amd-lm-eval-large-models
++  dind: false
++  device: mi300_8
++  optional: true
++  timeout_in_minutes: 65
++  depends_on:
++  - image-build-amd
++  commands:
++  - export VLLM_WORKER_MULTIPROC_METHOD=spawn
++  - export PYTORCH_ROCM_ARCH=gfx942 # Limit Quark compilation to save time
++  - pytest -s -v evals/gsm8k/test_gsm8k_correctness.py --config-list-file=configs/models-mi3xx.txt
++  source_file_dependencies:
++  - vllm/_aiter_ops.py
++  - vllm/platforms/rocm.py
+ 
+ - label: ":nvidia: (H100) MoE Refactor Integration TEMPORARY"
+   key: moe-refactor-integration-test-h100-temporary
+diff --git a/tests/evals/gsm8k/configs/models-h200-deepseek-r1-dp.txt b/tests/evals/gsm8k/configs/models-h200-deepseek-r1-dp.txt
+new file mode 100644
+index 0000000000000000000000000000000000000000..9e293daf16f459f033ebdb1a6a4a11cc60ae9a83
+--- /dev/null
++++ b/tests/evals/gsm8k/configs/models-h200-deepseek-r1-dp.txt
+@@ -0,0 +1 @@
++DeepSeek-R1-DP.yaml
+diff --git a/tests/evals/gsm8k/configs/models-h200-deepseek-r1-tp.txt b/tests/evals/gsm8k/configs/models-h200-deepseek-r1-tp.txt
+new file mode 100644
+index 0000000000000000000000000000000000000000..30826a6f7698e578bd78f7db06ae2a168c753714
+--- /dev/null
++++ b/tests/evals/gsm8k/configs/models-h200-deepseek-r1-tp.txt
+@@ -0,0 +1 @@
++DeepSeek-R1-TP.yaml
+diff --git a/tests/evals/gsm8k/configs/models-h200-deepseek-v32-dp.txt b/tests/evals/gsm8k/configs/models-h200-deepseek-v32-dp.txt
+new file mode 100644
+index 0000000000000000000000000000000000000000..57faba312ffc5cbb626dabc37e6a0b197d849223
+--- /dev/null
++++ b/tests/evals/gsm8k/configs/models-h200-deepseek-v32-dp.txt
+@@ -0,0 +1 @@
++DeepSeek-V3.2-DP.yaml
+diff --git a/tests/evals/gsm8k/configs/models-h200-deepseek-v32-tp.txt b/tests/evals/gsm8k/configs/models-h200-deepseek-v32-tp.txt
+new file mode 100644
+index 0000000000000000000000000000000000000000..027f168fd58e37aa2280c3cf9288b4f675eba5df
+--- /dev/null
++++ b/tests/evals/gsm8k/configs/models-h200-deepseek-v32-tp.txt
+@@ -0,0 +1 @@
++DeepSeek-V3.2-TP.yaml
+diff --git a/tests/evals/gsm8k/configs/models-h200-nemotron-3-super.txt b/tests/evals/gsm8k/configs/models-h200-nemotron-3-super.txt
+new file mode 100644
+index 0000000000000000000000000000000000000000..ec6fc214cdb8e5b017a5d2ebac8b33d5165199f6
+--- /dev/null
++++ b/tests/evals/gsm8k/configs/models-h200-nemotron-3-super.txt
+@@ -0,0 +1,2 @@
++Nemotron-3-Super-120B-A12B-BF16.yaml
++Nemotron-3-Super-120B-A12B-FP8.yaml
+diff --git a/tests/evals/gsm8k/configs/models-h200.txt b/tests/evals/gsm8k/configs/models-h200.txt
+deleted file mode 100644
+index 255e93b674430cd4b78e16618a38b6504fb6ac51..0000000000000000000000000000000000000000
+--- a/tests/evals/gsm8k/configs/models-h200.txt
++++ /dev/null
+@@ -1,6 +0,0 @@
+-DeepSeek-R1-TP.yaml
+-DeepSeek-R1-DP.yaml
+-DeepSeek-V3.2-TP.yaml
+-DeepSeek-V3.2-DP.yaml
+-Nemotron-3-Super-120B-A12B-BF16.yaml
+-Nemotron-3-Super-120B-A12B-FP8.yaml

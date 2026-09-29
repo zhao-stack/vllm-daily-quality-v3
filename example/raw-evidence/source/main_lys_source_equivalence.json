@@ -1,0 +1,36 @@
+{
+  "latest_sha": "2c815be15c4e094447c38d67f666e590492f4c28",
+  "sources": [
+    {
+      "file": "templates/SKILL.md",
+      "sha256": "b601a9f1aad5bc3818fc08ac4f37ea069f567881e6623e9a61d7d9abc009a68a",
+      "latest_source_sha": "2c815be15c4e094447c38d67f666e590492f4c28",
+      "blob": "c544793f707dc8ee9e3158c685710e975b03f854"
+    },
+    {
+      "file": "templates/optimization_prompt.txt",
+      "sha256": "06863a3c06393e41a5e7eee298dafea1fde622cfaca7205115b090d94521d6a7",
+      "latest_source_sha": "2c815be15c4e094447c38d67f666e590492f4c28",
+      "blob": "b01765081d2a9aa6f2b1260b027c309894acf3b2"
+    },
+    {
+      "file": "templates/optimization_schema.json",
+      "sha256": "847d2f45cb09b357cc1449a8c6007693b89b52f1db892f6906aa71c1e79566fa",
+      "latest_source_sha": "2c815be15c4e094447c38d67f666e590492f4c28",
+      "blob": "3e8f82c5013831f997452d32f8ff6c3725f201af"
+    },
+    {
+      "file": "scripts/deep_analyze.py",
+      "sha256": "f2e67d8bac972ce5c7a5dc5b14c95851db5441d850091f76186a2d916168dbbe",
+      "latest_source_sha": "2c815be15c4e094447c38d67f666e590492f4c28",
+      "blob": "9b62177c522f7389f936a0e8993a8300114d6f10"
+    },
+    {
+      "file": "scripts/source_repo.py",
+      "sha256": "3ce73de2ee1b2c9804cb8387745b4d0f494fd9494d9030248ea4e57d4496f409",
+      "latest_source_sha": "2c815be15c4e094447c38d67f666e590492f4c28",
+      "blob": "605c0a02cbffb64f2fb779ec2e27baea9f1f6a30"
+    }
+  ],
+  "basis": "Pinned GitHub Contents byte-equivalent original program"
+}

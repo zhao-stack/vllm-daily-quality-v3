@@ -1,0 +1,162 @@
+[
+  {
+    "id": 5189638143,
+    "node_id": "PRR_kwDOI7xefs8AAAABNVOX_w",
+    "user": {
+      "login": "claude[bot]",
+      "id": 209825114,
+      "node_id": "BOT_kgDODIGtWg",
+      "avatar_url": "https://avatars.githubusercontent.com/in/1236702?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/claude%5Bbot%5D",
+      "html_url": "https://github.com/apps/claude",
+      "followers_url": "https://api.github.com/users/claude%5Bbot%5D/followers",
+      "following_url": "https://api.github.com/users/claude%5Bbot%5D/following{/other_user}",
+      "gists_url": "https://api.github.com/users/claude%5Bbot%5D/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/claude%5Bbot%5D/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/claude%5Bbot%5D/subscriptions",
+      "organizations_url": "https://api.github.com/users/claude%5Bbot%5D/orgs",
+      "repos_url": "https://api.github.com/users/claude%5Bbot%5D/repos",
+      "events_url": "https://api.github.com/users/claude%5Bbot%5D/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/claude%5Bbot%5D/received_events",
+      "type": "Bot",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "## Claude Code Review\n\nThis pull request is from a fork — automated review is disabled. A repository maintainer can comment `@claude review` to run a one-time review.",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/51922#pullrequestreview-5189638143",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/51922",
+    "author_association": "NONE",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/51922#pullrequestreview-5189638143"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/51922"
+      }
+    },
+    "submitted_at": "2026-09-13T05:25:00Z",
+    "commit_id": null
+  },
+  {
+    "id": 5263106189,
+    "node_id": "PRR_kwDOI7xefs8AAAABObSgjQ",
+    "user": {
+      "login": "Isotr0py",
+      "id": 41363108,
+      "node_id": "MDQ6VXNlcjQxMzYzMTA4",
+      "avatar_url": "https://avatars.githubusercontent.com/u/41363108?u=cf740eef87baa3f65ebaa44f84e4c334ee4641cf&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/Isotr0py",
+      "html_url": "https://github.com/Isotr0py",
+      "followers_url": "https://api.github.com/users/Isotr0py/followers",
+      "following_url": "https://api.github.com/users/Isotr0py/following{/other_user}",
+      "gists_url": "https://api.github.com/users/Isotr0py/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/Isotr0py/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/Isotr0py/subscriptions",
+      "organizations_url": "https://api.github.com/users/Isotr0py/orgs",
+      "repos_url": "https://api.github.com/users/Isotr0py/repos",
+      "events_url": "https://api.github.com/users/Isotr0py/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/Isotr0py/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/51922#pullrequestreview-5263106189",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/51922",
+    "author_association": "MEMBER",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/51922#pullrequestreview-5263106189"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/51922"
+      }
+    },
+    "submitted_at": "2026-09-21T04:51:55Z",
+    "commit_id": "df6a1fbd3e1c78de4933c8408dcda286b4770805"
+  },
+  {
+    "id": 5263163161,
+    "node_id": "PRR_kwDOI7xefs8AAAABObV_GQ",
+    "user": {
+      "login": "Isotr0py",
+      "id": 41363108,
+      "node_id": "MDQ6VXNlcjQxMzYzMTA4",
+      "avatar_url": "https://avatars.githubusercontent.com/u/41363108?u=cf740eef87baa3f65ebaa44f84e4c334ee4641cf&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/Isotr0py",
+      "html_url": "https://github.com/Isotr0py",
+      "followers_url": "https://api.github.com/users/Isotr0py/followers",
+      "following_url": "https://api.github.com/users/Isotr0py/following{/other_user}",
+      "gists_url": "https://api.github.com/users/Isotr0py/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/Isotr0py/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/Isotr0py/subscriptions",
+      "organizations_url": "https://api.github.com/users/Isotr0py/orgs",
+      "repos_url": "https://api.github.com/users/Isotr0py/repos",
+      "events_url": "https://api.github.com/users/Isotr0py/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/Isotr0py/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/51922#pullrequestreview-5263163161",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/51922",
+    "author_association": "MEMBER",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/51922#pullrequestreview-5263163161"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/51922"
+      }
+    },
+    "submitted_at": "2026-09-21T04:57:22Z",
+    "commit_id": "df6a1fbd3e1c78de4933c8408dcda286b4770805"
+  },
+  {
+    "id": 5263914990,
+    "node_id": "PRR_kwDOI7xefs8AAAABOcD37g",
+    "user": {
+      "login": "Isotr0py",
+      "id": 41363108,
+      "node_id": "MDQ6VXNlcjQxMzYzMTA4",
+      "avatar_url": "https://avatars.githubusercontent.com/u/41363108?u=cf740eef87baa3f65ebaa44f84e4c334ee4641cf&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/Isotr0py",
+      "html_url": "https://github.com/Isotr0py",
+      "followers_url": "https://api.github.com/users/Isotr0py/followers",
+      "following_url": "https://api.github.com/users/Isotr0py/following{/other_user}",
+      "gists_url": "https://api.github.com/users/Isotr0py/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/Isotr0py/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/Isotr0py/subscriptions",
+      "organizations_url": "https://api.github.com/users/Isotr0py/orgs",
+      "repos_url": "https://api.github.com/users/Isotr0py/repos",
+      "events_url": "https://api.github.com/users/Isotr0py/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/Isotr0py/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Output look reasonable, thanks for contributions!\n\n**MM processor stage metrics (ms)**\n\nPython frontend (`vllm bench mm-processor`):\n\n```text\n                     Stage  Mean Median  Std P50.0 P90.0 P99.0\n          get_mm_hashes_ms  0.88   0.88 0.01  0.88  0.89  0.91\nget_cache_missing_items_ms  0.20   0.20 0.02  0.20  0.23  0.25\n     apply_hf_processor_ms 13.83  13.63 0.63 13.63 14.44 15.48\n        merge_mm_kwargs_ms  0.05   0.05 0.01  0.05  0.05  0.07\n   apply_prompt_updates_ms  0.06   0.06 0.01  0.06  0.07  0.07\n     preprocessor_total_ms 15.02  14.81 0.64 14.81 15.69 16.68\n        encoder_forward_ms 10.99  10.21 3.70 10.21 15.47 20.36\n         num_encoder_calls  1.00   1.00 0.00  1.00  1.00  1.00\n\nSummary: 20 total encoder calls across 20 requests.\n```\n\nRust frontend (`vllm-bench mm-processor`):\n\n```text\nMM Processor Metrics:\n                Stage  Mean Median  Std P50.0 P90.0 P99.0\npreprocessor_total_ms 22.82  22.45 0.66 22.45 23.62 24.46\n       media_fetch_ms 20.08  20.07 0.10 20.07 20.22 20.30\n  preprocess_image_ms  2.70   2.38 0.59  2.38  3.39  4.22\n  prompt_expansion_ms  0.01   0.01 0.00  0.01  0.01  0.01\n```\n\n**End-to-end latency (ms)**\n\nPython frontend:\n\n```text\nMetric Value (ms)\n  Mean     819.42\nMedian     830.33\n   Std     252.23\n P50.0     830.33\n P90.0    1130.49\n P99.0    1286.64\n```\n\nRust frontend:\n\n```text\nCompleted: 20, Failed: 0\nEnd-to-End Latency (ms):\nMetric Value (ms)\n  Mean     442.90\nMedian     451.44\n   Std      32.57\n P50.0     451.44\n P90.0     454.43\n P99.0     457.23\nRequest throughput: 2.256 req/s\n```",
+    "state": "APPROVED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/51922#pullrequestreview-5263914990",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/51922",
+    "author_association": "MEMBER",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/51922#pullrequestreview-5263914990"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/51922"
+      }
+    },
+    "submitted_at": "2026-09-21T07:12:01Z",
+    "commit_id": "6aabc11293b64833d6f269142632e6c9b86bb2fd"
+  }
+]

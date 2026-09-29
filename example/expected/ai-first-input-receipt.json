@@ -1,0 +1,10 @@
+{
+  "prepared_at": "2026-09-23T03:57:21.874Z",
+  "semantic_sha256": "15e136453bafb0345fdb9fdcae1c0962a691c85cfa68bf5c53537c8511e06750",
+  "semantic_mtime": "2026-09-23T03:46:26.857Z",
+  "manual_analysis_sha256": "8a77324c671e8bbf6e2e1831b620d51fa58eb64abf4e4d72af9a9dd9e272d741",
+  "pipeline_not_yet_run": true,
+  "source_equivalence": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260923-010154\\evidence\\main_lys_source_equivalence.json",
+  "template_source": "C:\\Users\\20202\\Documents\\main2main复盘\\outputs\\upstream-quality-main-lys-v3-20260922-010058\\20260921_010204-20260922_010058\\vLLM上游质量与优化分析_main-lys_V3_20260921_010204-20260922_010058.xlsx",
+  "template_sha256": "8f6fe76f614f79ac8add67f5ccb420cc747926ba59e46cadfd7788cd909ae966"
+}

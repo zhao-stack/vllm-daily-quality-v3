@@ -1,0 +1,708 @@
+diff --git a/rust/src/parser/src/output_grammar.rs b/rust/src/parser/src/output_grammar.rs
+index 24f24a225c9b90400dd158f2168563be957c6190..f19254d364824f49889f7c8ec460c38d6c310e14 100644
+--- a/rust/src/parser/src/output_grammar.rs
++++ b/rust/src/parser/src/output_grammar.rs
+@@ -133,6 +133,13 @@ pub enum OutputGrammarError {
+     /// A model-specific structural-tag builder rejected its inputs.
+     #[error("failed to build output grammar")]
+     Build(#[from] xgrammar_structural_tag::Error),
++    /// A model-specific parser could not project a builder format to its
++    /// visible-output language.
++    #[error("unexpected output grammar shape from `{builder}` builder")]
++    UnexpectedBuilderFormat {
++        /// Builder whose output did not match the parser's known shape.
++        builder: &'static str,
++    },
+ }
+ 
+ /// Build the visible (post-reasoning) language from a crate structural-tag
+@@ -149,6 +156,19 @@ pub(crate) fn visible_format_from_builder(
+     let Some(builder) = builder else {
+         return Ok(None);
+     };
++
++    format_from_builder(
++        builder,
++        ctx,
++        StructuralTagOptions::default().with_reasoning(false),
++    )
++}
++
++fn format_from_builder(
++    builder: &dyn StructuralTagBuilder,
++    ctx: &OutputGrammarContext<'_>,
++    options: StructuralTagOptions,
++) -> Result<Option<Format>> {
+     if !tool_grammar_applies(ctx) {
+         return Ok(None);
+     }
+@@ -157,14 +177,25 @@ pub(crate) fn visible_format_from_builder(
+         builder,
+         &tool_params(ctx.tools, ctx.tool_strict_level),
+         ctx.tool_choice.clone(),
+-        StructuralTagOptions::default()
+-            .with_reasoning(false)
+-            .with_parallel_tool_calls(ctx.parallel_tool_calls),
++        options.with_parallel_tool_calls(ctx.parallel_tool_calls),
+     )?;
+ 
+     Ok(Some(structural_tag.format))
+ }
+ 
++#[cfg(test)]
++pub(crate) fn full_format_from_builder_for_test(
++    builder: &dyn StructuralTagBuilder,
++    ctx: &OutputGrammarContext<'_>,
++    reasoning: xgrammar_structural_tag::builders::ReasoningMode,
++) -> Result<Option<Format>> {
++    format_from_builder(
++        builder,
++        ctx,
++        StructuralTagOptions::default().with_reasoning(reasoning),
++    )
++}
++
+ fn tool_params(tools: &[Tool], strict_level: ToolStrictLevel) -> Vec<ToolParam> {
+     tools
+         .iter()
+diff --git a/rust/src/parser/src/reasoning/deepseek_r1.rs b/rust/src/parser/src/reasoning/deepseek_r1.rs
+index 16c2e8c8dc6e782c8a8dee2fb3e971489dcd0f32..5f8c637c1b0305573d5820c4816838d77a83ef26 100644
+--- a/rust/src/parser/src/reasoning/deepseek_r1.rs
++++ b/rust/src/parser/src/reasoning/deepseek_r1.rs
+@@ -2,6 +2,9 @@
+ // SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+ 
+ use vllm_tokenizer::{DecodedText, DynTokenizer};
++use xgrammar_structural_tag::format::Format;
++
++use crate::output_grammar::{self, OutputGrammarContext};
+ 
+ use super::{
+     DelimitedReasoningParser, DelimitedReasoningParserBuilder, ReasoningDelta, ReasoningParser,
+@@ -36,6 +39,14 @@ impl ReasoningParser for DeepSeekR1ReasoningParser {
+         self.inner.initialize(prompt_token_ids)
+     }
+ 
++    fn wrap_visible_format(
++        &self,
++        _ctx: &OutputGrammarContext<'_>,
++        visible: &Format,
++    ) -> output_grammar::Result<Option<Format>> {
++        Ok(Some(self.inner.wrap_visible_format(visible)))
++    }
++
+     fn push(&mut self, delta: DecodedText) -> Result<ReasoningDelta> {
+         Ok(self.inner.push(delta))
+     }
+diff --git a/rust/src/parser/src/reasoning/deepseek_v3.rs b/rust/src/parser/src/reasoning/deepseek_v3.rs
+index 8b053c89f48d4cd15b568e8f623b1af4410b2e19..944ff02681ae0a934a2ce850e1df213a1103a10a 100644
+--- a/rust/src/parser/src/reasoning/deepseek_v3.rs
++++ b/rust/src/parser/src/reasoning/deepseek_v3.rs
+@@ -2,6 +2,9 @@
+ // SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+ 
+ use vllm_tokenizer::{DecodedText, DynTokenizer};
++use xgrammar_structural_tag::format::Format;
++
++use crate::output_grammar::{self, OutputGrammarContext};
+ 
+ use super::{
+     DelimitedReasoningParser, DelimitedReasoningParserBuilder, ReasoningDelta, ReasoningParser,
+@@ -35,6 +38,14 @@ impl ReasoningParser for DeepSeekV3ReasoningParser {
+         self.inner.initialize(prompt_token_ids)
+     }
+ 
++    fn wrap_visible_format(
++        &self,
++        _ctx: &OutputGrammarContext<'_>,
++        visible: &Format,
++    ) -> output_grammar::Result<Option<Format>> {
++        Ok(Some(self.inner.wrap_visible_format(visible)))
++    }
++
+     fn push(&mut self, delta: DecodedText) -> Result<ReasoningDelta> {
+         Ok(self.inner.push(delta))
+     }
+diff --git a/rust/src/parser/src/reasoning/delimited.rs b/rust/src/parser/src/reasoning/delimited.rs
+index 986ce2cc253ed73eebc66e18fc953e63582288d0..ef7b8f95e08df2f151ba603fb5903858ff338129 100644
+--- a/rust/src/parser/src/reasoning/delimited.rs
++++ b/rust/src/parser/src/reasoning/delimited.rs
+@@ -2,6 +2,7 @@
+ // SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+ 
+ use vllm_tokenizer::{DecodedText, DynTokenizer, Tokenizer};
++use xgrammar_structural_tag::format::Format;
+ 
+ use super::{ReasoningDelta, ReasoningError, Result};
+ use crate::utils::partial_prefix_len;
+@@ -148,6 +149,31 @@ impl DelimitedReasoningParser {
+         self.current_in_reasoning
+     }
+ 
++    /// Wrap visible output from the initialized reasoning and framing state.
++    pub(crate) fn wrap_visible_format(&self, visible: &Format) -> Format {
++        let begin = if self.current_in_reasoning {
++            "".to_string()
++        } else {
++            self.framed_start_token.clone()
++        };
++        let mut reasoning = Format::tag(begin, Format::any_text(), self.end_token.clone());
++        if !self.after_end.is_empty() {
++            reasoning = Format::sequence(vec![reasoning, Format::const_string(self.after_end)]);
++        }
++        if !self.current_in_reasoning {
++            reasoning = Format::optional(reasoning);
++            if !self.pending_after.is_empty() {
++                return Format::sequence(vec![
++                    Format::const_string(self.pending_after),
++                    reasoning,
++                    visible.clone(),
++                ]);
++            }
++        }
++
++        Format::sequence(vec![reasoning, visible.clone()])
++    }
++
+     /// Parse one decoded text delta and return its reasoning/content split.
+     pub(crate) fn push(&mut self, delta: DecodedText) -> ReasoningDelta {
+         self.buffer.append(delta);
+diff --git a/rust/src/parser/src/reasoning/glm45.rs b/rust/src/parser/src/reasoning/glm45.rs
+index 557e628b268c6069b15f8b15f45104b408913732..41bea717715f2ec642865c4be4413b6b3dda761c 100644
+--- a/rust/src/parser/src/reasoning/glm45.rs
++++ b/rust/src/parser/src/reasoning/glm45.rs
+@@ -2,6 +2,9 @@
+ // SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+ 
+ use vllm_tokenizer::{DecodedText, DynTokenizer};
++use xgrammar_structural_tag::format::Format;
++
++use crate::output_grammar::{self, OutputGrammarContext};
+ 
+ use super::{
+     DelimitedReasoningParser, DelimitedReasoningParserBuilder, ReasoningDelta, ReasoningParser,
+@@ -38,6 +41,14 @@ impl ReasoningParser for Glm45ReasoningParser {
+         self.inner.initialize(prompt_token_ids)
+     }
+ 
++    fn wrap_visible_format(
++        &self,
++        _ctx: &OutputGrammarContext<'_>,
++        visible: &Format,
++    ) -> output_grammar::Result<Option<Format>> {
++        Ok(Some(self.inner.wrap_visible_format(visible)))
++    }
++
+     fn push(&mut self, delta: DecodedText) -> Result<ReasoningDelta> {
+         Ok(self.inner.push(delta))
+     }
+diff --git a/rust/src/parser/src/reasoning/hy.rs b/rust/src/parser/src/reasoning/hy.rs
+index 4a0ae1223267547204fd29e08b3d91f71480534e..ac3132ff7be02efbe7a9cefa1cf27ae731ed982f 100644
+--- a/rust/src/parser/src/reasoning/hy.rs
++++ b/rust/src/parser/src/reasoning/hy.rs
+@@ -2,6 +2,9 @@
+ // SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+ 
+ use vllm_tokenizer::{DecodedText, DynTokenizer};
++use xgrammar_structural_tag::format::Format;
++
++use crate::output_grammar::{self, OutputGrammarContext};
+ 
+ use super::{
+     DelimitedReasoningParser, DelimitedReasoningParserBuilder, ReasoningDelta, ReasoningError,
+@@ -43,6 +46,14 @@ impl ReasoningParser for HyReasoningParser {
+         self.inner.initialize(prompt_token_ids)
+     }
+ 
++    fn wrap_visible_format(
++        &self,
++        _ctx: &OutputGrammarContext<'_>,
++        visible: &Format,
++    ) -> output_grammar::Result<Option<Format>> {
++        Ok(Some(self.inner.wrap_visible_format(visible)))
++    }
++
+     fn push(&mut self, delta: DecodedText) -> Result<ReasoningDelta> {
+         Ok(self.inner.push(delta))
+     }
+diff --git a/rust/src/parser/src/reasoning/qwen3.rs b/rust/src/parser/src/reasoning/qwen3.rs
+index 9a3f298c4b3d6a8e883673c5ef0192b4664cfb1e..19786422098a7097fc748e2de725676c5d083d31 100644
+--- a/rust/src/parser/src/reasoning/qwen3.rs
++++ b/rust/src/parser/src/reasoning/qwen3.rs
+@@ -2,6 +2,9 @@
+ // SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+ 
+ use vllm_tokenizer::{DecodedText, DynTokenizer};
++use xgrammar_structural_tag::format::Format;
++
++use crate::output_grammar::{self, OutputGrammarContext};
+ 
+ use super::{
+     DelimitedReasoningParser, DelimitedReasoningParserBuilder, ReasoningDelta, ReasoningParser,
+@@ -40,6 +43,14 @@ impl ReasoningParser for Qwen3ReasoningParser {
+         self.inner.initialize(prompt_token_ids)
+     }
+ 
++    fn wrap_visible_format(
++        &self,
++        _ctx: &OutputGrammarContext<'_>,
++        visible: &Format,
++    ) -> output_grammar::Result<Option<Format>> {
++        Ok(Some(self.inner.wrap_visible_format(visible)))
++    }
++
+     fn push(&mut self, delta: DecodedText) -> Result<ReasoningDelta> {
+         Ok(self.inner.push(delta))
+     }
+diff --git a/rust/src/parser/src/reasoning/step3p5.rs b/rust/src/parser/src/reasoning/step3p5.rs
+index 7f94faf9985d704ea6eb4539ac04f2dc1d561975..8e504d7a65acf1bff09f93f0f321e2335c8c474b 100644
+--- a/rust/src/parser/src/reasoning/step3p5.rs
++++ b/rust/src/parser/src/reasoning/step3p5.rs
+@@ -2,6 +2,9 @@
+ // SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+ 
+ use vllm_tokenizer::{DecodedText, DynTokenizer};
++use xgrammar_structural_tag::format::Format;
++
++use crate::output_grammar::{self, OutputGrammarContext};
+ 
+ use super::{
+     DelimitedReasoningParser, DelimitedReasoningParserBuilder, ReasoningDelta, ReasoningParser,
+@@ -38,6 +41,14 @@ impl ReasoningParser for Step3p5ReasoningParser {
+         self.inner.initialize(prompt_token_ids)
+     }
+ 
++    fn wrap_visible_format(
++        &self,
++        _ctx: &OutputGrammarContext<'_>,
++        visible: &Format,
++    ) -> output_grammar::Result<Option<Format>> {
++        Ok(Some(self.inner.wrap_visible_format(visible)))
++    }
++
+     fn push(&mut self, delta: DecodedText) -> Result<ReasoningDelta> {
+         Ok(self.inner.push(delta))
+     }
+diff --git a/rust/src/parser/src/tool/minimax_m2.rs b/rust/src/parser/src/tool/minimax_m2.rs
+index ee48bfe8bc2cfa4fbda07e675f74481888a6b1ff..3b868013bb320ac548e180c90f6ddf00e8fbdaad 100644
+--- a/rust/src/parser/src/tool/minimax_m2.rs
++++ b/rust/src/parser/src/tool/minimax_m2.rs
+@@ -6,10 +6,12 @@ use winnow::combinator::{alt, delimited, eof, repeat, seq, terminated};
+ use winnow::prelude::*;
+ use winnow::stream::Partial;
+ use winnow::token::{literal, rest, take_until};
++use xgrammar_structural_tag::format::Format;
+ 
+ use super::parameters::ToolSchemas;
+ use super::utils::{MarkerScanState, parse_buffered_event, safe_text_len_mul, take_until_marker};
+ use super::{Result, ToolCallDelta, ToolParser, ToolParserOutput};
++use crate::output_grammar::{self, OutputGrammarContext, OutputGrammarError};
+ use crate::tool::{StructuralTagBuilder, Tool};
+ 
+ const TOOL_CALL_START: &str = "<minimax:tool_call>";
+@@ -120,6 +122,38 @@ impl ToolParser for MinimaxM2ToolParser {
+         Some(xgrammar_structural_tag::Model::Minimax.builder())
+     }
+ 
++    fn build_visible_format(
++        &self,
++        ctx: &OutputGrammarContext<'_>,
++    ) -> output_grammar::Result<Option<Format>> {
++        let Some(format) =
++            output_grammar::visible_format_from_builder(self.structural_tag_builder(), ctx)?
++        else {
++            return Ok(None);
++        };
++
++        // The MiniMax builder's reasoning=false form retains the empty
++        // thinking close and separator used by its chat template. Strip that
++        // fixed prefix so the initialized reasoning parser can supply the
++        // actual reasoning phase.
++        let Format::Sequence(sequence) = format else {
++            return Err(OutputGrammarError::UnexpectedBuilderFormat { builder: "minimax" });
++        };
++        let [
++            Format::ConstString(empty_think),
++            Format::ConstString(separator),
++            visible,
++        ] = sequence.elements.as_slice()
++        else {
++            return Err(OutputGrammarError::UnexpectedBuilderFormat { builder: "minimax" });
++        };
++        if empty_think.value != "\n</think>\n\n" || separator.value != "\n\n" {
++            return Err(OutputGrammarError::UnexpectedBuilderFormat { builder: "minimax" });
++        }
++
++        Ok(Some(visible.clone()))
++    }
++
+     fn parse_into(&mut self, chunk: &str, output: &mut ToolParserOutput) -> Result<()> {
+         self.buffer.push_str(chunk);
+ 
+diff --git a/rust/src/parser/src/unified/combined.rs b/rust/src/parser/src/unified/combined.rs
+index d9a88929486a9b027dcc722f3ce04ba8a96cc799..48c77ef90035daeaf6fb610adf959e3dc345e138 100644
+--- a/rust/src/parser/src/unified/combined.rs
++++ b/rust/src/parser/src/unified/combined.rs
+@@ -155,11 +155,26 @@ mod tests {
+     use std::sync::Arc;
+ 
+     use vllm_tokenizer::test_utils::TestTokenizer;
+-    use vllm_tokenizer::{DecodedText, TokenAnchor, TokenAttribution};
++    use vllm_tokenizer::{DecodedText, DynTokenizer, TokenAnchor, TokenAttribution, Tokenizer};
++    use xgrammar_structural_tag::ToolChoice;
++    use xgrammar_structural_tag::builders::ReasoningMode;
++    use xgrammar_structural_tag::format::Format;
+ 
+     use super::CombinedParser;
+-    use crate::reasoning::{Qwen3ReasoningParser, ReasoningDelta, ReasoningParser};
+-    use crate::tool::{Qwen3XmlToolParser, Tool, ToolParser};
++    use crate::output_grammar::{
++        GrammarCoverage, OutputGrammarContext, full_format_from_builder_for_test,
++    };
++    use crate::reasoning::{
++        DeepSeekR1ReasoningParser, DeepSeekV3ReasoningParser, Glm45ReasoningParser,
++        Glm47ReasoningParser, KimiK2ReasoningParser, MiniMaxM2ReasoningParser,
++        NemotronV3ReasoningParser, Qwen3ReasoningParser, ReasoningDelta, ReasoningParser,
++        Step3ReasoningParser,
++    };
++    use crate::tool::{
++        DeepSeekV3ToolParser, DeepSeekV4ToolParser, DeepSeekV31ToolParser, DeepSeekV32ToolParser,
++        Glm47MoeToolParser, KimiK2ToolParser, MinimaxM2ToolParser, Qwen3CoderToolParser,
++        Qwen3XmlToolParser, Tool, ToolParser,
++    };
+     use crate::unified::{UnifiedParser, UnifiedParserEvent, UnifiedParserOutput};
+ 
+     fn tokenizer() -> TestTokenizer {
+@@ -191,6 +206,87 @@ mod tests {
+         output
+     }
+ 
++    fn assert_builder_parity<R, T>(name: &str)
++    where
++        R: ReasoningParser + 'static,
++        T: ToolParser + 'static,
++    {
++        // All builders' reasoning=true forms begin inside a reasoning block.
++        // Auto starts outside reasoning and allows a generated reasoning block.
++        for (mode, prompt) in [
++            (ReasoningMode::Enabled, &[256][..]),
++            (ReasoningMode::Auto, &[][..]),
++        ] {
++            for tool_choice in [
++                ToolChoice::required(),
++                ToolChoice::function("get_weather"),
++                ToolChoice::auto(),
++            ] {
++                let mut tools = test_tools();
++                if tool_choice == ToolChoice::auto() {
++                    tools[0].strict = Some(true);
++                }
++                let ctx = OutputGrammarContext {
++                    tools: &tools,
++                    tool_choice: &tool_choice,
++                    tool_strict_level: Default::default(),
++                    parallel_tool_calls: true,
++                };
++                let tool = T::create(&tools).unwrap();
++                let expected = full_format_from_builder_for_test(
++                    tool.structural_tag_builder().unwrap(),
++                    &ctx,
++                    mode,
++                )
++                .unwrap()
++                .unwrap();
++                let reasoning = R::create(Arc::new(tokenizer()) as DynTokenizer).unwrap();
++                let mut parser = CombinedParser::new(Some(reasoning), Some(tool));
++                parser.initialize(prompt).unwrap();
++                let actual = parser.build_output_grammar(&ctx).unwrap().unwrap();
++
++                assert_eq!(
++                    actual.coverage,
++                    GrammarCoverage::FromTokenZero,
++                    "{name} {mode:?} {tool_choice:?}"
++                );
++                assert_eq!(
++                    normalize_builder_parity(actual.format),
++                    normalize_builder_parity(expected),
++                    "{name} {mode:?} {tool_choice:?}"
++                );
++            }
++        }
++    }
++
++    fn normalize_builder_parity(format: Format) -> Format {
++        match format {
++            Format::AnyText(mut text) => {
++                text.excludes.clear();
++                Format::AnyText(text)
++            }
++            Format::Tag(mut tag) => {
++                tag.content = Box::new(normalize_builder_parity(*tag.content));
++                Format::Tag(tag)
++            }
++            Format::Optional(mut optional) => {
++                optional.content = Box::new(normalize_builder_parity(*optional.content));
++                Format::Optional(optional)
++            }
++            Format::Sequence(sequence) => {
++                let mut elements = Vec::new();
++                for element in sequence.elements {
++                    match normalize_builder_parity(element) {
++                        Format::Sequence(nested) => elements.extend(nested.elements),
++                        element => elements.push(element),
++                    }
++                }
++                Format::sequence(elements)
++            }
++            format => format,
++        }
++    }
++
+     struct PreserveReasoningParser;
+ 
+     impl ReasoningParser for PreserveReasoningParser {
+@@ -401,4 +497,153 @@ mod tests {
+         parser = CombinedParser::new(None, Some(Box::new(PreserveToolParser)));
+         assert!(parser.preserve_special_tokens());
+     }
++
++    #[test]
++    fn split_parser_wrappers_match_builder_full_formats() {
++        assert_builder_parity::<Qwen3ReasoningParser, Qwen3XmlToolParser>("qwen3");
++        assert_builder_parity::<Qwen3ReasoningParser, Qwen3CoderToolParser>("qwen3.5");
++        assert_builder_parity::<DeepSeekR1ReasoningParser, DeepSeekV3ToolParser>("deepseek-r1");
++        assert_builder_parity::<DeepSeekV3ReasoningParser, DeepSeekV31ToolParser>("deepseek-v3.1");
++        assert_builder_parity::<DeepSeekV3ReasoningParser, DeepSeekV32ToolParser>("deepseek-v3.2");
++        assert_builder_parity::<DeepSeekV3ReasoningParser, DeepSeekV4ToolParser>("deepseek-v4");
++        assert_builder_parity::<Glm47ReasoningParser, Glm47MoeToolParser>("glm-4.7");
++        assert_builder_parity::<KimiK2ReasoningParser, KimiK2ToolParser>("kimi-k2");
++        assert_builder_parity::<MiniMaxM2ReasoningParser, MinimaxM2ToolParser>("minimax-m2");
++    }
++
++    #[test]
++    fn outside_reasoning_allows_optional_generated_reasoning() {
++        let tools = test_tools();
++        let tool_choice = ToolChoice::required();
++        let ctx = OutputGrammarContext {
++            tools: &tools,
++            tool_choice: &tool_choice,
++            tool_strict_level: Default::default(),
++            parallel_tool_calls: true,
++        };
++        let reasoning = Qwen3ReasoningParser::create(Arc::new(tokenizer())).unwrap();
++        let tool = Qwen3XmlToolParser::create(&tools).unwrap();
++        let visible = tool.build_visible_format(&ctx).unwrap().unwrap();
++        let mut parser = CombinedParser::new(Some(reasoning), Some(tool));
++        parser.initialize(&[]).unwrap();
++
++        let actual = parser.build_output_grammar(&ctx).unwrap().unwrap();
++        let expected = Format::sequence(vec![
++            Format::optional(Format::sequence(vec![
++                Format::tag("<think>", Format::any_text(), "</think>"),
++                Format::const_string("\n\n"),
++            ])),
++            visible,
++        ]);
++
++        assert_eq!(actual.coverage, GrammarCoverage::FromTokenZero);
++        assert_eq!(actual.format, expected);
++    }
++
++    #[test]
++    fn glm45_wrapper_keeps_only_generated_start_framing() {
++        let tools = test_tools();
++        let tool_choice = ToolChoice::required();
++        let ctx = OutputGrammarContext {
++            tools: &tools,
++            tool_choice: &tool_choice,
++            tool_strict_level: Default::default(),
++            parallel_tool_calls: true,
++        };
++        let visible = Format::const_string("answer");
++
++        // GLM-4.5/4.6 thinking prompts leave the whole reasoning opener to generation.
++        for (prompt, begin) in [(vec![], "\n<think>"), (vec![256], "")] {
++            let mut parser = Glm45ReasoningParser::new(Arc::new(tokenizer())).unwrap();
++            parser.initialize(&prompt).unwrap();
++            let reasoning = Format::sequence(vec![
++                Format::tag(begin, Format::any_text(), "</think>"),
++                Format::const_string("\n"),
++            ]);
++            let reasoning = if prompt.is_empty() {
++                Format::optional(reasoning)
++            } else {
++                reasoning
++            };
++            assert_eq!(
++                parser.wrap_visible_format(&ctx, &visible).unwrap(),
++                Some(Format::sequence(vec![reasoning, visible.clone()])),
++                "prompt {prompt:?}"
++            );
++        }
++    }
++
++    #[test]
++    fn delimited_wrappers_use_model_specific_suffixes() {
++        let tools = test_tools();
++        let tool_choice = ToolChoice::required();
++        let ctx = OutputGrammarContext {
++            tools: &tools,
++            tool_choice: &tool_choice,
++            tool_strict_level: Default::default(),
++            parallel_tool_calls: true,
++        };
++        let visible = Format::const_string("visible");
++
++        let mut nemotron = NemotronV3ReasoningParser::new(Arc::new(tokenizer())).unwrap();
++        nemotron.initialize(&[256]).unwrap();
++        assert_eq!(
++            nemotron.wrap_visible_format(&ctx, &visible).unwrap(),
++            Some(Format::sequence(vec![
++                Format::sequence(vec![
++                    Format::tag("", Format::any_text(), "</think>"),
++                    Format::const_string("\n"),
++                ]),
++                visible.clone(),
++            ]))
++        );
++
++        let mut step3 = Step3ReasoningParser::new(Arc::new(tokenizer())).unwrap();
++        step3.initialize(&[256]).unwrap();
++        assert_eq!(
++            step3.wrap_visible_format(&ctx, &visible).unwrap(),
++            Some(Format::sequence(vec![
++                Format::tag("", Format::any_text(), "</think>"),
++                visible,
++            ]))
++        );
++    }
++
++    #[test]
++    fn prompt_closed_reasoning_keeps_only_unconsumed_separator() {
++        let tools = test_tools();
++        let tool_choice = ToolChoice::required();
++        let ctx = OutputGrammarContext {
++            tools: &tools,
++            tool_choice: &tool_choice,
++            tool_strict_level: Default::default(),
++            parallel_tool_calls: true,
++        };
++        let tokenizer = Arc::new(tokenizer());
++        let reasoning = Qwen3ReasoningParser::create(tokenizer.clone()).unwrap();
++        let tool = Qwen3XmlToolParser::create(&tools).unwrap();
++        let mut parser = CombinedParser::new(Some(reasoning), Some(tool));
++        parser.initialize(&[]).unwrap();
++        let outside = parser.build_output_grammar(&ctx).unwrap().unwrap().format;
++
++        for (prompt, remaining) in [
++            ("</think>", "\n\n"),
++            ("</think>\n", "\n"),
++            ("</think>\n\n", ""),
++        ] {
++            parser.initialize(&tokenizer.encode(prompt, false).unwrap()).unwrap();
++            let actual = parser.build_output_grammar(&ctx).unwrap().unwrap();
++            let expected = if remaining.is_empty() {
++                outside.clone()
++            } else {
++                Format::sequence(vec![Format::const_string(remaining), outside.clone()])
++            };
++            assert_eq!(actual.coverage, GrammarCoverage::FromTokenZero);
++            assert_eq!(
++                normalize_builder_parity(actual.format),
++                normalize_builder_parity(expected),
++                "{prompt:?}"
++            );
++        }
++    }
+ }
+diff --git a/rust/src/parser/src/unified/hy/hy_v3.rs b/rust/src/parser/src/unified/hy/hy_v3.rs
+index bc2e53cd88af93abceb2915a144f45061ff94b69..30e021b5bce52a2587d1a55e4ecf93576534db3e 100644
+--- a/rust/src/parser/src/unified/hy/hy_v3.rs
++++ b/rust/src/parser/src/unified/hy/hy_v3.rs
+@@ -154,7 +154,10 @@ mod tests {
+     #[test]
+     fn structural_tag_uses_tokenizer_detected_suffix() {
+         let tools = tools();
+-        let parser = HyV3UnifiedParser::new(&tools, Arc::new(tokenizer())).unwrap();
++        let tokenizer = Arc::new(tokenizer());
++        let mut parser = HyV3UnifiedParser::new(&tools, tokenizer.clone()).unwrap();
++        let prompt = tokenizer.encode("<think:opensource>", false).unwrap();
++        parser.initialize(&prompt).unwrap();
+         let tag = parser
+             .build_output_grammar(&OutputGrammarContext {
+                 tools: &tools,
+@@ -164,11 +167,44 @@ mod tests {
+             })
+             .unwrap()
+             .unwrap();
+-        assert_eq!(tag.coverage, GrammarCoverage::FinalOutputOnly);
++        assert_eq!(tag.coverage, GrammarCoverage::FromTokenZero);
+         let tag = StructuralTag::new(tag.format).to_json_string().unwrap();
+ 
++        assert!(tag.contains("</think:opensource>"));
+         assert!(tag.contains("<tool_calls:opensource>"));
+         assert!(tag.contains("<arg_value:opensource>"));
+         assert!(!tag.contains("glm_xml"));
+     }
++
++    #[test]
++    fn grammar_root_follows_prompt_reasoning_state() {
++        let tools = tools();
++        let tokenizer = Arc::new(tokenizer());
++        let mut parser = HyV3UnifiedParser::new(&tools, tokenizer.clone()).unwrap();
++        for (prompt, inside) in [
++            ("<think:opensource>", true),
++            ("</think:opensource>", false),
++            ("", false),
++        ] {
++            parser.initialize(&tokenizer.encode(prompt, false).unwrap()).unwrap();
++            let grammar = parser
++                .build_output_grammar(&OutputGrammarContext {
++                    tools: &tools,
++                    tool_choice: &ToolChoice::required(),
++                    tool_strict_level: Default::default(),
++                    parallel_tool_calls: true,
++                })
++                .unwrap()
++                .unwrap();
++            let value = serde_json::to_value(grammar.format).unwrap();
++            let root = &value["elements"][0];
++            if inside {
++                assert_eq!(root["begin"], "");
++                assert_eq!(root["end"], "</think:opensource>");
++            } else {
++                assert_eq!(root["type"], "optional");
++                assert_eq!(root["content"]["begin"], "<think:opensource>");
++            }
++        }
++    }
+ }
+diff --git a/rust/src/parser/src/unified/hy/hy_v4.rs b/rust/src/parser/src/unified/hy/hy_v4.rs
+index b65f2df69d6f75145b7ced1b40ddb2bd487c17d0..777688bcaa056108afef002ef48a00352e7243ba 100644
+--- a/rust/src/parser/src/unified/hy/hy_v4.rs
++++ b/rust/src/parser/src/unified/hy/hy_v4.rs
+@@ -167,7 +167,10 @@ mod tests {
+     #[test]
+     fn structural_tag_uses_compact_hy4_skeleton() {
+         let tools = tools();
+-        let parser = HyV4UnifiedParser::new(&tools, Arc::new(tokenizer())).unwrap();
++        let tokenizer = Arc::new(tokenizer());
++        let mut parser = HyV4UnifiedParser::new(&tools, tokenizer.clone()).unwrap();
++        let prompt = tokenizer.encode("<think:opensource>", false).unwrap();
++        parser.initialize(&prompt).unwrap();
+         let tag = parser
+             .build_output_grammar(&OutputGrammarContext {
+                 tools: &tools,
+@@ -177,10 +180,11 @@ mod tests {
+             })
+             .unwrap()
+             .unwrap();
+-        assert_eq!(tag.coverage, GrammarCoverage::FinalOutputOnly);
++        assert_eq!(tag.coverage, GrammarCoverage::FromTokenZero);
+         let tag = StructuralTag::new(tag.format).to_json_string().unwrap();
+ 
+         assert!(tag.contains("<tool_calls:opensource>"));
++        assert!(tag.contains("</think:opensource>"));
+         assert!(tag.contains("<tool_call:opensource>get_weather"));
+         assert!(tag.contains("<arg_key:opensource>"));
+         assert!(tag.contains("</tool_call:opensource>"));

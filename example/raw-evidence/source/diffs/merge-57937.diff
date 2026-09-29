@@ -1,0 +1,84 @@
+diff --git a/tests/test_config.py b/tests/test_config.py
+index e97e2cebaad2a86f339d66b1ab460697a836cfca..7a6ea1d4c4357fc0e0d89c2436b9999e884b6bf2 100644
+--- a/tests/test_config.py
++++ b/tests/test_config.py
+@@ -1392,16 +1392,8 @@ def test_engram_model_support(
+         assert resolved.engram_config.cpu_offload is True
+ 
+ 
+-@pytest.mark.parametrize(
+-    ("value", "expected"), [(None, True), ("0", False), ("1", True)]
+-)
+-def test_engram_cpu_offload_environment_default(monkeypatch, value, expected):
+-    monkeypatch.delenv("VLLM_PLE_CPU_OFFLOAD", raising=False)
+-    if value is not None:
+-        monkeypatch.setenv("VLLM_PLE_CPU_OFFLOAD", value)
+-    assert EngramConfig().cpu_offload is expected
+-    assert EngramConfig(cpu_offload=False).cpu_offload is False
+-    assert EngramConfig(cpu_offload=True).cpu_offload is True
++def test_engram_cpu_offload_default():
++    assert EngramConfig().cpu_offload is True
+ 
+ 
+ def test_engram_config_defaults_to_none():
+diff --git a/vllm/config/engram.py b/vllm/config/engram.py
+index c9f05c93828fb0204f1b3613eec1bed0baf02144..0f5ec31b335fcb497f454fe6d58a7c150ba5389f 100644
+--- a/vllm/config/engram.py
++++ b/vllm/config/engram.py
+@@ -3,10 +3,9 @@
+ 
+ from typing import TYPE_CHECKING
+ 
+-from pydantic import Field, model_validator
++from pydantic import model_validator
+ from typing_extensions import Self
+ 
+-import vllm.envs as envs
+ from vllm.config.utils import config, get_hash_factors, hash_factors
+ 
+ if TYPE_CHECKING:
+@@ -22,10 +21,6 @@ _NGRAM_LAYER_FIELDS = {
+ }
+ 
+ 
+-def _default_cpu_offload() -> bool:
+-    return envs.VLLM_PLE_CPU_OFFLOAD
+-
+-
+ def model_has_engram_layers(model_config: "ModelConfig | None") -> bool:
+     """Whether the model carries n-gram embedding layers."""
+     if model_config is None:
+@@ -40,10 +35,8 @@ def model_has_engram_layers(model_config: "ModelConfig | None") -> bool:
+ class EngramConfig:
+     """Configuration for Engram embedding storage and sharding."""
+ 
+-    cpu_offload: bool = Field(default_factory=_default_cpu_offload)
+-    """Store embedding weights in pinned CPU memory for UVA lookup.
+-    Defaults to VLLM_PLE_CPU_OFFLOAD, which is enabled by default. An explicit
+-    value takes precedence over the environment variable."""
++    cpu_offload: bool = True
++    """Store embedding weights in pinned CPU memory for UVA lookup."""
+ 
+     embedding_across_dp: bool = False
+     """Shard embeddings across TP and all DP ranks when enabled.
+diff --git a/vllm/envs.py b/vllm/envs.py
+index 259c08e7e7b3c77efb60f6b481bbd1f9d51e3aff..fa98db1cf12a7f86a3a4e9f7e23e840d0460147c 100755
+--- a/vllm/envs.py
++++ b/vllm/envs.py
+@@ -156,7 +156,6 @@ if TYPE_CHECKING:
+     VLLM_ROCM_SHUFFLE_KV_CACHE_LAYOUT: bool = False
+     VLLM_ENABLE_V1_MULTIPROCESSING: bool = True
+     VLLM_LOG_BATCHSIZE_INTERVAL: float = -1
+-    VLLM_PLE_CPU_OFFLOAD: bool = True
+     VLLM_DISABLE_COMPILE_CACHE: bool = False
+     VLLM_REPLICATE_EMBED: bool = False
+     VLLM_USE_LAYERNAME: bool = True
+@@ -2066,8 +2065,6 @@ environment_variables: dict[str, Callable[[], Any]] = {
+     "VLLM_LOG_MODEL_INSPECTION": lambda: bool(
+         int(os.getenv("VLLM_LOG_MODEL_INSPECTION", "0"))
+     ),
+-    # Store n-gram embedding tables in pinned CPU memory for UVA lookup.
+-    "VLLM_PLE_CPU_OFFLOAD": lambda: bool(int(os.getenv("VLLM_PLE_CPU_OFFLOAD", "1"))),
+     # Debug logging for --enable-mfu-metrics
+     "VLLM_DEBUG_MFU_METRICS": lambda: bool(
+         int(os.getenv("VLLM_DEBUG_MFU_METRICS", "0"))

@@ -1,0 +1,437 @@
+{
+  "note": "Only exact SHA-verified commit objects are restored from public GitHub signed payloads. No branch/HEAD, working tree, remote or version marker is changed. Commit-object presence is not a claim of complete source-tree download.",
+  "commits": [
+    {
+      "repository": "ascend",
+      "sha": "a71b766ce6fc0a9669a412e15a5cf53f7f827093",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\ascend-a71b766ce6fc0a9669a412e15a5cf53f7f827093.json",
+      "tree": "495ed5a65e513932cdbdbd3fe0f6b5a84d1f5369"
+    },
+    {
+      "repository": "vllm",
+      "sha": "066ee911975133dc148433ed9e65061b4587c969",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-066ee911975133dc148433ed9e65061b4587c969.json",
+      "tree": "3db9b64a0af84972b0e020124d633d6fefdc3f1b"
+    },
+    {
+      "repository": "vllm",
+      "sha": "0961bbae2894d574be790d219651824eb199318e",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-0961bbae2894d574be790d219651824eb199318e.json",
+      "tree": "b826ef168790bc25254c1ca3a10a4a783481aeb1"
+    },
+    {
+      "repository": "vllm",
+      "sha": "0bce411a073e0da2c9bded9bb6ced1cbee51c564",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-0bce411a073e0da2c9bded9bb6ced1cbee51c564.json",
+      "tree": "237ccdfa1ebeb4d614d0be53ff05e1edc6bd89a2"
+    },
+    {
+      "repository": "vllm",
+      "sha": "12972ae40bece6f9b9898fadd0c50d6a317df6fd",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-12972ae40bece6f9b9898fadd0c50d6a317df6fd.json",
+      "tree": "be1830b202886022085942ef105fc7b5ac8f3461"
+    },
+    {
+      "repository": "vllm",
+      "sha": "13058faa49f5e4a4d50e1ca562ba0c2fdd73c7bc",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-13058faa49f5e4a4d50e1ca562ba0c2fdd73c7bc.json",
+      "tree": "2d96e7090318512e6debc474ccf24d545480f979"
+    },
+    {
+      "repository": "vllm",
+      "sha": "17322375a2d7815ed3d7c9c3ffd718196564314e",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-17322375a2d7815ed3d7c9c3ffd718196564314e.json",
+      "tree": "8d7b88ce207f9503281df246d07714d1f62c5a72"
+    },
+    {
+      "repository": "vllm",
+      "sha": "1ea7c63f4af7bb4fd6f025c8db44434ab274cb51",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-1ea7c63f4af7bb4fd6f025c8db44434ab274cb51.json",
+      "tree": "1d3474adbc9054c0ed3fa45dc39ebc6d5bb30d55"
+    },
+    {
+      "repository": "vllm",
+      "sha": "1fee69838eeb72622b441a593888687831c1e434",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-1fee69838eeb72622b441a593888687831c1e434.json",
+      "tree": "9c3b2ed97e219860dee14deb802b95c2375965bc"
+    },
+    {
+      "repository": "vllm",
+      "sha": "2af05512cf94eda87b4eb51e9f1345a12337a36d",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-2af05512cf94eda87b4eb51e9f1345a12337a36d.json",
+      "tree": "91263af32f241715a11524bb9ac9ceb011e5d9d2"
+    },
+    {
+      "repository": "vllm",
+      "sha": "362a64b21d5038691c929521478b63dcb4828e58",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-362a64b21d5038691c929521478b63dcb4828e58.json",
+      "tree": "3125a6228e9f4d48033664f66f3759d65a286134"
+    },
+    {
+      "repository": "vllm",
+      "sha": "382970ee6ca490aeaaaf4e32c53695b581ff61ba",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-382970ee6ca490aeaaaf4e32c53695b581ff61ba.json",
+      "tree": "ebbd5fc475c8ca38e2735300cb02c3aa5d8299fd"
+    },
+    {
+      "repository": "vllm",
+      "sha": "42a85a49761921fe5965e28eb971d863d9759503",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-42a85a49761921fe5965e28eb971d863d9759503.json",
+      "tree": "6ec189a545b3c3ff984d41a0074b4222bb1dd6c3"
+    },
+    {
+      "repository": "vllm",
+      "sha": "4800024b98f70c9b3022c27b41e63a5dc9556ed7",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-4800024b98f70c9b3022c27b41e63a5dc9556ed7.json",
+      "tree": "9e01cb4576aea3e103936c90d0ae9000ab2a4293"
+    },
+    {
+      "repository": "vllm",
+      "sha": "496c6472cb70d5eb8681dadae238d160f5086454",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-496c6472cb70d5eb8681dadae238d160f5086454.json",
+      "tree": "bd58a44b00e99ed09e6bc5432cb27442484700e5"
+    },
+    {
+      "repository": "vllm",
+      "sha": "54020c3c3ec9de219929a5a956010a0251b87520",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-54020c3c3ec9de219929a5a956010a0251b87520.json",
+      "tree": "e9a44c694856a9b556ac35628fd9ab8245883ad1"
+    },
+    {
+      "repository": "vllm",
+      "sha": "5abf85d27ace7998a86b27d2754de239c73d0723",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-5abf85d27ace7998a86b27d2754de239c73d0723.json",
+      "tree": "5de0999cfb182894afa3663dcb6adf727d1ac30d"
+    },
+    {
+      "repository": "vllm",
+      "sha": "5c121e962a31ed0b5fe70d743b6e194686d2b473",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-5c121e962a31ed0b5fe70d743b6e194686d2b473.json",
+      "tree": "732807f9d60541bdf0174b67bfb79abb1cec3991"
+    },
+    {
+      "repository": "vllm",
+      "sha": "639461eda424debe7bbdf2b1fc577bf83e29c643",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-639461eda424debe7bbdf2b1fc577bf83e29c643.json",
+      "tree": "e39b8e0f5cfa5919d6e831066e30c3b9244bd78d"
+    },
+    {
+      "repository": "vllm",
+      "sha": "64a48b19b41005f1e783a69b9fdd0b5364aea4cf",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-64a48b19b41005f1e783a69b9fdd0b5364aea4cf.json",
+      "tree": "a9838bb61388b126340dfccfb980c7d66aac94bd"
+    },
+    {
+      "repository": "vllm",
+      "sha": "68363d64ec476bbbf5025b30ced0f6a2425b1291",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-68363d64ec476bbbf5025b30ced0f6a2425b1291.json",
+      "tree": "eb76a0383598b72a80a4e6d46f4033fd925cde36"
+    },
+    {
+      "repository": "vllm",
+      "sha": "6dc34b6334fe9439a46748a0df290bc785dd69df",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-6dc34b6334fe9439a46748a0df290bc785dd69df.json",
+      "tree": "8f6a189c8cba1a64e0e1d56385b756eb25d6960e"
+    },
+    {
+      "repository": "vllm",
+      "sha": "74370a0e3044c16b6ba58f9c144b02ab733cd73a",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-74370a0e3044c16b6ba58f9c144b02ab733cd73a.json",
+      "tree": "6775893c0fb5a83984c657393366d358d0cfe35f"
+    },
+    {
+      "repository": "vllm",
+      "sha": "78d78365254dfa20d3a265b6da695ab8151ec8b1",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-78d78365254dfa20d3a265b6da695ab8151ec8b1.json",
+      "tree": "4098e6d6468b6d60d00cc03257f735da9b9e9ab1"
+    },
+    {
+      "repository": "vllm",
+      "sha": "79468c20ef23227d4e051f807e10fd54fb24e24f",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-79468c20ef23227d4e051f807e10fd54fb24e24f.json",
+      "tree": "bf5ba954d36b0fc8888e2c05f669f964e8e0e20f"
+    },
+    {
+      "repository": "vllm",
+      "sha": "7d06dd1ffaab13bb6b9a34e86a8a62e4d715bd1e",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-7d06dd1ffaab13bb6b9a34e86a8a62e4d715bd1e.json",
+      "tree": "543d70aee90d1d2ea47e85bdc5f57aa521904dc5"
+    },
+    {
+      "repository": "vllm",
+      "sha": "81d7293c2167e39f3ffddc9a82d633f94e8a1eaa",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-81d7293c2167e39f3ffddc9a82d633f94e8a1eaa.json",
+      "tree": "f85618c7acb159059e4afaa46d294d079f44b8ff"
+    },
+    {
+      "repository": "vllm",
+      "sha": "84030bbe3d74d99bad477a3d2e37a973ccd8865c",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-84030bbe3d74d99bad477a3d2e37a973ccd8865c.json",
+      "tree": "f3e320f8ae2e9a30e57a3c8dccfac94fcae93bee"
+    },
+    {
+      "repository": "vllm",
+      "sha": "8644d2af2fb7c4588190a8d7f6c26a3cbef78a0f",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-8644d2af2fb7c4588190a8d7f6c26a3cbef78a0f.json",
+      "tree": "4e2e1e90817606e308e8a9075161f4b1baa9d46a"
+    },
+    {
+      "repository": "vllm",
+      "sha": "8bf051cd51adff79e1bc94e910adaea543aaa2e1",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-8bf051cd51adff79e1bc94e910adaea543aaa2e1.json",
+      "tree": "b9f7aa9e0437e6c805f6ec2c9a096cdad4db0c58"
+    },
+    {
+      "repository": "vllm",
+      "sha": "9179bcd4166bd03f4903aafed39d2c284eeb8c91",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-9179bcd4166bd03f4903aafed39d2c284eeb8c91.json",
+      "tree": "f9bf6c9fecfeb175457ee35ddf4ec46cc422afe8"
+    },
+    {
+      "repository": "vllm",
+      "sha": "91d7324cb19d301c72d849e457221ee8dd645024",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-91d7324cb19d301c72d849e457221ee8dd645024.json",
+      "tree": "420bd23226542f948542cc241f72f55e75dd9fd8"
+    },
+    {
+      "repository": "vllm",
+      "sha": "9815732c16ca076c60b65fccd787167d6a9c5328",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-9815732c16ca076c60b65fccd787167d6a9c5328.json",
+      "tree": "4aa1a242ba34ba6d17639bae09e7123fd025f6ee"
+    },
+    {
+      "repository": "vllm",
+      "sha": "9fe1cbd463055314863a6de210d5f898200a0a9a",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-9fe1cbd463055314863a6de210d5f898200a0a9a.json",
+      "tree": "7db07c3525ef734b9414930aae46dc5e23e00648"
+    },
+    {
+      "repository": "vllm",
+      "sha": "a33b3bac5dad5654065adbdadc87f35118e482e3",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-a33b3bac5dad5654065adbdadc87f35118e482e3.json",
+      "tree": "a87dab1c713bc71af671afd5a492684b5a0d47d3"
+    },
+    {
+      "repository": "vllm",
+      "sha": "a369a7becc20c6c4dda601aedef51b8cc8387971",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-a369a7becc20c6c4dda601aedef51b8cc8387971.json",
+      "tree": "108a1a195794eea2e1054152ed33ce5ef6537a86"
+    },
+    {
+      "repository": "vllm",
+      "sha": "a6131b0e656e18eeb3797b8856aa3dbc69efd8e5",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-a6131b0e656e18eeb3797b8856aa3dbc69efd8e5.json",
+      "tree": "77021fac1fa84efaedcd760fcd17d18bd56b4152"
+    },
+    {
+      "repository": "vllm",
+      "sha": "a6c47fbbf4187e8ae5396ebdcf93234db617a4ad",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-a6c47fbbf4187e8ae5396ebdcf93234db617a4ad.json",
+      "tree": "4a7b59a58a17d63dcfc577304b5e1920b3675b01"
+    },
+    {
+      "repository": "vllm",
+      "sha": "c42f5285ec9851dacfa370e163e7837e87fd7b6d",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-c42f5285ec9851dacfa370e163e7837e87fd7b6d.json",
+      "tree": "efaf35f5154fce3e422a97debf74a2db637156e4"
+    },
+    {
+      "repository": "vllm",
+      "sha": "c4d424c2e27b392da235704ba0edca7ac48bd495",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-c4d424c2e27b392da235704ba0edca7ac48bd495.json",
+      "tree": "c69d6d36c8d2a32ca90641f77246bd6be28b6f7b"
+    },
+    {
+      "repository": "vllm",
+      "sha": "c64b15cde583c7dd3cbb906b30164131a030d6b4",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-c64b15cde583c7dd3cbb906b30164131a030d6b4.json",
+      "tree": "b101a9b9f8ab86f5ff18c5e8f784b458784510fa"
+    },
+    {
+      "repository": "vllm",
+      "sha": "c723a831a81cb4ff89ea6d61b2d15109306ed1bc",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-c723a831a81cb4ff89ea6d61b2d15109306ed1bc.json",
+      "tree": "1fc5241e5c758ce3ce1b8dca0dc4696edf6e20be"
+    },
+    {
+      "repository": "vllm",
+      "sha": "c9b34fdb2d0c9fdcc20fae6454bf0895a5faf6f5",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-c9b34fdb2d0c9fdcc20fae6454bf0895a5faf6f5.json",
+      "tree": "2c2c094589b96d91b0706d99e4037101dfa00e46"
+    },
+    {
+      "repository": "vllm",
+      "sha": "d50723df04f77c732c75e07d337ee81d843e014f",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-d50723df04f77c732c75e07d337ee81d843e014f.json",
+      "tree": "5844017fc778afc28be4433f8492fc666a37bc03"
+    },
+    {
+      "repository": "vllm",
+      "sha": "d90f0eade5b56ca83ba03839591fe111c51790b3",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-d90f0eade5b56ca83ba03839591fe111c51790b3.json",
+      "tree": "18a6cc0dd31c88e41ae3accd5ac4877a1530bcf6"
+    },
+    {
+      "repository": "vllm",
+      "sha": "e4340e41c9a32b2247cc2442b35aa91b081c424f",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-e4340e41c9a32b2247cc2442b35aa91b081c424f.json",
+      "tree": "2a6fe07eb69e5cdc46f1d7898e43a54d694b4c45"
+    },
+    {
+      "repository": "vllm",
+      "sha": "e548298f8144cae77d26949078c264d819d3993c",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-e548298f8144cae77d26949078c264d819d3993c.json",
+      "tree": "62ea0e33442e2f216770219fd812dad9d338dd65"
+    },
+    {
+      "repository": "vllm",
+      "sha": "e9f169d16b9408bb9ae44f75072b91a5521d733c",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-e9f169d16b9408bb9ae44f75072b91a5521d733c.json",
+      "tree": "b4d20c064e0e8a9034805b3364cd3357915c2799"
+    },
+    {
+      "repository": "vllm",
+      "sha": "f07e227ee9acdb8d7e48d69f178c897fb54ecd88",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-f07e227ee9acdb8d7e48d69f178c897fb54ecd88.json",
+      "tree": "3b6cdf9cf2b652377c0cd6d5704a2d8eb7b79263"
+    },
+    {
+      "repository": "vllm",
+      "sha": "f84325c48c0acc1e3703103788c5f2976e719762",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-f84325c48c0acc1e3703103788c5f2976e719762.json",
+      "tree": "d7fb8ab90d1e4f9d77167cabdc7a39eb008cc910"
+    },
+    {
+      "repository": "vllm",
+      "sha": "f92b78f6ef9c9b28f60668da77af5b65645b1a45",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-f92b78f6ef9c9b28f60668da77af5b65645b1a45.json",
+      "tree": "237ad193425526bc31624e0521286076ac5c32b7"
+    },
+    {
+      "repository": "vllm",
+      "sha": "fba33e39cb74c7c31cc648ae530a85e0c6636f92",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-fba33e39cb74c7c31cc648ae530a85e0c6636f92.json",
+      "tree": "4ef161b9694db0a6a022ae776f241149154c25d0"
+    },
+    {
+      "repository": "vllm",
+      "sha": "feb87b1934c10046a19cfef610c44f1710b825b8",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-feb87b1934c10046a19cfef610c44f1710b825b8.json",
+      "tree": "cb286a1e149aa382b56880ee12a3dcbc51ed4533"
+    },
+    {
+      "repository": "vllm",
+      "sha": "ff3c9cba3f459085efdac7e8b7fed35bdb0151a2",
+      "git_sha1_verified": true,
+      "github_signature_verified": true,
+      "source": "evidence\\git_commits\\vllm-ff3c9cba3f459085efdac7e8b7fed35bdb0151a2.json",
+      "tree": "6db5fda7857be7e92c8158a2452c1ee962d0a7bc"
+    }
+  ]
+}

@@ -1,0 +1,1005 @@
+{
+  "date": "2026-09-22",
+  "repo": "vllm-project/vllm",
+  "generated_at": "2026-09-23T11:57:44.577493+08:00",
+  "daily_summary": "【MRV2 相关改动】5 个 commits 涉及 Model Runner V2。当日共 52 个 commits，包含 34 个 bugfix，14 个 feature。风险分布：3 个高风险、24 个中风险。",
+  "commits": [
+    {
+      "sha": "fba33e39cb74c7c31cc648ae530a85e0c6636f92",
+      "comment": "变更：[Docs] Add an Engram feature page explaining Engram usage in vLLM (#57910)",
+      "tags": [
+        "low-risk",
+        "bugfix"
+      ],
+      "ascend_impact": {
+        "ascend_affected": false,
+        "functionality": "无影响",
+        "testing": "无影响",
+        "needs_test_update": false,
+        "suggested_test_areas": []
+      }
+    },
+    {
+      "sha": "17322375a2d7815ed3d7c9c3ffd718196564314e",
+      "comment": "变更：[ROCm][Perf] Route the fused shared-expert gate GEMM through the platform dispat",
+      "tags": [
+        "moe",
+        "model-runner",
+        "medium-risk",
+        "bugfix"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/model_executor/layers/fused_moe/runner/moe_runner.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/model_executor/layers/fused_moe/runner/moe_runner.py"
+        ]
+      }
+    },
+    {
+      "sha": "54020c3c3ec9de219929a5a956010a0251b87520",
+      "comment": "变更：[Engram] Drop redundant VLLM_PLE_CPU_OFFLOAD env var (#57937)",
+      "tags": [
+        "low-risk",
+        "feature",
+        "config"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/config/engram.py, vllm/envs.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/config/engram.py",
+          "vllm/envs.py"
+        ]
+      }
+    },
+    {
+      "sha": "9179bcd4166bd03f4903aafed39d2c284eeb8c91",
+      "comment": "变更：[Bugfix][MoE] Reject hash routing for unsupported monolithic backends (#57867)",
+      "tags": [
+        "bugfix",
+        "model-runner",
+        "kernels",
+        "moe",
+        "medium-risk"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/model_executor/layers/fused_moe/config.py, vllm/model_executor/layers/fused_moe/layer.py, vllm/model_executor/layers/fused_moe/modular_kernel.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/model_executor/layers/fused_moe/config.py",
+          "vllm/model_executor/layers/fused_moe/layer.py",
+          "vllm/model_executor/layers/fused_moe/modular_kernel.py"
+        ]
+      }
+    },
+    {
+      "sha": "12972ae40bece6f9b9898fadd0c50d6a317df6fd",
+      "comment": "变更：[Bugfix][ROCm] Reject unsupported EP for monolithic AITER MXFP4 MoE (#57866)",
+      "tags": [
+        "bugfix",
+        "model-runner",
+        "kernels",
+        "moe",
+        "quantization",
+        "medium-risk"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/model_executor/layers/fused_moe/experts/aiter_mxfp4_w4a16_moe.py, vllm/model_executor/layers/fused_moe/experts/aiter_mxfp4_w4a8_moe.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/model_executor/layers/fused_moe/experts/aiter_mxfp4_w4a16_moe.py",
+          "vllm/model_executor/layers/fused_moe/experts/aiter_mxfp4_w4a8_moe.py"
+        ]
+      }
+    },
+    {
+      "sha": "9fe1cbd463055314863a6de210d5f898200a0a9a",
+      "comment": "变更：[Docker] Use zstd for CI images and offer a Docker Hub variant (#55608)",
+      "tags": [
+        "chore",
+        "multimodal",
+        "medium-risk"
+      ],
+      "ascend_impact": {
+        "ascend_affected": false,
+        "functionality": "无影响",
+        "testing": "无影响",
+        "needs_test_update": false,
+        "suggested_test_areas": []
+      }
+    },
+    {
+      "sha": "382970ee6ca490aeaaaf4e32c53695b581ff61ba",
+      "comment": "变更：[Kimi-K3][AMD] Return KDA and MLA projection outputs directly (#50592)",
+      "tags": [
+        "model-runner",
+        "medium-risk",
+        "attention",
+        "bugfix"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/model_executor/layers/mamba/gdn/kimi_gdn_linear_attn.py, vllm/models/kimi_k3/amd/kda.py, vllm/models/kimi_k3/amd/linear.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/model_executor/layers/mamba/gdn/kimi_gdn_linear_attn.py",
+          "vllm/models/kimi_k3/amd/kda.py",
+          "vllm/models/kimi_k3/amd/linear.py",
+          "vllm/models/kimi_k3/nvidia/model.py"
+        ]
+      }
+    },
+    {
+      "sha": "8644d2af2fb7c4588190a8d7f6c26a3cbef78a0f",
+      "comment": "变更：[CI][Build] Harden triton-cpu sleef submodule fetch in CPU image build (#57871)",
+      "tags": [
+        "low-risk",
+        "ci"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（docker/Dockerfile.cpu），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "docker/Dockerfile.cpu"
+        ]
+      }
+    },
+    {
+      "sha": "8bf051cd51adff79e1bc94e910adaea543aaa2e1",
+      "comment": "变更：[Bugfix][Kernel] Skip the fused silu-mul block-quant fast path when a swiglu cla",
+      "tags": [
+        "bugfix",
+        "low-risk",
+        "model-runner",
+        "kernels",
+        "moe",
+        "quantization"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/model_executor/layers/fused_moe/experts/triton_moe.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/model_executor/layers/fused_moe/experts/triton_moe.py"
+        ]
+      }
+    },
+    {
+      "sha": "13058faa49f5e4a4d50e1ca562ba0c2fdd73c7bc",
+      "comment": "变更：[Frontend] Add reusable TP1 initialized-engine snapshots (#51360)",
+      "tags": [
+        "bugfix",
+        "low-risk",
+        "model-runner",
+        "mrv2",
+        "quantization"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（docker/Dockerfile, tools/install_snapshot_runtime.sh, vllm/entrypoints/cli/main.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "docker/Dockerfile",
+          "tools/install_snapshot_runtime.sh",
+          "vllm/entrypoints/cli/main.py",
+          "vllm/entrypoints/cli/snapshot.py",
+          "vllm/snapshot/__init__.py"
+        ]
+      }
+    },
+    {
+      "sha": "7d06dd1ffaab13bb6b9a34e86a8a62e4d715bd1e",
+      "comment": "变更：[Pooling] MRV2 pooling shutdown model ref (#57737)",
+      "tags": [
+        "worker",
+        "feature",
+        "low-risk",
+        "model-runner",
+        "mrv2"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/v1/worker/gpu/model_runner.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/v1/worker/gpu/model_runner.py"
+        ]
+      }
+    },
+    {
+      "sha": "78d78365254dfa20d3a265b6da695ab8151ec8b1",
+      "comment": "变更：[CI] Split (H200) LM Eval Large Models into per-model jobs (#57965)",
+      "tags": [
+        "low-risk",
+        "feature"
+      ],
+      "ascend_impact": {
+        "ascend_affected": false,
+        "functionality": "无影响",
+        "testing": "无影响",
+        "needs_test_update": false,
+        "suggested_test_areas": []
+      }
+    },
+    {
+      "sha": "c64b15cde583c7dd3cbb906b30164131a030d6b4",
+      "comment": "变更：[Scheduler] Soften Long Prefill Tokens Threshhold (#57951)",
+      "tags": [
+        "low-risk",
+        "feature",
+        "config",
+        "scheduler"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/config/scheduler.py, vllm/v1/core/sched/scheduler.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/config/scheduler.py",
+          "vllm/v1/core/sched/scheduler.py"
+        ]
+      }
+    },
+    {
+      "sha": "a369a7becc20c6c4dda601aedef51b8cc8387971",
+      "comment": "变更：[Perf][Attention] Reduce GLM sparse MLA preparation overhead (#57458)",
+      "tags": [
+        "attention",
+        "bugfix",
+        "model-runner",
+        "kernels",
+        "medium-risk"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/model_executor/layers/attention/mla_attention.py, vllm/v1/attention/backends/mla/flashinfer_mla_sparse.py, vllm/v1/attention/backends/mla/sparse_utils.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/model_executor/layers/attention/mla_attention.py",
+          "vllm/v1/attention/backends/mla/flashinfer_mla_sparse.py",
+          "vllm/v1/attention/backends/mla/sparse_utils.py"
+        ]
+      }
+    },
+    {
+      "sha": "0bce411a073e0da2c9bded9bb6ced1cbee51c564",
+      "comment": "变更：[Bugfix] Annotate MTP draft KV cache groups positionally on the hybrid grouping ",
+      "tags": [
+        "prefix-caching",
+        "high-risk",
+        "bugfix"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/v1/core/kv_cache_utils.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/v1/core/kv_cache_utils.py"
+        ]
+      }
+    },
+    {
+      "sha": "79468c20ef23227d4e051f807e10fd54fb24e24f",
+      "comment": "变更：[Bugfix][GDN] Fix stateless first-chunk classification (#51565)",
+      "tags": [
+        "high-risk",
+        "attention",
+        "bugfix"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/v1/attention/backends/gdn_attn.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/v1/attention/backends/gdn_attn.py"
+        ]
+      }
+    },
+    {
+      "sha": "e9f169d16b9408bb9ae44f75072b91a5521d733c",
+      "comment": "变更：[CI] Add pre-commit check that new tests are tethered to Buildkite jobs (#54867)",
+      "tags": [
+        "low-risk",
+        "bugfix"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（docker/Dockerfile.cpu, tools/__init__.py, tools/pre_commit/__init__.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "docker/Dockerfile.cpu",
+          "tools/__init__.py",
+          "tools/pre_commit/__init__.py",
+          "tools/pre_commit/check_test_tethering.py"
+        ]
+      }
+    },
+    {
+      "sha": "1fee69838eeb72622b441a593888687831c1e434",
+      "comment": "变更：[XPU] Fix Nemotron FP8 LM-eval config: drop CUDA-only moe_backend and wire to ne",
+      "tags": [
+        "quantization",
+        "medium-risk",
+        "bugfix"
+      ],
+      "ascend_impact": {
+        "ascend_affected": false,
+        "functionality": "无影响",
+        "testing": "无影响",
+        "needs_test_update": false,
+        "suggested_test_areas": []
+      }
+    },
+    {
+      "sha": "f07e227ee9acdb8d7e48d69f178c897fb54ecd88",
+      "comment": "变更：[Docker] Expose bundled vllm-rs on PATH (#57606)",
+      "tags": [
+        "low-risk",
+        "bugfix"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（docker/Dockerfile），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "docker/Dockerfile"
+        ]
+      }
+    },
+    {
+      "sha": "c723a831a81cb4ff89ea6d61b2d15109306ed1bc",
+      "comment": "变更：[Fast Start] Cache the MTP draft model in a separate daemon group (#57312)",
+      "tags": [
+        "worker",
+        "spec-decode",
+        "attention",
+        "bugfix",
+        "model-runner",
+        "moe",
+        "config",
+        "medium-risk"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/config/speculative.py, vllm/model_executor/model_loader/utils.py, vllm/model_executor/model_loader/weight_cache/__init__.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/config/speculative.py",
+          "vllm/model_executor/model_loader/utils.py",
+          "vllm/model_executor/model_loader/weight_cache/__init__.py",
+          "vllm/model_executor/model_loader/weight_cache/daemon.py",
+          "vllm/model_executor/model_loader/weight_cache/ipc_loader.py"
+        ]
+      }
+    },
+    {
+      "sha": "ff3c9cba3f459085efdac7e8b7fed35bdb0151a2",
+      "comment": "变更：[Rust Frontend] Add MiMo V2.6 parser support (#57933)",
+      "tags": [
+        "reasoning",
+        "feature",
+        "medium-risk"
+      ],
+      "ascend_impact": {
+        "ascend_affected": false,
+        "functionality": "无影响",
+        "testing": "无影响",
+        "needs_test_update": false,
+        "suggested_test_areas": []
+      }
+    },
+    {
+      "sha": "c4d424c2e27b392da235704ba0edca7ac48bd495",
+      "comment": "变更：[Bugfix][Spec Decode] Cap DFlash/DSpark profiling query batch (#56448)",
+      "tags": [
+        "worker",
+        "spec-decode",
+        "bugfix",
+        "high-risk",
+        "model-runner"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/v1/worker/gpu/model_runner.py, vllm/v1/worker/gpu/spec_decode/speculator.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/v1/worker/gpu/model_runner.py",
+          "vllm/v1/worker/gpu/spec_decode/speculator.py"
+        ]
+      }
+    },
+    {
+      "sha": "639461eda424debe7bbdf2b1fc577bf83e29c643",
+      "comment": "变更：[RL][Sleep] Retain frozen weights across level-2 sleep (#57891)",
+      "tags": [
+        "worker",
+        "feature",
+        "engine",
+        "config",
+        "medium-risk"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/config/model.py, vllm/engine/arg_utils.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/config/model.py",
+          "vllm/engine/arg_utils.py"
+        ]
+      }
+    },
+    {
+      "sha": "42a85a49761921fe5965e28eb971d863d9759503",
+      "comment": "变更：[ROCm][Bugfix] Explicitly reject FSE=1 with DPA+ETP deployment for DeepSeek-V4 (",
+      "tags": [
+        "medium-risk",
+        "bugfix"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/models/deepseek_v4/amd/model.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/models/deepseek_v4/amd/model.py"
+        ]
+      }
+    },
+    {
+      "sha": "0961bbae2894d574be790d219651824eb199318e",
+      "comment": "变更：[Spec Decode] Enable async scheduling for DFlash (#58065)",
+      "tags": [
+        "bugfix",
+        "low-risk",
+        "model-runner",
+        "mrv2",
+        "config"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/config/vllm.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/config/vllm.py"
+        ]
+      }
+    },
+    {
+      "sha": "f84325c48c0acc1e3703103788c5f2976e719762",
+      "comment": "变更：[Rust Frontend] Add mm-processor benchmark (#51922)",
+      "tags": [
+        "multimodal",
+        "feature",
+        "medium-risk"
+      ],
+      "ascend_impact": {
+        "ascend_affected": false,
+        "functionality": "无影响",
+        "testing": "无影响",
+        "needs_test_update": false,
+        "suggested_test_areas": []
+      }
+    },
+    {
+      "sha": "d50723df04f77c732c75e07d337ee81d843e014f",
+      "comment": "变更：[Rust Frontend] Introduce parser-owned output grammar interfaces (#55269)",
+      "tags": [
+        "reasoning",
+        "feature",
+        "medium-risk"
+      ],
+      "ascend_impact": {
+        "ascend_affected": false,
+        "functionality": "无影响",
+        "testing": "无影响",
+        "needs_test_update": false,
+        "suggested_test_areas": []
+      }
+    },
+    {
+      "sha": "4800024b98f70c9b3022c27b41e63a5dc9556ed7",
+      "comment": "变更：[Security] Reject min_tokens that exceeds the filled max_tokens default (#57731)",
+      "tags": [
+        "low-risk",
+        "feature",
+        "ascend",
+        "engine"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/v1/engine/input_processor.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/v1/engine/input_processor.py"
+        ]
+      }
+    },
+    {
+      "sha": "5abf85d27ace7998a86b27d2754de239c73d0723",
+      "comment": "变更：[Bugfix][Frontend] Validate mixed prompt embedding mask lengths (#57006)",
+      "tags": [
+        "low-risk",
+        "engine",
+        "ascend",
+        "bugfix"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/v1/engine/input_processor.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/v1/engine/input_processor.py"
+        ]
+      }
+    },
+    {
+      "sha": "a33b3bac5dad5654065adbdadc87f35118e482e3",
+      "comment": "变更：[Bugfix][Qwen2.5-VL] Honor video fps for temporal M-RoPE (#47736)",
+      "tags": [
+        "multimodal",
+        "bugfix",
+        "low-risk",
+        "compilation",
+        "model-runner"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（examples/generate/multimodal/vision_language_offline.py, vllm/model_executor/models/qwen2_5_vl.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "examples/generate/multimodal/vision_language_offline.py",
+          "vllm/model_executor/models/qwen2_5_vl.py"
+        ]
+      }
+    },
+    {
+      "sha": "496c6472cb70d5eb8681dadae238d160f5086454",
+      "comment": "变更：[Rust Frontend] Build full-output grammars from initialized reasoning parsers (#",
+      "tags": [
+        "reasoning",
+        "medium-risk",
+        "bugfix"
+      ],
+      "ascend_impact": {
+        "ascend_affected": false,
+        "functionality": "无影响",
+        "testing": "无影响",
+        "needs_test_update": false,
+        "suggested_test_areas": []
+      }
+    },
+    {
+      "sha": "68363d64ec476bbbf5025b30ced0f6a2425b1291",
+      "comment": "变更：[ROCm][Perf] Avoid extra reshape kernel in Qwen GDN output norm (#47842)",
+      "tags": [
+        "attention",
+        "bugfix",
+        "low-risk",
+        "compilation",
+        "model-runner",
+        "kernels"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/compilation/passes/fusion/rocm_aiter_fusion.py, vllm/compilation/passes/vllm_inductor_pass.py, vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/compilation/passes/fusion/rocm_aiter_fusion.py",
+          "vllm/compilation/passes/vllm_inductor_pass.py",
+          "vllm/model_executor/layers/mamba/gdn/qwen_gdn_linear_attn.py"
+        ]
+      }
+    },
+    {
+      "sha": "2af05512cf94eda87b4eb51e9f1345a12337a36d",
+      "comment": "变更：[Kernel] Add opt-in load-time MXFP4 dequantization (#50814)",
+      "tags": [
+        "feature",
+        "low-risk",
+        "model-runner",
+        "kernels",
+        "quantization"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/envs.py, vllm/model_executor/kernels/linear/mxfp4/emulation.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/envs.py",
+          "vllm/model_executor/kernels/linear/mxfp4/emulation.py"
+        ]
+      }
+    },
+    {
+      "sha": "a6c47fbbf4187e8ae5396ebdcf93234db617a4ad",
+      "comment": "变更：[Rust Frontend] Separate multimodal instrumentation from request timing (#58084)",
+      "tags": [
+        "multimodal",
+        "feature",
+        "medium-risk"
+      ],
+      "ascend_impact": {
+        "ascend_affected": false,
+        "functionality": "无影响",
+        "testing": "无影响",
+        "needs_test_update": false,
+        "suggested_test_areas": []
+      }
+    },
+    {
+      "sha": "f92b78f6ef9c9b28f60668da77af5b65645b1a45",
+      "comment": "变更：[Kernel][DSV4.1] Fuse MXFP8 wo_b GEMM with sequence-parallel reduce-scatter (#57",
+      "tags": [
+        "feature",
+        "attention",
+        "low-risk",
+        "model-runner",
+        "kernels",
+        "distributed"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/cute_utils/_tcgen05.py, vllm/envs.py, vllm/model_executor/kernels/linear/cute_dsl/gemm_rs_ar.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/cute_utils/_tcgen05.py",
+          "vllm/envs.py",
+          "vllm/model_executor/kernels/linear/cute_dsl/gemm_rs_ar.py",
+          "vllm/model_executor/warmup/kernel_warmup.py",
+          "vllm/models/deepseek_v4/nvidia/ops/o_proj.py"
+        ]
+      }
+    },
+    {
+      "sha": "64a48b19b41005f1e783a69b9fdd0b5364aea4cf",
+      "comment": "更新 FlashMLA 外部依赖的 git tag，修复 dense fp8 metadata crash 问题（num_sm_parts clamp）。属于外部依赖版本升级，不影响 vLLM 核心代码。",
+      "tags": [
+        "multimodal",
+        "low-risk",
+        "feature",
+        "kernels"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（docker/Dockerfile, tools/ci/kernel_symbol_map.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "docker/Dockerfile",
+          "tools/ci/kernel_symbol_map.py"
+        ]
+      }
+    },
+    {
+      "sha": "91d7324cb19d301c72d849e457221ee8dd645024",
+      "comment": "更新 FlashMLA 外部依赖的 git tag，修复 dense fp8 metadata crash 问题（num_sm_parts clamp）。属于外部依赖版本升级，不影响 vLLM 核心代码。",
+      "tags": [
+        "medium-risk",
+        "attention",
+        "bugfix"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（cmake/external_projects/vllm_flash_attn.cmake, vllm/v1/attention/backends/mla/flashattn_mla_sparse.py, vllm/v1/attention/backends/mla/flashmla_sparse.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "cmake/external_projects/vllm_flash_attn.cmake",
+          "vllm/v1/attention/backends/mla/flashattn_mla_sparse.py",
+          "vllm/v1/attention/backends/mla/flashmla_sparse.py"
+        ]
+      }
+    },
+    {
+      "sha": "6dc34b6334fe9439a46748a0df290bc785dd69df",
+      "comment": "变更：[CPU] Add device-memory-utilization CLI alias (#56547)",
+      "tags": [
+        "config",
+        "engine",
+        "medium-risk",
+        "bugfix"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/config/cache.py, vllm/engine/arg_utils.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/config/cache.py",
+          "vllm/engine/arg_utils.py"
+        ]
+      }
+    },
+    {
+      "sha": "81d7293c2167e39f3ffddc9a82d633f94e8a1eaa",
+      "comment": "变更：[Rust Frontend] Construct model-owned vision processors through specs (#58109)",
+      "tags": [
+        "chore",
+        "multimodal",
+        "medium-risk"
+      ],
+      "ascend_impact": {
+        "ascend_affected": false,
+        "functionality": "无影响",
+        "testing": "无影响",
+        "needs_test_update": false,
+        "suggested_test_areas": []
+      }
+    },
+    {
+      "sha": "9815732c16ca076c60b65fccd787167d6a9c5328",
+      "comment": "变更：[BugFix][Core] Make the structured-output grammar poll non-blocking (#55931)",
+      "tags": [
+        "low-risk",
+        "bugfix"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/v1/structured_output/request.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/v1/structured_output/request.py"
+        ]
+      }
+    },
+    {
+      "sha": "362a64b21d5038691c929521478b63dcb4828e58",
+      "comment": "变更：[XPU][CI]Remove model_runner_v2 test from Intel GPU CI (#58050)",
+      "tags": [
+        "low-risk",
+        "model-runner",
+        "mrv2",
+        "bugfix"
+      ],
+      "ascend_impact": {
+        "ascend_affected": false,
+        "functionality": "无影响",
+        "testing": "无影响",
+        "needs_test_update": false,
+        "suggested_test_areas": []
+      }
+    },
+    {
+      "sha": "e548298f8144cae77d26949078c264d819d3993c",
+      "comment": "变更：[Bugfix][Structured Outputs] Reject empty `structural_tag` at request validation",
+      "tags": [
+        "low-risk",
+        "sampler",
+        "bugfix"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/sampling_params.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/sampling_params.py"
+        ]
+      }
+    },
+    {
+      "sha": "d90f0eade5b56ca83ba03839591fe111c51790b3",
+      "comment": "变更：[Build] Fix CUDA 12 KV connector dependency selection (#57945)",
+      "tags": [
+        "medium-risk",
+        "bugfix"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（docker/Dockerfile），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "docker/Dockerfile"
+        ]
+      }
+    },
+    {
+      "sha": "c9b34fdb2d0c9fdcc20fae6454bf0895a5faf6f5",
+      "comment": "变更：[Bugfix][GLM-5.3-Flash] Run the dense MLP layers on the sequence-parallel shard ",
+      "tags": [
+        "low-risk",
+        "bugfix"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/models/glm5next/common/model.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/models/glm5next/common/model.py"
+        ]
+      }
+    },
+    {
+      "sha": "1ea7c63f4af7bb4fd6f025c8db44434ab274cb51",
+      "comment": "变更：[Bugfix][Structured Output] Disallow MRV1 + PP>1 + async sched + structured outp",
+      "tags": [
+        "bugfix",
+        "model-runner",
+        "mrv2",
+        "config",
+        "medium-risk"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/config/vllm.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/config/vllm.py"
+        ]
+      }
+    },
+    {
+      "sha": "e4340e41c9a32b2247cc2442b35aa91b081c424f",
+      "comment": "变更：[Feat][XPU] VLLM_BATCH_INVARIANT support for Dense/MoE models (#55881)",
+      "tags": [
+        "feature",
+        "model-runner",
+        "sampler",
+        "moe",
+        "distributed",
+        "quantization",
+        "medium-risk"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/model_executor/determinism/batch_invariant.py, vllm/model_executor/layers/fused_moe/oracle/unquantized.py, vllm/model_executor/layers/layernorm.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/model_executor/determinism/batch_invariant.py",
+          "vllm/model_executor/layers/fused_moe/oracle/unquantized.py",
+          "vllm/model_executor/layers/layernorm.py",
+          "vllm/sampling_params.py",
+          "vllm/v1/sample/ops/topk_topp_sampler.py"
+        ]
+      }
+    },
+    {
+      "sha": "5c121e962a31ed0b5fe70d743b6e194686d2b473",
+      "comment": "变更：[SpecDecode] Restore residual-logits comments in _resample_kernel (#58166)",
+      "tags": [
+        "worker",
+        "spec-decode",
+        "sampler",
+        "chore",
+        "medium-risk"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/v1/worker/gpu/spec_decode/rejection_sampler_utils.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/v1/worker/gpu/spec_decode/rejection_sampler_utils.py"
+        ]
+      }
+    },
+    {
+      "sha": "feb87b1934c10046a19cfef610c44f1710b825b8",
+      "comment": "变更：[Bugfix] Narrow AuxOutput KV restrictions to known PD connectors (#58150)",
+      "tags": [
+        "low-risk",
+        "config",
+        "bugfix"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/config/vllm.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/config/vllm.py"
+        ]
+      }
+    },
+    {
+      "sha": "c42f5285ec9851dacfa370e163e7837e87fd7b6d",
+      "comment": "变更：[Bugfix] prioritize architecture capability before DeepGEMM availability check (",
+      "tags": [
+        "medium-risk",
+        "bugfix"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/utils/deep_gemm.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/utils/deep_gemm.py"
+        ]
+      }
+    },
+    {
+      "sha": "066ee911975133dc148433ed9e65061b4587c969",
+      "comment": "变更：[Bugfix][Attention] Avoid NaN in the Triton softcap for large attention logits (",
+      "tags": [
+        "low-risk",
+        "attention",
+        "kernels",
+        "bugfix"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/v1/attention/ops/triton_attention_helpers.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/v1/attention/ops/triton_attention_helpers.py"
+        ]
+      }
+    },
+    {
+      "sha": "a6131b0e656e18eeb3797b8856aa3dbc69efd8e5",
+      "comment": "变更：[Bugfix][Engram] Fall back when /dev/shm is absent before sharing tables (#57914",
+      "tags": [
+        "low-risk",
+        "bugfix"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/models/deepseek_v41/nvidia/engram.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/models/deepseek_v41/nvidia/engram.py"
+        ]
+      }
+    },
+    {
+      "sha": "74370a0e3044c16b6ba58f9c144b02ab733cd73a",
+      "comment": "变更：[Bugfix] hadacore_transform: respect inplace parameter to fix garbage outputs wi",
+      "tags": [
+        "bugfix",
+        "model-runner",
+        "kernels",
+        "quantization",
+        "medium-risk"
+      ],
+      "ascend_impact": {
+        "ascend_affected": true,
+        "functionality": "涉及 vLLM 核心代码变更（vllm/model_executor/layers/quantization/compressed_tensors/transform/module.py），可能影响 vllm-ascend 的相应模块实现。建议 Ascend 侧关注接口兼容性。",
+        "testing": "建议在 Ascend 平台上进行相关功能的回归测试。",
+        "needs_test_update": true,
+        "suggested_test_areas": [
+          "vllm/model_executor/layers/quantization/compressed_tensors/transform/module.py"
+        ]
+      }
+    }
+  ],
+  "ascend_impact_summary": "当日 41 个 commits 可能影响 vllm-ascend，主要涉及 engine, envs.py, ci, v1, snapshot 等模块。建议 Ascend 侧关注接口兼容性并进行回归测试。"
+}

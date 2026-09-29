@@ -1,0 +1,278 @@
+[
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3794836314",
+    "pull_request_review_id": 4949726569,
+    "id": 3794836314,
+    "node_id": "PRRC_kwDOI7xefs7iMJta",
+    "diff_hunk": "@@ -1231,6 +1180,13 @@ def _resolve_rust_cli_path() -> str | None:\n     ),\n     # Disable aiter ops unless specifically enabled.\n     # Acts as a parent switch to enable the rest of the other operations.\n+    # The MXFP4 emulation path dequantizes weights to BF16 once at load time and\n+    # runs as a BF16 checkpoint (no per-step weight dequant). Set to 0 to keep\n+    # the packed weights and dequantize every forward step. Default on.\n+    \"VLLM_MXFP4_EMULATION_DEQUANT_AT_LOAD\": lambda: (\n+        os.getenv(\"VLLM_MXFP4_EMULATION_DEQUANT_AT_LOAD\", \"True\").lower()\n+        in (\"true\", \"1\")\n+    ),",
+    "path": "vllm/envs.py",
+    "commit_id": "5c48da4571019c12702988ab1b082cc40fa1f15e",
+    "original_commit_id": "5c48da4571019c12702988ab1b082cc40fa1f15e",
+    "user": {
+      "login": "fxmarty-amd",
+      "id": 180171742,
+      "node_id": "U_kgDOCr0z3g",
+      "avatar_url": "https://avatars.githubusercontent.com/u/180171742?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/fxmarty-amd",
+      "html_url": "https://github.com/fxmarty-amd",
+      "followers_url": "https://api.github.com/users/fxmarty-amd/followers",
+      "following_url": "https://api.github.com/users/fxmarty-amd/following{/other_user}",
+      "gists_url": "https://api.github.com/users/fxmarty-amd/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/fxmarty-amd/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/fxmarty-amd/subscriptions",
+      "organizations_url": "https://api.github.com/users/fxmarty-amd/orgs",
+      "repos_url": "https://api.github.com/users/fxmarty-amd/repos",
+      "events_url": "https://api.github.com/users/fxmarty-amd/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/fxmarty-amd/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Should default to False IMO",
+    "created_at": "2026-08-17T08:26:01Z",
+    "updated_at": "2026-08-17T08:31:42Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/50814#discussion_r3794836314",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/50814",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3794836314"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/50814#discussion_r3794836314"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/50814"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3794836314/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": 1183,
+    "start_side": "RIGHT",
+    "line": null,
+    "original_line": 1189,
+    "side": "RIGHT",
+    "author_association": "CONTRIBUTOR",
+    "original_position": 176,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3794846345",
+    "pull_request_review_id": 4949726569,
+    "id": 3794846345,
+    "node_id": "PRRC_kwDOI7xefs7iMMKJ",
+    "diff_hunk": "@@ -0,0 +1,230 @@\n+# SPDX-License-Identifier: Apache-2.0\n+# SPDX-FileCopyrightText: Copyright contributors to the vLLM project\n+\"\"\"Automatic gfx950 AITER A16WFP4 fallback for dynamic MXFP4 layers.\"\"\"\n+\n+from __future__ import annotations\n+\n+from typing import Any\n+\n+import torch\n+import torch.nn.functional as F\n+from torch.nn.parameter import Parameter\n+\n+import vllm.envs as envs\n+from vllm._aiter_ops import is_aiter_found_and_supported\n+from vllm.logger import init_logger\n+from vllm.model_executor.layers.quantization.utils.mxfp4_utils import (\n+    dequant_mxfp4,\n+    quant_dequant_mxfp4,\n+)\n+from vllm.model_executor.layers.quantization.utils.quant_utils import (\n+    kMxfp4Dynamic,\n+)\n+from vllm.platforms import current_platform\n+\n+from .base import MxFp4LinearKernel, MxFp4LinearLayerConfig\n+\n+logger = init_logger(__name__)\n+\n+\n+def _prepare_aiter_a16wfp4_weight(\n+    weight: torch.Tensor, weight_scale: torch.Tensor\n+) -> Any:\n+    # Keep the concrete import here: importing AITER/FlyDSL at module scope can\n+    # initialize HIP before the engine core forks.\n+    from aiter.ops.flydsl.gemm_a16wfp4 import prepare_gemm_a16wfp4_weight\n+\n+    return prepare_gemm_a16wfp4_weight(weight, weight_scale)\n+\n+\n+# Registering this wrapper is safe because the concrete AITER/FlyDSL import is\n+# deferred until execution. Old AITER installs therefore remain importable and\n+# fall back while weights are prepared.\n+if is_aiter_found_and_supported():\n+    from vllm.utils.torch_utils import direct_register_custom_op\n+\n+    def aiter_a16wfp4_gemm(\n+        x: torch.Tensor,\n+        weight: torch.Tensor,\n+        weight_scale: torch.Tensor,\n+        n: int,\n+        k: int,\n+    ) -> torch.Tensor:\n+        from aiter.ops.flydsl.gemm_a16wfp4 import (\n+            PreshuffledA16WFP4Weight,\n+            flydsl_gemm_a16wfp4,\n+        )\n+\n+        prepared = PreshuffledA16WFP4Weight(\n+            weight=weight,\n+            scale=weight_scale,\n+            n=n,\n+            k=k,\n+        )\n+        return flydsl_gemm_a16wfp4(x, prepared)\n+\n+    def aiter_a16wfp4_gemm_fake(\n+        x: torch.Tensor,\n+        weight: torch.Tensor,\n+        weight_scale: torch.Tensor,\n+        n: int,\n+        k: int,\n+    ) -> torch.Tensor:\n+        del weight, weight_scale, k\n+        return torch.empty((x.shape[0], n), dtype=x.dtype, device=x.device)\n+\n+    direct_register_custom_op(\n+        op_name=\"aiter_a16wfp4_gemm\",\n+        op_func=aiter_a16wfp4_gemm,\n+        mutates_args=[],\n+        fake_impl=aiter_a16wfp4_gemm_fake,\n+        dispatch_key=current_platform.dispatch_key,\n+    )\n+\n+\n+class AiterA16Wfp4LinearKernel(MxFp4LinearKernel):\n+    \"\"\"QDQ activations, then use fused A16WFP4 or emulation automatically.\"\"\"\n+\n+    _logged_routes: set[tuple[str, int, int, str | None]] = set()\n+\n+    def __init__(self, config: MxFp4LinearLayerConfig) -> None:\n+        super().__init__(config)\n+        self.quant_dequant_func = quant_dequant_mxfp4\n+\n+    @classmethod\n+    def is_supported(\n+        cls, compute_capability: int | None = None\n+    ) -> tuple[bool, str | None]:\n+        if not current_platform.is_rocm():\n+            return False, \"only supports ROCm\"\n+\n+        if compute_capability is None:\n+            capability = current_platform.get_device_capability()\n+            if capability is not None:\n+                compute_capability = capability[0] * 10 + capability[1]\n+        if compute_capability != 95:\n+            return False, f\"requires gfx950, got capability {compute_capability}\"\n+        if not is_aiter_found_and_supported():\n+            return False, \"AITER is not found or supported\"\n+        return True, None\n+\n+    @classmethod\n+    def can_implement(cls, config: MxFp4LinearLayerConfig) -> tuple[bool, str | None]:\n+        if config.activation_quant_key != kMxfp4Dynamic:\n+            return False, \"only supports dynamic MXFP4 activations\"\n+        return True, None\n+\n+    @classmethod\n+    def _log_route(\n+        cls,\n+        route: str,\n+        n: int,\n+        k: int,\n+        reason: str | None = None,\n+    ) -> None:\n+        key = (route, n, k, reason)\n+        if key in cls._logged_routes:\n+            return\n+        if reason is None:\n+            logger.info(\n+                \"AiterA16Wfp4LinearKernel route=%s N=%d K=%d\",\n+                route,\n+                n,\n+                k,\n+            )\n+        else:\n+            logger.warning(\n+                \"AiterA16Wfp4LinearKernel route=%s N=%d K=%d: %s\",\n+                route,\n+                n,\n+                k,\n+                reason,\n+            )\n+        cls._logged_routes.add(key)\n+\n+    @staticmethod\n+    def _set_fallback_weights(\n+        layer: torch.nn.Module,\n+        weight: torch.Tensor,\n+        weight_scale: torch.Tensor,\n+    ) -> str:\n+        if envs.VLLM_MXFP4_EMULATION_DEQUANT_AT_LOAD:\n+            decoded = dequant_mxfp4(weight, weight_scale, torch.bfloat16)\n+            layer.weight = Parameter(decoded.contiguous(), requires_grad=False)\n+            route = \"cached-emulation\"\n+        else:\n+            layer.weight = Parameter(weight, requires_grad=False)\n+            route = \"per-call-emulation\"\n+        layer.weight_scale = Parameter(weight_scale, requires_grad=False)\n+        return route\n+\n+    def process_weights_after_loading(self, layer: torch.nn.Module) -> None:\n+        weight = layer.weight.data\n+        weight_scale = layer.weight_scale.data\n+        n, packed_k = weight.shape\n+        k = packed_k * 2\n+        layer._aiter_a16wfp4_n = n\n+        layer._aiter_a16wfp4_k = k\n+        layer._aiter_a16wfp4_prepared = False\n+\n+        fallback_reason: str | None = None\n+        if not envs.VLLM_MXFP4_EMULATION_DEQUANT_AT_LOAD:\n+            fallback_reason = \"dequant-at-load is disabled\"\n+        elif getattr(layer, \"params_dtype\", None) != torch.bfloat16:\n+            params_dtype = getattr(layer, \"params_dtype\", None)\n+            fallback_reason = f\"layer params dtype is {params_dtype}, not BF16\"\n+        elif n % 256 or k % 256:\n+            fallback_reason = \"AITER requires N and K divisible by 256\"\n+        else:\n+            try:\n+                prepared = _prepare_aiter_a16wfp4_weight(weight, weight_scale)\n+            except Exception as exc:\n+                fallback_reason = (\n+                    f\"AITER FlyDSL preparation failed ({type(exc).__name__}: {exc})\"\n+                )\n+            else:\n+                layer.weight = Parameter(prepared.weight, requires_grad=False)\n+                layer.weight_scale = Parameter(prepared.scale, requires_grad=False)\n+                layer._aiter_a16wfp4_prepared = True\n+                layer._aiter_a16wfp4_n = prepared.n\n+                layer._aiter_a16wfp4_k = prepared.k\n+                self._log_route(\"flydsl\", n, k)\n+                return\n+\n+        route = self._set_fallback_weights(layer, weight, weight_scale)\n+        self._log_route(route, n, k, fallback_reason)\n+\n+    def apply_weights(\n+        self,\n+        layer: torch.nn.Module,\n+        x: torch.Tensor,\n+        bias: torch.Tensor | None = None,\n+    ) -> torch.Tensor:\n+        qdq_x = self.quant_dequant_func(x)\n+        if not layer._aiter_a16wfp4_prepared:\n+            if layer.weight.element_size() >= 2:\n+                weight = layer.weight.to(qdq_x.dtype)\n+            else:\n+                weight = dequant_mxfp4(\n+                    layer.weight,\n+                    layer.weight_scale,\n+                    qdq_x.dtype,\n+                )\n+            return F.linear(qdq_x, weight, bias)",
+    "path": "vllm/model_executor/kernels/linear/mxfp4/aiter_a16wfp4.py",
+    "commit_id": "5c48da4571019c12702988ab1b082cc40fa1f15e",
+    "original_commit_id": "5c48da4571019c12702988ab1b082cc40fa1f15e",
+    "user": {
+      "login": "fxmarty-amd",
+      "id": 180171742,
+      "node_id": "U_kgDOCr0z3g",
+      "avatar_url": "https://avatars.githubusercontent.com/u/180171742?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/fxmarty-amd",
+      "html_url": "https://github.com/fxmarty-amd",
+      "followers_url": "https://api.github.com/users/fxmarty-amd/followers",
+      "following_url": "https://api.github.com/users/fxmarty-amd/following{/other_user}",
+      "gists_url": "https://api.github.com/users/fxmarty-amd/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/fxmarty-amd/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/fxmarty-amd/subscriptions",
+      "organizations_url": "https://api.github.com/users/fxmarty-amd/orgs",
+      "repos_url": "https://api.github.com/users/fxmarty-amd/repos",
+      "events_url": "https://api.github.com/users/fxmarty-amd/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/fxmarty-amd/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Please remove this. This is the job of the emulation backend",
+    "created_at": "2026-08-17T08:27:54Z",
+    "updated_at": "2026-08-17T08:31:42Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/50814#discussion_r3794846345",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/50814",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3794846345"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/50814#discussion_r3794846345"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/50814"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3794846345/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": 204,
+    "start_side": "RIGHT",
+    "line": null,
+    "original_line": 213,
+    "side": "RIGHT",
+    "author_association": "CONTRIBUTOR",
+    "original_position": 213,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3794850138",
+    "pull_request_review_id": 4949726569,
+    "id": 3794850138,
+    "node_id": "PRRC_kwDOI7xefs7iMNFa",
+    "diff_hunk": "@@ -0,0 +1,230 @@\n+# SPDX-License-Identifier: Apache-2.0\n+# SPDX-FileCopyrightText: Copyright contributors to the vLLM project\n+\"\"\"Automatic gfx950 AITER A16WFP4 fallback for dynamic MXFP4 layers.\"\"\"\n+\n+from __future__ import annotations\n+\n+from typing import Any\n+\n+import torch\n+import torch.nn.functional as F\n+from torch.nn.parameter import Parameter\n+\n+import vllm.envs as envs\n+from vllm._aiter_ops import is_aiter_found_and_supported\n+from vllm.logger import init_logger\n+from vllm.model_executor.layers.quantization.utils.mxfp4_utils import (\n+    dequant_mxfp4,\n+    quant_dequant_mxfp4,\n+)\n+from vllm.model_executor.layers.quantization.utils.quant_utils import (\n+    kMxfp4Dynamic,\n+)\n+from vllm.platforms import current_platform\n+\n+from .base import MxFp4LinearKernel, MxFp4LinearLayerConfig\n+\n+logger = init_logger(__name__)\n+\n+\n+def _prepare_aiter_a16wfp4_weight(\n+    weight: torch.Tensor, weight_scale: torch.Tensor\n+) -> Any:\n+    # Keep the concrete import here: importing AITER/FlyDSL at module scope can\n+    # initialize HIP before the engine core forks.\n+    from aiter.ops.flydsl.gemm_a16wfp4 import prepare_gemm_a16wfp4_weight\n+\n+    return prepare_gemm_a16wfp4_weight(weight, weight_scale)\n+\n+\n+# Registering this wrapper is safe because the concrete AITER/FlyDSL import is\n+# deferred until execution. Old AITER installs therefore remain importable and\n+# fall back while weights are prepared.\n+if is_aiter_found_and_supported():\n+    from vllm.utils.torch_utils import direct_register_custom_op\n+\n+    def aiter_a16wfp4_gemm(\n+        x: torch.Tensor,\n+        weight: torch.Tensor,\n+        weight_scale: torch.Tensor,\n+        n: int,\n+        k: int,\n+    ) -> torch.Tensor:\n+        from aiter.ops.flydsl.gemm_a16wfp4 import (\n+            PreshuffledA16WFP4Weight,\n+            flydsl_gemm_a16wfp4,\n+        )\n+\n+        prepared = PreshuffledA16WFP4Weight(\n+            weight=weight,\n+            scale=weight_scale,\n+            n=n,\n+            k=k,\n+        )\n+        return flydsl_gemm_a16wfp4(x, prepared)\n+\n+    def aiter_a16wfp4_gemm_fake(\n+        x: torch.Tensor,\n+        weight: torch.Tensor,\n+        weight_scale: torch.Tensor,\n+        n: int,\n+        k: int,\n+    ) -> torch.Tensor:\n+        del weight, weight_scale, k\n+        return torch.empty((x.shape[0], n), dtype=x.dtype, device=x.device)\n+\n+    direct_register_custom_op(\n+        op_name=\"aiter_a16wfp4_gemm\",\n+        op_func=aiter_a16wfp4_gemm,\n+        mutates_args=[],\n+        fake_impl=aiter_a16wfp4_gemm_fake,\n+        dispatch_key=current_platform.dispatch_key,\n+    )\n+\n+\n+class AiterA16Wfp4LinearKernel(MxFp4LinearKernel):\n+    \"\"\"QDQ activations, then use fused A16WFP4 or emulation automatically.\"\"\"\n+\n+    _logged_routes: set[tuple[str, int, int, str | None]] = set()\n+\n+    def __init__(self, config: MxFp4LinearLayerConfig) -> None:\n+        super().__init__(config)\n+        self.quant_dequant_func = quant_dequant_mxfp4\n+\n+    @classmethod\n+    def is_supported(\n+        cls, compute_capability: int | None = None\n+    ) -> tuple[bool, str | None]:\n+        if not current_platform.is_rocm():\n+            return False, \"only supports ROCm\"\n+\n+        if compute_capability is None:\n+            capability = current_platform.get_device_capability()\n+            if capability is not None:\n+                compute_capability = capability[0] * 10 + capability[1]\n+        if compute_capability != 95:\n+            return False, f\"requires gfx950, got capability {compute_capability}\"\n+        if not is_aiter_found_and_supported():\n+            return False, \"AITER is not found or supported\"\n+        return True, None\n+\n+    @classmethod\n+    def can_implement(cls, config: MxFp4LinearLayerConfig) -> tuple[bool, str | None]:\n+        if config.activation_quant_key != kMxfp4Dynamic:\n+            return False, \"only supports dynamic MXFP4 activations\"\n+        return True, None\n+\n+    @classmethod\n+    def _log_route(\n+        cls,\n+        route: str,\n+        n: int,\n+        k: int,\n+        reason: str | None = None,\n+    ) -> None:\n+        key = (route, n, k, reason)\n+        if key in cls._logged_routes:\n+            return\n+        if reason is None:\n+            logger.info(\n+                \"AiterA16Wfp4LinearKernel route=%s N=%d K=%d\",\n+                route,\n+                n,\n+                k,\n+            )\n+        else:\n+            logger.warning(\n+                \"AiterA16Wfp4LinearKernel route=%s N=%d K=%d: %s\",\n+                route,\n+                n,\n+                k,\n+                reason,\n+            )\n+        cls._logged_routes.add(key)\n+\n+    @staticmethod\n+    def _set_fallback_weights(\n+        layer: torch.nn.Module,\n+        weight: torch.Tensor,\n+        weight_scale: torch.Tensor,\n+    ) -> str:\n+        if envs.VLLM_MXFP4_EMULATION_DEQUANT_AT_LOAD:",
+    "path": "vllm/model_executor/kernels/linear/mxfp4/aiter_a16wfp4.py",
+    "commit_id": "5c48da4571019c12702988ab1b082cc40fa1f15e",
+    "original_commit_id": "5c48da4571019c12702988ab1b082cc40fa1f15e",
+    "user": {
+      "login": "fxmarty-amd",
+      "id": 180171742,
+      "node_id": "U_kgDOCr0z3g",
+      "avatar_url": "https://avatars.githubusercontent.com/u/180171742?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/fxmarty-amd",
+      "html_url": "https://github.com/fxmarty-amd",
+      "followers_url": "https://api.github.com/users/fxmarty-amd/followers",
+      "following_url": "https://api.github.com/users/fxmarty-amd/following{/other_user}",
+      "gists_url": "https://api.github.com/users/fxmarty-amd/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/fxmarty-amd/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/fxmarty-amd/subscriptions",
+      "organizations_url": "https://api.github.com/users/fxmarty-amd/orgs",
+      "repos_url": "https://api.github.com/users/fxmarty-amd/repos",
+      "events_url": "https://api.github.com/users/fxmarty-amd/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/fxmarty-amd/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Remove all `VLLM_MXFP4_EMULATION_DEQUANT_AT_LOAD` logic from this file",
+    "created_at": "2026-08-17T08:28:36Z",
+    "updated_at": "2026-08-17T08:31:42Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/50814#discussion_r3794850138",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/50814",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3794850138"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/50814#discussion_r3794850138"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/50814"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3794850138/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 151,
+    "side": "RIGHT",
+    "author_association": "CONTRIBUTOR",
+    "original_position": 151,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3794865901",
+    "pull_request_review_id": 4949726569,
+    "id": 3794865901,
+    "node_id": "PRRC_kwDOI7xefs7iMQ7t",
+    "diff_hunk": "@@ -0,0 +1,230 @@\n+# SPDX-License-Identifier: Apache-2.0\n+# SPDX-FileCopyrightText: Copyright contributors to the vLLM project\n+\"\"\"Automatic gfx950 AITER A16WFP4 fallback for dynamic MXFP4 layers.\"\"\"\n+\n+from __future__ import annotations\n+\n+from typing import Any\n+\n+import torch\n+import torch.nn.functional as F\n+from torch.nn.parameter import Parameter\n+\n+import vllm.envs as envs\n+from vllm._aiter_ops import is_aiter_found_and_supported\n+from vllm.logger import init_logger\n+from vllm.model_executor.layers.quantization.utils.mxfp4_utils import (\n+    dequant_mxfp4,\n+    quant_dequant_mxfp4,\n+)\n+from vllm.model_executor.layers.quantization.utils.quant_utils import (\n+    kMxfp4Dynamic,\n+)\n+from vllm.platforms import current_platform\n+\n+from .base import MxFp4LinearKernel, MxFp4LinearLayerConfig\n+\n+logger = init_logger(__name__)\n+\n+\n+def _prepare_aiter_a16wfp4_weight(\n+    weight: torch.Tensor, weight_scale: torch.Tensor\n+) -> Any:\n+    # Keep the concrete import here: importing AITER/FlyDSL at module scope can\n+    # initialize HIP before the engine core forks.\n+    from aiter.ops.flydsl.gemm_a16wfp4 import prepare_gemm_a16wfp4_weight",
+    "path": "vllm/model_executor/kernels/linear/mxfp4/aiter_a16wfp4.py",
+    "commit_id": "5c48da4571019c12702988ab1b082cc40fa1f15e",
+    "original_commit_id": "5c48da4571019c12702988ab1b082cc40fa1f15e",
+    "user": {
+      "login": "fxmarty-amd",
+      "id": 180171742,
+      "node_id": "U_kgDOCr0z3g",
+      "avatar_url": "https://avatars.githubusercontent.com/u/180171742?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/fxmarty-amd",
+      "html_url": "https://github.com/fxmarty-amd",
+      "followers_url": "https://api.github.com/users/fxmarty-amd/followers",
+      "following_url": "https://api.github.com/users/fxmarty-amd/following{/other_user}",
+      "gists_url": "https://api.github.com/users/fxmarty-amd/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/fxmarty-amd/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/fxmarty-amd/subscriptions",
+      "organizations_url": "https://api.github.com/users/fxmarty-amd/orgs",
+      "repos_url": "https://api.github.com/users/fxmarty-amd/repos",
+      "events_url": "https://api.github.com/users/fxmarty-amd/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/fxmarty-amd/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Which AITER version adds this, which PR is it from? This is not in main yet, so you will need to have merged + AITER released + AITER version bumped in vLLM.\n\nI would strongly recommend you to open a separate PR to add this backend",
+    "created_at": "2026-08-17T08:31:20Z",
+    "updated_at": "2026-08-17T08:31:42Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/50814#discussion_r3794865901",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/50814",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3794865901"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/50814#discussion_r3794865901"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/50814"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/3794865901/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 35,
+    "side": "RIGHT",
+    "author_association": "CONTRIBUTOR",
+    "original_position": 35,
+    "position": 1,
+    "subject_type": "line"
+  }
+]

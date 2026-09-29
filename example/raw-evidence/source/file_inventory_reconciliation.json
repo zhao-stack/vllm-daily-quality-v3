@@ -1,0 +1,11 @@
+[
+  {
+    "pr_number": 57428,
+    "pr_diff_only": [],
+    "merge_diff_only": [
+      "tests/kernels/test_kimi_k3_gemm_rs_ar.py",
+      "vllm/models/kimi_k3/nvidia/ops/cute_dsl/gemm_rs_ar.py"
+    ],
+    "basis": "Exact parent-to-merge tree difference; PR files are preserved in original GraphQL evidence and merged_prs_all.json."
+  }
+]

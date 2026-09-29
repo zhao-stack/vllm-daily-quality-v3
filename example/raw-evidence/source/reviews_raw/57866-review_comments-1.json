@@ -1,0 +1,141 @@
+[
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4060956563",
+    "pull_request_review_id": 5265175143,
+    "id": 4060956563,
+    "node_id": "PRRC_kwDOI7xefs7yDUeT",
+    "diff_hunk": "@@ -321,7 +321,7 @@ def _supports_parallel_config(\n         moe_parallel_config: FusedMoEParallelConfig,\n     ) -> bool:\n         return (\n-            not moe_parallel_config.use_all2all_kernels\n+            not moe_parallel_config.use_ep",
+    "path": "vllm/model_executor/layers/fused_moe/experts/aiter_mxfp4_w4a16_moe.py",
+    "commit_id": "00fd28a475b923412a3cea21e30b8ff1e32efa07",
+    "original_commit_id": "00fd28a475b923412a3cea21e30b8ff1e32efa07",
+    "user": {
+      "login": "tjtanaa",
+      "id": 29171856,
+      "node_id": "MDQ6VXNlcjI5MTcxODU2",
+      "avatar_url": "https://avatars.githubusercontent.com/u/29171856?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/tjtanaa",
+      "html_url": "https://github.com/tjtanaa",
+      "followers_url": "https://api.github.com/users/tjtanaa/followers",
+      "following_url": "https://api.github.com/users/tjtanaa/following{/other_user}",
+      "gists_url": "https://api.github.com/users/tjtanaa/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/tjtanaa/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/tjtanaa/subscriptions",
+      "organizations_url": "https://api.github.com/users/tjtanaa/orgs",
+      "repos_url": "https://api.github.com/users/tjtanaa/repos",
+      "events_url": "https://api.github.com/users/tjtanaa/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/tjtanaa/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "@AndreasKaratzas this seems to have changed the semantic,  do you know if @BowenBao can take a look?",
+    "created_at": "2026-09-21T09:48:28Z",
+    "updated_at": "2026-09-21T09:48:36Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57866#discussion_r4060956563",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57866",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4060956563"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57866#discussion_r4060956563"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57866"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4060956563/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": 324,
+    "original_line": 324,
+    "side": "RIGHT",
+    "author_association": "MEMBER",
+    "original_position": 5,
+    "position": 5,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4064325067",
+    "pull_request_review_id": 5269318242,
+    "id": 4064325067,
+    "node_id": "PRRC_kwDOI7xefs7yQK3L",
+    "diff_hunk": "@@ -321,7 +321,7 @@ def _supports_parallel_config(\n         moe_parallel_config: FusedMoEParallelConfig,\n     ) -> bool:\n         return (\n-            not moe_parallel_config.use_all2all_kernels\n+            not moe_parallel_config.use_ep",
+    "path": "vllm/model_executor/layers/fused_moe/experts/aiter_mxfp4_w4a16_moe.py",
+    "commit_id": "00fd28a475b923412a3cea21e30b8ff1e32efa07",
+    "original_commit_id": "00fd28a475b923412a3cea21e30b8ff1e32efa07",
+    "user": {
+      "login": "BowenBao",
+      "id": 9376104,
+      "node_id": "MDQ6VXNlcjkzNzYxMDQ=",
+      "avatar_url": "https://avatars.githubusercontent.com/u/9376104?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/BowenBao",
+      "html_url": "https://github.com/BowenBao",
+      "followers_url": "https://api.github.com/users/BowenBao/followers",
+      "following_url": "https://api.github.com/users/BowenBao/following{/other_user}",
+      "gists_url": "https://api.github.com/users/BowenBao/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/BowenBao/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/BowenBao/subscriptions",
+      "organizations_url": "https://api.github.com/users/BowenBao/orgs",
+      "repos_url": "https://api.github.com/users/BowenBao/repos",
+      "events_url": "https://api.github.com/users/BowenBao/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/BowenBao/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "https://github.com/vllm-project/vllm/blob/00fd28a475b923412a3cea21e30b8ff1e32efa07/vllm/model_executor/layers/fused_moe/config.py#L1023-L1031\n\nShould be safe as this modification is strictly tightening the condition.\n\nAnd based on context this kernel does not have EP support.",
+    "created_at": "2026-09-21T16:43:27Z",
+    "updated_at": "2026-09-21T16:46:04Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57866#discussion_r4064325067",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57866",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4064325067"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57866#discussion_r4064325067"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57866"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4064325067/reactions",
+      "total_count": 1,
+      "+1": 1,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": 324,
+    "original_line": 324,
+    "side": "RIGHT",
+    "in_reply_to_id": 4060956563,
+    "author_association": "CONTRIBUTOR",
+    "original_position": 5,
+    "position": 5,
+    "subject_type": "line"
+  }
+]

@@ -1,0 +1,82 @@
+[
+  {
+    "id": 5279915019,
+    "node_id": "PRR_kwDOI7xefs8AAAABOrUcCw",
+    "user": {
+      "login": "claude[bot]",
+      "id": 209825114,
+      "node_id": "BOT_kgDODIGtWg",
+      "avatar_url": "https://avatars.githubusercontent.com/in/1236702?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/claude%5Bbot%5D",
+      "html_url": "https://github.com/apps/claude",
+      "followers_url": "https://api.github.com/users/claude%5Bbot%5D/followers",
+      "following_url": "https://api.github.com/users/claude%5Bbot%5D/following{/other_user}",
+      "gists_url": "https://api.github.com/users/claude%5Bbot%5D/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/claude%5Bbot%5D/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/claude%5Bbot%5D/subscriptions",
+      "organizations_url": "https://api.github.com/users/claude%5Bbot%5D/orgs",
+      "repos_url": "https://api.github.com/users/claude%5Bbot%5D/repos",
+      "events_url": "https://api.github.com/users/claude%5Bbot%5D/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/claude%5Bbot%5D/received_events",
+      "type": "Bot",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "## Claude Code Review\n\nThis repository is configured for manual code reviews. Comment `@claude review` for a one-time review, or `@claude review always` to subscribe this PR to a review on every future push.\n\n<sub>Tip: disable this comment in your organization's [Code Review settings](https://claude.ai/admin-settings/claude-code).</sub>",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/58166#pullrequestreview-5279915019",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/58166",
+    "author_association": "NONE",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/58166#pullrequestreview-5279915019"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/58166"
+      }
+    },
+    "submitted_at": "2026-09-22T15:04:39Z",
+    "commit_id": "ae8ed81b062defe511c5ea114b2f4d4c0494d8a0"
+  },
+  {
+    "id": 5279944832,
+    "node_id": "PRR_kwDOI7xefs8AAAABOrWQgA",
+    "user": {
+      "login": "mgoin",
+      "id": 3195154,
+      "node_id": "MDQ6VXNlcjMxOTUxNTQ=",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3195154?u=baa3820b95103662bc2aca01959e41aa651764b5&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/mgoin",
+      "html_url": "https://github.com/mgoin",
+      "followers_url": "https://api.github.com/users/mgoin/followers",
+      "following_url": "https://api.github.com/users/mgoin/following{/other_user}",
+      "gists_url": "https://api.github.com/users/mgoin/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/mgoin/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/mgoin/subscriptions",
+      "organizations_url": "https://api.github.com/users/mgoin/orgs",
+      "repos_url": "https://api.github.com/users/mgoin/repos",
+      "events_url": "https://api.github.com/users/mgoin/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/mgoin/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "APPROVED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/58166#pullrequestreview-5279944832",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/58166",
+    "author_association": "MEMBER",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/58166#pullrequestreview-5279944832"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/58166"
+      }
+    },
+    "submitted_at": "2026-09-22T15:07:17Z",
+    "commit_id": "ae8ed81b062defe511c5ea114b2f4d4c0494d8a0"
+  }
+]

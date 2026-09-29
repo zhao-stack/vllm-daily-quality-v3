@@ -1,0 +1,79 @@
+diff --git a/tests/kernels/attention/test_triton_unified_attention.py b/tests/kernels/attention/test_triton_unified_attention.py
+index c3a2919fac88..e30d9225eac8 100644
+--- a/tests/kernels/attention/test_triton_unified_attention.py
++++ b/tests/kernels/attention/test_triton_unified_attention.py
+@@ -10,6 +10,7 @@
+ from vllm.utils.math_utils import next_power_of_2
+ from vllm.utils.torch_utils import set_random_seed
+ from vllm.v1.attention.ops.triton_attention_helpers import (
++    apply_softcap,
+     compute_tile_loop_bounds,
+ )
+ from vllm.v1.attention.ops.triton_unified_attention import unified_attention
+@@ -899,3 +900,40 @@ def test_triton_unified_attn_use_td_tile_clamp(
+         soft_cap=None,
+         seq_threshold_3D=0,
+     )
++
++
++@triton.jit
++def _softcap_probe_kernel(
++    scores_ptr,
++    out_ptr,
++    numel,
++    soft_cap,
++    BLOCK: tl.constexpr,
++):
++    offs = tl.program_id(0) * BLOCK + tl.arange(0, BLOCK)
++    mask = offs < numel
++    scores = tl.load(scores_ptr + offs, mask=mask, other=0.0)
++    tl.store(out_ptr + offs, apply_softcap(scores, soft_cap), mask=mask)
++
++
++@torch.inference_mode()
++def test_softcap_does_not_overflow_on_large_scores() -> None:
++    """Scores above ~88 * soft_cap must not overflow to inf/NaN.
++
++    The exp-based softcap computes ``(exp(y) - exp(-y)) / (exp(y) + exp(-y))``
++    with ``y = S / soft_cap``. For ``|y| > ~88`` the exponentials overflow to
++    ``inf`` and the ratio becomes ``inf / inf = NaN``, poisoning the whole
++    attention row. Gemma-2 style models use ``attn_logit_softcapping = 50``,
++    so scores above 4400 are in range for their large attention logits.
++    """
++    soft_cap = 50.0
++    scores = torch.tensor(
++        [1.0, 100.0, 1000.0, 3000.0, 5000.0, 10000.0, -1.0, -10000.0, 4400.0],
++        device=DEVICE_TYPE,
++        dtype=torch.float32,
++    )
++    out = torch.empty_like(scores)
++    _softcap_probe_kernel[(1,)](scores, out, scores.numel(), soft_cap, BLOCK=16)
++    ref = soft_cap * torch.tanh(scores / soft_cap)
++    assert torch.isfinite(out).all(), out
++    torch.testing.assert_close(out, ref, atol=1e-3, rtol=1e-3)
+diff --git a/vllm/v1/attention/ops/triton_attention_helpers.py b/vllm/v1/attention/ops/triton_attention_helpers.py
+index dff0b21c6423..7804b013171e 100644
+--- a/vllm/v1/attention/ops/triton_attention_helpers.py
++++ b/vllm/v1/attention/ops/triton_attention_helpers.py
+@@ -28,12 +28,16 @@ def cdiv_fn(x, y):
+ def apply_softcap(S, x):
+     """Softcap (aka tanh-style clamp) used to bound attention scores.
+ 
+-    ``x * tanh(S / x)`` rewritten to avoid a direct ``tanh`` call.
++    ``x * tanh(S / x)`` computed without a direct ``tanh`` call.
++
++    Use ``tanh(y) = 1 - 2 / (exp(2y) + 1)`` rather than
++    ``(exp(y) - exp(-y)) / (exp(y) + exp(-y))``. The symmetric-exponential
++    form overflows to ``inf`` for ``|y| > ~88`` and then evaluates to
++    ``inf / inf = NaN``, poisoning the attention row. The single-exponential
++    form saturates cleanly at +/-1 for either sign.
+     """
+-    Sdiv = S / x
+-    p1 = tl.exp(Sdiv)
+-    p2 = tl.exp(-Sdiv)
+-    return x * (p1 - p2) / (p1 + p2)
++    y = S / x
++    return x * (1.0 - 2.0 / (tl.exp(2.0 * y) + 1.0))
+ 
+ 
+ # ===========================================================================

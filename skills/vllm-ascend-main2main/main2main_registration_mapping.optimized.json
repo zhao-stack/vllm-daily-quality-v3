@@ -1,0 +1,2195 @@
+{
+  "schema_version": 2,
+  "generated_from": {
+    "scope": "patch/plugin/package registration and glue entrypoints",
+    "optimized_by": "scripts/optimize_mappings.py",
+    "generated_at": "2026-07-22T00:00:00Z",
+    "source_table": "raw/main2main_registration_mapping.json",
+    "source_table_sha256": "c9d46f432ce44ca40b4d34ccb056f119fc6a5284a6a8f1e9d71658365d3aba68",
+    "additional_source_tables_sha256": {},
+    "source_sha": {
+      "vllm": "fe784ff22e630a31fd798f392b01e0a75c18f047",
+      "vllm_ascend": "69d1d6fe0cb15b07854bf058098a49d4165cc558"
+    }
+  },
+  "summary": {
+    "total": 52,
+    "by_relation": {
+      "package_build_reference": 12,
+      "package_entrypoint": 4,
+      "patch_module_registered": 31,
+      "plugin_entrypoint": 5
+    },
+    "by_risk": {
+      "high": 36,
+      "low": 12,
+      "medium": 4
+    },
+    "by_action": {
+      "dismiss": 12,
+      "review": 40
+    },
+    "by_confidence": {
+      "low": 12,
+      "medium": 40
+    },
+    "upstream_files": 1,
+    "ascend_files": 4
+  },
+  "optimization": {
+    "input_total": 62,
+    "output_total": 52,
+    "removed_total": 10,
+    "deduplicated": 0,
+    "stale_records_removed": 10,
+    "stale_paths": {
+      "vllm_ascend/patch/platform/patch_glm_tool_call_parser.py": 1,
+      "vllm_ascend/patch/platform/patch_kv_cache_interface.py": 1,
+      "vllm_ascend/patch/platform/patch_minimax_usage_accounting.py": 1,
+      "vllm_ascend/patch/platform/patch_sched_yield.py": 2,
+      "vllm_ascend/patch/platform/patch_tool_choice_none_content.py": 1,
+      "vllm_ascend/patch/worker/patch_bailing_moe_linear.py": 1,
+      "vllm_ascend/patch/worker/patch_bert.py": 1,
+      "vllm_ascend/patch/worker/patch_gdn_attn.py": 1,
+      "vllm_ascend/patch/worker/patch_huanyuan_vl.py": 1
+    },
+    "package_build_references_downgraded": 12,
+    "target_existence_checked": true,
+    "rules_version": 2,
+    "canonical_source_preserved": true
+  },
+  "mappings": [
+    {
+      "relation": "package_build_reference",
+      "risk": "low",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 453,
+        "registered_file": null,
+        "expression": "VERSION = get_version(write_to=\"vllm_ascend/_version.py\")"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration",
+      "relationship_verified": false,
+      "action": "dismiss",
+      "confidence": "low",
+      "verification": {
+        "status": "dismissed",
+        "reason": "ordinary setup/build reference is not a vLLM runtime entrypoint"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 54,
+          "source_relation": "package_build_reference",
+          "original_risk": "low",
+          "registry_line": 453,
+          "expression": "VERSION = get_version(write_to=\"vllm_ascend/_version.py\")"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          54
+        ],
+        "source_relations": [
+          "package_entrypoint"
+        ]
+      }
+    },
+    {
+      "relation": "package_build_reference",
+      "risk": "low",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 427,
+        "registered_file": null,
+        "expression": "dst_cann_ops_custom = os.path.join(self.build_lib, \"vllm_ascend\", \"_cann_ops_custom\")"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration",
+      "relationship_verified": false,
+      "action": "dismiss",
+      "confidence": "low",
+      "verification": {
+        "status": "dismissed",
+        "reason": "ordinary setup/build reference is not a vLLM runtime entrypoint"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 53,
+          "source_relation": "package_build_reference",
+          "original_risk": "low",
+          "registry_line": 427,
+          "expression": "dst_cann_ops_custom = os.path.join(self.build_lib, \"vllm_ascend\", \"_cann_ops_custom\")"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          53
+        ],
+        "source_relations": [
+          "package_entrypoint"
+        ]
+      }
+    },
+    {
+      "relation": "package_build_reference",
+      "risk": "low",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 421,
+        "registered_file": null,
+        "expression": "dst_path = os.path.join(self.build_lib, \"vllm_ascend\", file)"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration",
+      "relationship_verified": false,
+      "action": "dismiss",
+      "confidence": "low",
+      "verification": {
+        "status": "dismissed",
+        "reason": "ordinary setup/build reference is not a vLLM runtime entrypoint"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 51,
+          "source_relation": "package_build_reference",
+          "original_risk": "low",
+          "registry_line": 421,
+          "expression": "dst_path = os.path.join(self.build_lib, \"vllm_ascend\", file)"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          51
+        ],
+        "source_relations": [
+          "package_entrypoint"
+        ]
+      }
+    },
+    {
+      "relation": "package_build_reference",
+      "risk": "low",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 132,
+        "registered_file": null,
+        "expression": "envs = load_module_from_path(\"envs\", os.path.join(ROOT_DIR, \"vllm_ascend\", \"envs.py\"))"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration",
+      "relationship_verified": false,
+      "action": "dismiss",
+      "confidence": "low",
+      "verification": {
+        "status": "dismissed",
+        "reason": "ordinary setup/build reference is not a vLLM runtime entrypoint"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 46,
+          "source_relation": "package_build_reference",
+          "original_risk": "low",
+          "registry_line": 132,
+          "expression": "envs = load_module_from_path(\"envs\", os.path.join(ROOT_DIR, \"vllm_ascend\", \"envs.py\"))"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          46
+        ],
+        "source_relations": [
+          "package_entrypoint"
+        ]
+      }
+    },
+    {
+      "relation": "package_build_reference",
+      "risk": "low",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 461,
+        "registered_file": null,
+        "expression": "ext_modules = [CMakeExtension(name=\"vllm_ascend.vllm_ascend_C\")]"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration",
+      "relationship_verified": false,
+      "action": "dismiss",
+      "confidence": "low",
+      "verification": {
+        "status": "dismissed",
+        "reason": "ordinary setup/build reference is not a vLLM runtime entrypoint"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 55,
+          "source_relation": "package_build_reference",
+          "original_risk": "low",
+          "registry_line": 461,
+          "expression": "ext_modules = [CMakeExtension(name=\"vllm_ascend.vllm_ascend_C\")]"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          55
+        ],
+        "source_relations": [
+          "package_entrypoint"
+        ]
+      }
+    },
+    {
+      "relation": "package_build_reference",
+      "risk": "low",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 310,
+        "registered_file": null,
+        "expression": "install_path = os.path.join(ROOT_DIR, \"vllm_ascend\")"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration",
+      "relationship_verified": false,
+      "action": "dismiss",
+      "confidence": "low",
+      "verification": {
+        "status": "dismissed",
+        "reason": "ordinary setup/build reference is not a vLLM runtime entrypoint"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 48,
+          "source_relation": "package_build_reference",
+          "original_risk": "low",
+          "registry_line": 310,
+          "expression": "install_path = os.path.join(ROOT_DIR, \"vllm_ascend\")"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          48
+        ],
+        "source_relations": [
+          "package_entrypoint"
+        ]
+      }
+    },
+    {
+      "relation": "package_build_reference",
+      "risk": "low",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 510,
+        "registered_file": null,
+        "expression": "name=\"vllm_ascend\","
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration",
+      "relationship_verified": false,
+      "action": "dismiss",
+      "confidence": "low",
+      "verification": {
+        "status": "dismissed",
+        "reason": "ordinary setup/build reference is not a vLLM runtime entrypoint"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 57,
+          "source_relation": "package_build_reference",
+          "original_risk": "low",
+          "registry_line": 510,
+          "expression": "name=\"vllm_ascend\","
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          57
+        ],
+        "source_relations": [
+          "package_entrypoint"
+        ]
+      }
+    },
+    {
+      "relation": "package_build_reference",
+      "risk": "low",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 380,
+        "registered_file": null,
+        "expression": "os.makedirs(os.path.join(self.build_lib, \"vllm_ascend\"), exist_ok=True)"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration",
+      "relationship_verified": false,
+      "action": "dismiss",
+      "confidence": "low",
+      "verification": {
+        "status": "dismissed",
+        "reason": "ordinary setup/build reference is not a vLLM runtime entrypoint"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 49,
+          "source_relation": "package_build_reference",
+          "original_risk": "low",
+          "registry_line": 380,
+          "expression": "os.makedirs(os.path.join(self.build_lib, \"vllm_ascend\"), exist_ok=True)"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          49
+        ],
+        "source_relations": [
+          "package_entrypoint"
+        ]
+      }
+    },
+    {
+      "relation": "package_build_reference",
+      "risk": "low",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 186,
+        "registered_file": null,
+        "expression": "package_dir = os.path.join(ROOT_DIR, \"vllm_ascend\", \"_build_info.py\")"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration",
+      "relationship_verified": false,
+      "action": "dismiss",
+      "confidence": "low",
+      "verification": {
+        "status": "dismissed",
+        "reason": "ordinary setup/build reference is not a vLLM runtime entrypoint"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 47,
+          "source_relation": "package_build_reference",
+          "original_risk": "low",
+          "registry_line": 186,
+          "expression": "package_dir = os.path.join(ROOT_DIR, \"vllm_ascend\", \"_build_info.py\")"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          47
+        ],
+        "source_relations": [
+          "package_entrypoint"
+        ]
+      }
+    },
+    {
+      "relation": "package_build_reference",
+      "risk": "low",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 497,
+        "registered_file": null,
+        "expression": "print(\"Failed to read requirements.txt in vllm_ascend.\")"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration",
+      "relationship_verified": false,
+      "action": "dismiss",
+      "confidence": "low",
+      "verification": {
+        "status": "dismissed",
+        "reason": "ordinary setup/build reference is not a vLLM runtime entrypoint"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 56,
+          "source_relation": "package_build_reference",
+          "original_risk": "low",
+          "registry_line": 497,
+          "expression": "print(\"Failed to read requirements.txt in vllm_ascend.\")"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          56
+        ],
+        "source_relations": [
+          "package_entrypoint"
+        ]
+      }
+    },
+    {
+      "relation": "package_build_reference",
+      "risk": "low",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 383,
+        "registered_file": null,
+        "expression": "return s.removeprefix(\"vllm_ascend.\")"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration",
+      "relationship_verified": false,
+      "action": "dismiss",
+      "confidence": "low",
+      "verification": {
+        "status": "dismissed",
+        "reason": "ordinary setup/build reference is not a vLLM runtime entrypoint"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 50,
+          "source_relation": "package_build_reference",
+          "original_risk": "low",
+          "registry_line": 383,
+          "expression": "return s.removeprefix(\"vllm_ascend.\")"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          50
+        ],
+        "source_relations": [
+          "package_entrypoint"
+        ]
+      }
+    },
+    {
+      "relation": "package_build_reference",
+      "risk": "low",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 426,
+        "registered_file": null,
+        "expression": "src_cann_ops_custom = os.path.join(ROOT_DIR, \"vllm_ascend\", \"_cann_ops_custom\")"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration",
+      "relationship_verified": false,
+      "action": "dismiss",
+      "confidence": "low",
+      "verification": {
+        "status": "dismissed",
+        "reason": "ordinary setup/build reference is not a vLLM runtime entrypoint"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 52,
+          "source_relation": "package_build_reference",
+          "original_risk": "low",
+          "registry_line": 426,
+          "expression": "src_cann_ops_custom = os.path.join(ROOT_DIR, \"vllm_ascend\", \"_cann_ops_custom\")"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          52
+        ],
+        "source_relations": [
+          "package_entrypoint"
+        ]
+      }
+    },
+    {
+      "relation": "package_entrypoint",
+      "risk": "medium",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 543,
+        "registered_file": null,
+        "expression": "\"ascend_kv_connector = vllm_ascend:register_connector\","
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 59,
+          "source_relation": "package_entrypoint",
+          "original_risk": "medium",
+          "registry_line": 543,
+          "expression": "\"ascend_kv_connector = vllm_ascend:register_connector\","
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          59
+        ],
+        "source_relations": [
+          "package_entrypoint"
+        ]
+      }
+    },
+    {
+      "relation": "package_entrypoint",
+      "risk": "medium",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 544,
+        "registered_file": null,
+        "expression": "\"ascend_model_loader = vllm_ascend:register_model_loader\","
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 60,
+          "source_relation": "package_entrypoint",
+          "original_risk": "medium",
+          "registry_line": 544,
+          "expression": "\"ascend_model_loader = vllm_ascend:register_model_loader\","
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          60
+        ],
+        "source_relations": [
+          "package_entrypoint"
+        ]
+      }
+    },
+    {
+      "relation": "package_entrypoint",
+      "risk": "medium",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 545,
+        "registered_file": null,
+        "expression": "\"ascend_service_profiling = vllm_ascend:register_service_profiling\","
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 61,
+          "source_relation": "package_entrypoint",
+          "original_risk": "medium",
+          "registry_line": 545,
+          "expression": "\"ascend_service_profiling = vllm_ascend:register_service_profiling\","
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          61
+        ],
+        "source_relations": [
+          "package_entrypoint"
+        ]
+      }
+    },
+    {
+      "relation": "package_entrypoint",
+      "risk": "medium",
+      "upstream": {
+        "trigger": "packaging_entrypoint",
+        "file": "vllm/plugins",
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "setup.py",
+        "line": 541,
+        "registered_file": null,
+        "expression": "\"vllm.platform_plugins\": [\"ascend = vllm_ascend:register\"],"
+      },
+      "reason": "package entrypoint links vLLM plugin discovery to vllm-ascend registration",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 58,
+          "source_relation": "package_entrypoint",
+          "original_risk": "medium",
+          "registry_line": 541,
+          "expression": "\"vllm.platform_plugins\": [\"ascend = vllm_ascend:register\"],"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          58
+        ],
+        "source_relations": [
+          "package_entrypoint"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/platform/__init__.py",
+        "line": 40,
+        "registered_file": "vllm_ascend/patch/platform/patch_balance_schedule.py",
+        "expression": "import vllm_ascend.patch.platform.patch_balance_schedule"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 12,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 40,
+          "expression": "import vllm_ascend.patch.platform.patch_balance_schedule"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          12
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/platform/__init__.py",
+        "line": 19,
+        "registered_file": "vllm_ascend/patch/platform/patch_distributed.py",
+        "expression": "import vllm_ascend.patch.platform.patch_distributed"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 0,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 19,
+          "expression": "import vllm_ascend.patch.platform.patch_distributed"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          0
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/platform/__init__.py",
+        "line": 21,
+        "registered_file": "vllm_ascend/patch/platform/patch_kv_cache_utils.py",
+        "expression": "import vllm_ascend.patch.platform.patch_kv_cache_utils"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 2,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 21,
+          "expression": "import vllm_ascend.patch.platform.patch_kv_cache_utils"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          2
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/platform/__init__.py",
+        "line": 26,
+        "registered_file": "vllm_ascend/patch/platform/patch_mamba_config.py",
+        "expression": "import vllm_ascend.patch.platform.patch_mamba_config"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 3,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 26,
+          "expression": "import vllm_ascend.patch.platform.patch_mamba_config"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          3
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/platform/__init__.py",
+        "line": 28,
+        "registered_file": "vllm_ascend/patch/platform/patch_mamba_config_310.py",
+        "expression": "import vllm_ascend.patch.platform.patch_mamba_config_310"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 4,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 28,
+          "expression": "import vllm_ascend.patch.platform.patch_mamba_config_310"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          4
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/platform/__init__.py",
+        "line": 29,
+        "registered_file": "vllm_ascend/patch/platform/patch_minimax_m2_config.py",
+        "expression": "import vllm_ascend.patch.platform.patch_minimax_m2_config"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 5,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 29,
+          "expression": "import vllm_ascend.patch.platform.patch_minimax_m2_config"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          5
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/platform/__init__.py",
+        "line": 37,
+        "registered_file": "vllm_ascend/patch/platform/patch_multiproc_executor.py",
+        "expression": "import vllm_ascend.patch.platform.patch_multiproc_executor"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 11,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 37,
+          "expression": "import vllm_ascend.patch.platform.patch_multiproc_executor"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          11
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/platform/__init__.py",
+        "line": 33,
+        "registered_file": "vllm_ascend/patch/platform/patch_torch_accelerator.py",
+        "expression": "import vllm_ascend.patch.platform.patch_torch_accelerator"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 9,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 33,
+          "expression": "import vllm_ascend.patch.platform.patch_torch_accelerator"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          9
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 48,
+        "registered_file": "vllm_ascend/patch/worker/patch_cudagraph.py",
+        "expression": "import vllm_ascend.patch.worker.patch_cudagraph"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 32,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 48,
+          "expression": "import vllm_ascend.patch.worker.patch_cudagraph"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          32
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 49,
+        "registered_file": "vllm_ascend/patch/worker/patch_deepseek_mtp.py",
+        "expression": "import vllm_ascend.patch.worker.patch_deepseek_mtp"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 33,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 49,
+          "expression": "import vllm_ascend.patch.worker.patch_deepseek_mtp"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          33
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 31,
+        "registered_file": "vllm_ascend/patch/worker/patch_distributed.py",
+        "expression": "import vllm_ascend.patch.worker.patch_distributed"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 18,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 31,
+          "expression": "import vllm_ascend.patch.worker.patch_distributed"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          18
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 47,
+        "registered_file": "vllm_ascend/patch/worker/patch_draft_quarot.py",
+        "expression": "import vllm_ascend.patch.worker.patch_draft_quarot"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 31,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 47,
+          "expression": "import vllm_ascend.patch.worker.patch_draft_quarot"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          31
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 53,
+        "registered_file": "vllm_ascend/patch/worker/patch_gqa_c8.py",
+        "expression": "import vllm_ascend.patch.worker.patch_gqa_c8"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 37,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 53,
+          "expression": "import vllm_ascend.patch.worker.patch_gqa_c8"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          37
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 46,
+        "registered_file": "vllm_ascend/patch/worker/patch_kimi_k25.py",
+        "expression": "import vllm_ascend.patch.worker.patch_kimi_k25"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 30,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 46,
+          "expression": "import vllm_ascend.patch.worker.patch_kimi_k25"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          30
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 34,
+        "registered_file": "vllm_ascend/patch/worker/patch_mamba_utils.py",
+        "expression": "import vllm_ascend.patch.worker.patch_mamba_utils"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 21,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 34,
+          "expression": "import vllm_ascend.patch.worker.patch_mamba_utils"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          21
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 32,
+        "registered_file": "vllm_ascend/patch/worker/patch_minimax_m2.py",
+        "expression": "import vllm_ascend.patch.worker.patch_minimax_m2"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 19,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 32,
+          "expression": "import vllm_ascend.patch.worker.patch_minimax_m2"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          19
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 33,
+        "registered_file": "vllm_ascend/patch/worker/patch_minimax_m2_linear_attn.py",
+        "expression": "import vllm_ascend.patch.worker.patch_minimax_m2_linear_attn"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 20,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 33,
+          "expression": "import vllm_ascend.patch.worker.patch_minimax_m2_linear_attn"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          20
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 45,
+        "registered_file": "vllm_ascend/patch/worker/patch_npugraph_ex_triton.py",
+        "expression": "import vllm_ascend.patch.worker.patch_npugraph_ex_triton"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 29,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 45,
+          "expression": "import vllm_ascend.patch.worker.patch_npugraph_ex_triton"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          29
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 38,
+        "registered_file": "vllm_ascend/patch/worker/patch_qwen3_5.py",
+        "expression": "import vllm_ascend.patch.worker.patch_qwen3_5"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 23,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 38,
+          "expression": "import vllm_ascend.patch.worker.patch_qwen3_5"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          23
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 40,
+        "registered_file": "vllm_ascend/patch/worker/patch_qwen3_dflash.py",
+        "expression": "import vllm_ascend.patch.worker.patch_qwen3_dflash"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 25,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 40,
+          "expression": "import vllm_ascend.patch.worker.patch_qwen3_dflash"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          25
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 35,
+        "registered_file": "vllm_ascend/patch/worker/patch_qwen3_next_mtp.py",
+        "expression": "import vllm_ascend.patch.worker.patch_qwen3_next_mtp"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 22,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 35,
+          "expression": "import vllm_ascend.patch.worker.patch_qwen3_next_mtp"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          22
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 54,
+        "registered_file": "vllm_ascend/patch/worker/patch_qwen3vl.py",
+        "expression": "import vllm_ascend.patch.worker.patch_qwen3vl"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 38,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 54,
+          "expression": "import vllm_ascend.patch.worker.patch_qwen3vl"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          38
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 42,
+        "registered_file": "vllm_ascend/patch/worker/patch_rejection_sampler.py",
+        "expression": "import vllm_ascend.patch.worker.patch_rejection_sampler"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 26,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 42,
+          "expression": "import vllm_ascend.patch.worker.patch_rejection_sampler"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          26
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 23,
+        "registered_file": "vllm_ascend/patch/worker/patch_triton.py",
+        "expression": "import vllm_ascend.patch.worker.patch_triton"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 13,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 23,
+          "expression": "import vllm_ascend.patch.worker.patch_triton"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          13
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 55,
+        "registered_file": "vllm_ascend/patch/worker/patch_v2/patch_attn_utils.py",
+        "expression": "import vllm_ascend.patch.worker.patch_v2.patch_attn_utils"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 39,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 55,
+          "expression": "import vllm_ascend.patch.worker.patch_v2.patch_attn_utils"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          39
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 52,
+        "registered_file": "vllm_ascend/patch/worker/patch_v2/patch_block_table.py",
+        "expression": "import vllm_ascend.patch.worker.patch_v2.patch_block_table"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 36,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 52,
+          "expression": "import vllm_ascend.patch.worker.patch_v2.patch_block_table"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          36
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 50,
+        "registered_file": "vllm_ascend/patch/worker/patch_v2/patch_input_batch.py",
+        "expression": "import vllm_ascend.patch.worker.patch_v2.patch_input_batch"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 34,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 50,
+          "expression": "import vllm_ascend.patch.worker.patch_v2.patch_input_batch"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          34
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 51,
+        "registered_file": "vllm_ascend/patch/worker/patch_v2/patch_model_state.py",
+        "expression": "import vllm_ascend.patch.worker.patch_v2.patch_model_state"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 35,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 51,
+          "expression": "import vllm_ascend.patch.worker.patch_v2.patch_model_state"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          35
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 24,
+        "registered_file": "vllm_ascend/patch/worker/patch_v2/patch_triton.py",
+        "expression": "import vllm_ascend.patch.worker.patch_v2.patch_triton"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 14,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 24,
+          "expression": "import vllm_ascend.patch.worker.patch_v2.patch_triton"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          14
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 43,
+        "registered_file": "vllm_ascend/patch/worker/patch_v2/patch_uva.py",
+        "expression": "import vllm_ascend.patch.worker.patch_v2.patch_uva"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 27,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 43,
+          "expression": "import vllm_ascend.patch.worker.patch_v2.patch_uva"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          27
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "patch_module_registered",
+      "risk": "high",
+      "upstream": {
+        "trigger": "patch_module_lifecycle",
+        "file": null,
+        "symbol": null
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/patch/worker/__init__.py",
+        "line": 28,
+        "registered_file": "vllm_ascend/patch/worker/patch_weight_utils.py",
+        "expression": "import vllm_ascend.patch.worker.patch_weight_utils"
+      },
+      "reason": "patch module must be imported by registry to take effect",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 15,
+          "source_relation": "patch_module_registered",
+          "original_risk": "high",
+          "registry_line": 28,
+          "expression": "import vllm_ascend.patch.worker.patch_weight_utils"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          15
+        ],
+        "source_relations": [
+          "patch_module_registered"
+        ]
+      }
+    },
+    {
+      "relation": "plugin_entrypoint",
+      "risk": "high",
+      "upstream": {
+        "trigger": "vllm_plugin_lifecycle",
+        "file": "vllm/plugins",
+        "symbol": "_ensure_global_patch"
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/__init__.py",
+        "line": 21,
+        "registered_file": "vllm_ascend/__init__.py",
+        "expression": "_ensure_global_patch"
+      },
+      "reason": "vLLM plugin loading or subprocess initialization changes may require this entrypoint",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 41,
+          "source_relation": "plugin_entrypoint",
+          "original_risk": "high",
+          "registry_line": 21,
+          "expression": "_ensure_global_patch"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          41
+        ],
+        "source_relations": [
+          "plugin_entrypoint"
+        ]
+      }
+    },
+    {
+      "relation": "plugin_entrypoint",
+      "risk": "high",
+      "upstream": {
+        "trigger": "vllm_plugin_lifecycle",
+        "file": "vllm/plugins",
+        "symbol": "register"
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/__init__.py",
+        "line": 38,
+        "registered_file": "vllm_ascend/__init__.py",
+        "expression": "register"
+      },
+      "reason": "vLLM plugin loading or subprocess initialization changes may require this entrypoint",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 42,
+          "source_relation": "plugin_entrypoint",
+          "original_risk": "high",
+          "registry_line": 38,
+          "expression": "register"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          42
+        ],
+        "source_relations": [
+          "plugin_entrypoint"
+        ]
+      }
+    },
+    {
+      "relation": "plugin_entrypoint",
+      "risk": "high",
+      "upstream": {
+        "trigger": "vllm_plugin_lifecycle",
+        "file": "vllm/plugins",
+        "symbol": "register_connector"
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/__init__.py",
+        "line": 44,
+        "registered_file": "vllm_ascend/__init__.py",
+        "expression": "register_connector"
+      },
+      "reason": "vLLM plugin loading or subprocess initialization changes may require this entrypoint",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 43,
+          "source_relation": "plugin_entrypoint",
+          "original_risk": "high",
+          "registry_line": 44,
+          "expression": "register_connector"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          43
+        ],
+        "source_relations": [
+          "plugin_entrypoint"
+        ]
+      }
+    },
+    {
+      "relation": "plugin_entrypoint",
+      "risk": "high",
+      "upstream": {
+        "trigger": "vllm_plugin_lifecycle",
+        "file": "vllm/plugins",
+        "symbol": "register_model_loader"
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/__init__.py",
+        "line": 52,
+        "registered_file": "vllm_ascend/__init__.py",
+        "expression": "register_model_loader"
+      },
+      "reason": "vLLM plugin loading or subprocess initialization changes may require this entrypoint",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 44,
+          "source_relation": "plugin_entrypoint",
+          "original_risk": "high",
+          "registry_line": 52,
+          "expression": "register_model_loader"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          44
+        ],
+        "source_relations": [
+          "plugin_entrypoint"
+        ]
+      }
+    },
+    {
+      "relation": "plugin_entrypoint",
+      "risk": "high",
+      "upstream": {
+        "trigger": "vllm_plugin_lifecycle",
+        "file": "vllm/plugins",
+        "symbol": "register_service_profiling"
+      },
+      "ascend": {
+        "registry_file": "vllm_ascend/__init__.py",
+        "line": 62,
+        "registered_file": "vllm_ascend/__init__.py",
+        "expression": "register_service_profiling"
+      },
+      "reason": "vLLM plugin loading or subprocess initialization changes may require this entrypoint",
+      "relationship_verified": false,
+      "action": "review",
+      "confidence": "medium",
+      "verification": {
+        "status": "candidate",
+        "reason": "declared lifecycle edge requires import/entrypoint and process-scope validation"
+      },
+      "occurrences": [
+        {
+          "source_record_index": 45,
+          "source_relation": "plugin_entrypoint",
+          "original_risk": "high",
+          "registry_line": 62,
+          "expression": "register_service_profiling"
+        }
+      ],
+      "provenance": {
+        "source_table": "main2main_registration_mapping.json",
+        "source_record_indexes": [
+          45
+        ],
+        "source_relations": [
+          "plugin_entrypoint"
+        ]
+      }
+    }
+  ]
+}

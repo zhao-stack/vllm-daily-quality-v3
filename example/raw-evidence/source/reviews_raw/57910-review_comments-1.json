@@ -1,0 +1,697 @@
+[
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4062591038",
+    "pull_request_review_id": 5267205626,
+    "id": 4062591038,
+    "node_id": "PRRC_kwDOI7xefs7yJjg-",
+    "diff_hunk": "@@ -0,0 +1,145 @@\n+# Engram: conditional memory via n-gram lookups\n+\n+Engram is a *conditional memory* module attached to specific layers of a\n+transformer backbone. At each position, the preceding few tokens are hashed\n+into large static embedding tables, and the retrieved rows are fused into the\n+hidden state, gated by how well they match it. Where Mixture-of-Experts scales\n+capacity through conditional computation, Engram scales it through conditional\n+memory: parameters that are never computed over, only looked up, so capacity\n+grows at O(1) per-token cost. The mechanism and its design rationale are\n+described in [Conditional Memory via Scalable Lookup: A New Axis of Sparsity\n+for Large Language Models](https://arxiv.org/abs/2601.07372).\n+\n+vLLM enables Engram automatically whenever the checkpoint declares Engram\n+layers, so basic serving needs no extra flags. This page explains what Engram\n+does and how to control its memory footprint and multi-GPU topology.\n+\n+## Supported models\n+\n+Engram layers are declared by the checkpoint, not chosen at serve time:\n+\n+| Architecture | HF config field | Notes |\n+| --- | --- | --- |\n+| `DeepseekV41ForCausalLM` | `engram_layer_ids` | e.g. `deepseek-ai/DeepSeek-V4.1-Flash` |\n+| `Qwen4ExpForCausalLM` / `Qwen4ExpForConditionalGeneration` | `ple_layer_ids` | same mechanism, called PLE |\n+\n+Passing `--engram-config` for a model without n-gram embedding layers fails at\n+startup, as does running on a non-CUDA-alike platform.\n+\n+## How it works\n+\n+Engram processes each position in two phases: *retrieval* and *fusion*.\n+\n+**Retrieval** maps the local token context to static table rows:\n+\n+1. **Tokenizer compression.** At startup, vLLM builds a surjective map from",
+    "path": "docs/features/engram.md",
+    "commit_id": "90e38b7f1a85da3470b69f52ffa391e710fd3283",
+    "original_commit_id": "90e38b7f1a85da3470b69f52ffa391e710fd3283",
+    "user": {
+      "login": "hmellor",
+      "id": 19981378,
+      "node_id": "MDQ6VXNlcjE5OTgxMzc4",
+      "avatar_url": "https://avatars.githubusercontent.com/u/19981378?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/hmellor",
+      "html_url": "https://github.com/hmellor",
+      "followers_url": "https://api.github.com/users/hmellor/followers",
+      "following_url": "https://api.github.com/users/hmellor/following{/other_user}",
+      "gists_url": "https://api.github.com/users/hmellor/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/hmellor/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/hmellor/subscriptions",
+      "organizations_url": "https://api.github.com/users/hmellor/orgs",
+      "repos_url": "https://api.github.com/users/hmellor/repos",
+      "events_url": "https://api.github.com/users/hmellor/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/hmellor/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "```suggestion\n1. **Tokenizer compression.** At startup, vLLM builds a subjective map from\n```\n",
+    "created_at": "2026-09-21T13:31:19Z",
+    "updated_at": "2026-09-21T13:41:56Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57910#discussion_r4062591038",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57910",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4062591038"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57910#discussion_r4062591038"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57910"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4062591038/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 35,
+    "side": "RIGHT",
+    "author_association": "MEMBER",
+    "original_position": 35,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4062631047",
+    "pull_request_review_id": 5267205626,
+    "id": 4062631047,
+    "node_id": "PRRC_kwDOI7xefs7yJtSH",
+    "diff_hunk": "@@ -0,0 +1,145 @@\n+# Engram: conditional memory via n-gram lookups\n+\n+Engram is a *conditional memory* module attached to specific layers of a\n+transformer backbone. At each position, the preceding few tokens are hashed\n+into large static embedding tables, and the retrieved rows are fused into the\n+hidden state, gated by how well they match it. Where Mixture-of-Experts scales\n+capacity through conditional computation, Engram scales it through conditional\n+memory: parameters that are never computed over, only looked up, so capacity\n+grows at O(1) per-token cost. The mechanism and its design rationale are\n+described in [Conditional Memory via Scalable Lookup: A New Axis of Sparsity\n+for Large Language Models](https://arxiv.org/abs/2601.07372).\n+\n+vLLM enables Engram automatically whenever the checkpoint declares Engram\n+layers, so basic serving needs no extra flags. This page explains what Engram\n+does and how to control its memory footprint and multi-GPU topology.\n+\n+## Supported models\n+\n+Engram layers are declared by the checkpoint, not chosen at serve time:\n+\n+| Architecture | HF config field | Notes |\n+| --- | --- | --- |\n+| `DeepseekV41ForCausalLM` | `engram_layer_ids` | e.g. `deepseek-ai/DeepSeek-V4.1-Flash` |\n+| `Qwen4ExpForCausalLM` / `Qwen4ExpForConditionalGeneration` | `ple_layer_ids` | same mechanism, called PLE |\n+\n+Passing `--engram-config` for a model without n-gram embedding layers fails at\n+startup, as does running on a non-CUDA-alike platform.\n+\n+## How it works\n+\n+Engram processes each position in two phases: *retrieval* and *fusion*.\n+\n+**Retrieval** maps the local token context to static table rows:\n+\n+1. **Tokenizer compression.** At startup, vLLM builds a surjective map from\n+   the tokenizer that collapses tokens which normalize alike (NFKC, accent\n+   stripping, lowercasing, whitespace collapsing), so `\" The\"`, `\"the\"` and\n+   `\"THE\"` hash identically. This concentrates semantic density into a much\n+   smaller id space; its size must match `engram_compressed_vocab_size` from\n+   the checkpoint, or startup fails — every hash multiplier derives from it.\n+2. **Multi-head hashing.** For each n-gram order `n` (up to\n+   `engram_max_ngram_size - 1`), several hash heads each apply an independent\n+   multiplicative-XOR hash over the compressed suffix n-gram. Every (n-gram\n+   order, head) pair indexes its own prime-sized bucket range in the layer's\n+   table — disjoint across pairs, so collisions cannot collide twice — and\n+   the retrieved rows are concatenated into one memory vector per position.\n+\n+**Fusion** turns the retrieved rows into a context-aware contribution to the\n+hidden state. The rows are context-independent priors and may be noisy (hash\n+collisions, polysemy), so they are gated: a `wkv` projection produces one key\n+per hyper-connection branch plus a shared value, and each branch computes a\n+sigmoid gate over the normalized dot product between its hidden state —\n+which has already aggregated global context through preceding attention —\n+and its key. If the retrieved memory contradicts the current context, the\n+gate tends toward zero and suppresses it. The gated value is added\n+residually into the branch's stream (`hidden + gate * value`); positions that\n+take no part in an n-gram (e.g. image spans) are masked so they pass through\n+untouched.\n+\n+Engram sits only on the layers listed in the checkpoint. Placement is a\n+deliberate hardware-algorithm trade-off: early enough that the backbone is\n+relieved from reconstructing static patterns in its first layers, deep enough\n+that vLLM can hide table lookups behind the compute of the preceding layers\n+(see below).\n+\n+In vLLM, hashing, lookup, and gating run as fused Triton kernels over FP8\n+rows with ue8m0 block scales. The layer layout — table sizes, n-gram size,\n+head count — is fixed by the checkpoint and is not user-configurable. Only the\n+storage and sharding described below are configurable, via\n+`--engram-config` (a JSON object, see the [CLI reference](../cli/README.md)).",
+    "path": "docs/features/engram.md",
+    "commit_id": "90e38b7f1a85da3470b69f52ffa391e710fd3283",
+    "original_commit_id": "90e38b7f1a85da3470b69f52ffa391e710fd3283",
+    "user": {
+      "login": "hmellor",
+      "id": 19981378,
+      "node_id": "MDQ6VXNlcjE5OTgxMzc4",
+      "avatar_url": "https://avatars.githubusercontent.com/u/19981378?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/hmellor",
+      "html_url": "https://github.com/hmellor",
+      "followers_url": "https://api.github.com/users/hmellor/followers",
+      "following_url": "https://api.github.com/users/hmellor/following{/other_user}",
+      "gists_url": "https://api.github.com/users/hmellor/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/hmellor/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/hmellor/subscriptions",
+      "organizations_url": "https://api.github.com/users/hmellor/orgs",
+      "repos_url": "https://api.github.com/users/hmellor/repos",
+      "events_url": "https://api.github.com/users/hmellor/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/hmellor/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "You could link to this exact cli arg if you wanted",
+    "created_at": "2026-09-21T13:36:06Z",
+    "updated_at": "2026-09-21T13:41:56Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57910#discussion_r4062631047",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57910",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4062631047"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57910#discussion_r4062631047"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57910"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4062631047/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 70,
+    "side": "RIGHT",
+    "author_association": "MEMBER",
+    "original_position": 70,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4062658446",
+    "pull_request_review_id": 5267205626,
+    "id": 4062658446,
+    "node_id": "PRRC_kwDOI7xefs7yJz-O",
+    "diff_hunk": "@@ -0,0 +1,145 @@\n+# Engram: conditional memory via n-gram lookups\n+\n+Engram is a *conditional memory* module attached to specific layers of a\n+transformer backbone. At each position, the preceding few tokens are hashed\n+into large static embedding tables, and the retrieved rows are fused into the\n+hidden state, gated by how well they match it. Where Mixture-of-Experts scales\n+capacity through conditional computation, Engram scales it through conditional\n+memory: parameters that are never computed over, only looked up, so capacity\n+grows at O(1) per-token cost. The mechanism and its design rationale are\n+described in [Conditional Memory via Scalable Lookup: A New Axis of Sparsity\n+for Large Language Models](https://arxiv.org/abs/2601.07372).\n+\n+vLLM enables Engram automatically whenever the checkpoint declares Engram\n+layers, so basic serving needs no extra flags. This page explains what Engram\n+does and how to control its memory footprint and multi-GPU topology.\n+\n+## Supported models\n+\n+Engram layers are declared by the checkpoint, not chosen at serve time:\n+\n+| Architecture | HF config field | Notes |\n+| --- | --- | --- |\n+| `DeepseekV41ForCausalLM` | `engram_layer_ids` | e.g. `deepseek-ai/DeepSeek-V4.1-Flash` |\n+| `Qwen4ExpForCausalLM` / `Qwen4ExpForConditionalGeneration` | `ple_layer_ids` | same mechanism, called PLE |\n+\n+Passing `--engram-config` for a model without n-gram embedding layers fails at\n+startup, as does running on a non-CUDA-alike platform.\n+\n+## How it works\n+\n+Engram processes each position in two phases: *retrieval* and *fusion*.\n+\n+**Retrieval** maps the local token context to static table rows:\n+\n+1. **Tokenizer compression.** At startup, vLLM builds a surjective map from\n+   the tokenizer that collapses tokens which normalize alike (NFKC, accent\n+   stripping, lowercasing, whitespace collapsing), so `\" The\"`, `\"the\"` and\n+   `\"THE\"` hash identically. This concentrates semantic density into a much\n+   smaller id space; its size must match `engram_compressed_vocab_size` from\n+   the checkpoint, or startup fails — every hash multiplier derives from it.\n+2. **Multi-head hashing.** For each n-gram order `n` (up to\n+   `engram_max_ngram_size - 1`), several hash heads each apply an independent\n+   multiplicative-XOR hash over the compressed suffix n-gram. Every (n-gram\n+   order, head) pair indexes its own prime-sized bucket range in the layer's\n+   table — disjoint across pairs, so collisions cannot collide twice — and\n+   the retrieved rows are concatenated into one memory vector per position.\n+\n+**Fusion** turns the retrieved rows into a context-aware contribution to the\n+hidden state. The rows are context-independent priors and may be noisy (hash\n+collisions, polysemy), so they are gated: a `wkv` projection produces one key\n+per hyper-connection branch plus a shared value, and each branch computes a\n+sigmoid gate over the normalized dot product between its hidden state —\n+which has already aggregated global context through preceding attention —\n+and its key. If the retrieved memory contradicts the current context, the\n+gate tends toward zero and suppresses it. The gated value is added\n+residually into the branch's stream (`hidden + gate * value`); positions that\n+take no part in an n-gram (e.g. image spans) are masked so they pass through\n+untouched.\n+\n+Engram sits only on the layers listed in the checkpoint. Placement is a\n+deliberate hardware-algorithm trade-off: early enough that the backbone is\n+relieved from reconstructing static patterns in its first layers, deep enough\n+that vLLM can hide table lookups behind the compute of the preceding layers\n+(see below).\n+\n+In vLLM, hashing, lookup, and gating run as fused Triton kernels over FP8\n+rows with ue8m0 block scales. The layer layout — table sizes, n-gram size,\n+head count — is fixed by the checkpoint and is not user-configurable. Only the\n+storage and sharding described below are configurable, via\n+`--engram-config` (a JSON object, see the [CLI reference](../cli/README.md)).\n+\n+## CPU offload\n+\n+Engram tables dwarf typical embedding weights: [DeepSeek-V4.1-Flash](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash)\n+carries two Engram layers of roughly 384M table rows each, with 256-byte FP8\n+entries plus their ue8m0 block scales — about 200 GB of table weights alone.\n+Because lookups are deterministic — the indices are known from the token ids\n+alone, before the forward pass — the tables need not sit in GPU memory at\n+all. By default vLLM stores them in **pinned host memory** and serves lookups\n+directly from the Triton kernel through unified virtual addressing (UVA),\n+prefetching on a side CUDA stream so transfers overlap with the compute of\n+preceding layers. The freed GPU memory goes to the KV cache.\n+\n+`cpu_offload` defaults to the `VLLM_PLE_CPU_OFFLOAD` environment variable,\n+which is enabled by default. An explicit `--engram-config` value takes\n+precedence over the environment variable.\n+\n+To keep the tables resident on GPU instead (e.g. when host memory is\n+scarce):\n+\n+```bash\n+vllm serve deepseek-ai/DeepSeek-V4.1-Flash \\\n+  --engram-config '{\"cpu_offload\": false}'",
+    "path": "docs/features/engram.md",
+    "commit_id": "90e38b7f1a85da3470b69f52ffa391e710fd3283",
+    "original_commit_id": "90e38b7f1a85da3470b69f52ffa391e710fd3283",
+    "user": {
+      "login": "hmellor",
+      "id": 19981378,
+      "node_id": "MDQ6VXNlcjE5OTgxMzc4",
+      "avatar_url": "https://avatars.githubusercontent.com/u/19981378?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/hmellor",
+      "html_url": "https://github.com/hmellor",
+      "followers_url": "https://api.github.com/users/hmellor/followers",
+      "following_url": "https://api.github.com/users/hmellor/following{/other_user}",
+      "gists_url": "https://api.github.com/users/hmellor/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/hmellor/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/hmellor/subscriptions",
+      "organizations_url": "https://api.github.com/users/hmellor/orgs",
+      "repos_url": "https://api.github.com/users/hmellor/repos",
+      "events_url": "https://api.github.com/users/hmellor/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/hmellor/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "We could use:\n\n\n```suggestion\n  --engram-config.cpu_offload false\n```\n",
+    "created_at": "2026-09-21T13:39:15Z",
+    "updated_at": "2026-09-21T13:41:56Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57910#discussion_r4062658446",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57910",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4062658446"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57910#discussion_r4062658446"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57910"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4062658446/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 93,
+    "side": "RIGHT",
+    "author_association": "MEMBER",
+    "original_position": 93,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4062665320",
+    "pull_request_review_id": 5267205626,
+    "id": 4062665320,
+    "node_id": "PRRC_kwDOI7xefs7yJ1po",
+    "diff_hunk": "@@ -0,0 +1,145 @@\n+# Engram: conditional memory via n-gram lookups\n+\n+Engram is a *conditional memory* module attached to specific layers of a\n+transformer backbone. At each position, the preceding few tokens are hashed\n+into large static embedding tables, and the retrieved rows are fused into the\n+hidden state, gated by how well they match it. Where Mixture-of-Experts scales\n+capacity through conditional computation, Engram scales it through conditional\n+memory: parameters that are never computed over, only looked up, so capacity\n+grows at O(1) per-token cost. The mechanism and its design rationale are\n+described in [Conditional Memory via Scalable Lookup: A New Axis of Sparsity\n+for Large Language Models](https://arxiv.org/abs/2601.07372).\n+\n+vLLM enables Engram automatically whenever the checkpoint declares Engram\n+layers, so basic serving needs no extra flags. This page explains what Engram\n+does and how to control its memory footprint and multi-GPU topology.\n+\n+## Supported models\n+\n+Engram layers are declared by the checkpoint, not chosen at serve time:\n+\n+| Architecture | HF config field | Notes |\n+| --- | --- | --- |\n+| `DeepseekV41ForCausalLM` | `engram_layer_ids` | e.g. `deepseek-ai/DeepSeek-V4.1-Flash` |\n+| `Qwen4ExpForCausalLM` / `Qwen4ExpForConditionalGeneration` | `ple_layer_ids` | same mechanism, called PLE |\n+\n+Passing `--engram-config` for a model without n-gram embedding layers fails at\n+startup, as does running on a non-CUDA-alike platform.\n+\n+## How it works\n+\n+Engram processes each position in two phases: *retrieval* and *fusion*.\n+\n+**Retrieval** maps the local token context to static table rows:\n+\n+1. **Tokenizer compression.** At startup, vLLM builds a surjective map from\n+   the tokenizer that collapses tokens which normalize alike (NFKC, accent\n+   stripping, lowercasing, whitespace collapsing), so `\" The\"`, `\"the\"` and\n+   `\"THE\"` hash identically. This concentrates semantic density into a much\n+   smaller id space; its size must match `engram_compressed_vocab_size` from\n+   the checkpoint, or startup fails — every hash multiplier derives from it.\n+2. **Multi-head hashing.** For each n-gram order `n` (up to\n+   `engram_max_ngram_size - 1`), several hash heads each apply an independent\n+   multiplicative-XOR hash over the compressed suffix n-gram. Every (n-gram\n+   order, head) pair indexes its own prime-sized bucket range in the layer's\n+   table — disjoint across pairs, so collisions cannot collide twice — and\n+   the retrieved rows are concatenated into one memory vector per position.\n+\n+**Fusion** turns the retrieved rows into a context-aware contribution to the\n+hidden state. The rows are context-independent priors and may be noisy (hash\n+collisions, polysemy), so they are gated: a `wkv` projection produces one key\n+per hyper-connection branch plus a shared value, and each branch computes a\n+sigmoid gate over the normalized dot product between its hidden state —\n+which has already aggregated global context through preceding attention —\n+and its key. If the retrieved memory contradicts the current context, the\n+gate tends toward zero and suppresses it. The gated value is added\n+residually into the branch's stream (`hidden + gate * value`); positions that\n+take no part in an n-gram (e.g. image spans) are masked so they pass through\n+untouched.\n+\n+Engram sits only on the layers listed in the checkpoint. Placement is a\n+deliberate hardware-algorithm trade-off: early enough that the backbone is\n+relieved from reconstructing static patterns in its first layers, deep enough\n+that vLLM can hide table lookups behind the compute of the preceding layers\n+(see below).\n+\n+In vLLM, hashing, lookup, and gating run as fused Triton kernels over FP8\n+rows with ue8m0 block scales. The layer layout — table sizes, n-gram size,\n+head count — is fixed by the checkpoint and is not user-configurable. Only the\n+storage and sharding described below are configurable, via\n+`--engram-config` (a JSON object, see the [CLI reference](../cli/README.md)).\n+\n+## CPU offload\n+\n+Engram tables dwarf typical embedding weights: [DeepSeek-V4.1-Flash](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash)\n+carries two Engram layers of roughly 384M table rows each, with 256-byte FP8\n+entries plus their ue8m0 block scales — about 200 GB of table weights alone.\n+Because lookups are deterministic — the indices are known from the token ids\n+alone, before the forward pass — the tables need not sit in GPU memory at\n+all. By default vLLM stores them in **pinned host memory** and serves lookups\n+directly from the Triton kernel through unified virtual addressing (UVA),\n+prefetching on a side CUDA stream so transfers overlap with the compute of\n+preceding layers. The freed GPU memory goes to the KV cache.\n+\n+`cpu_offload` defaults to the `VLLM_PLE_CPU_OFFLOAD` environment variable,",
+    "path": "docs/features/engram.md",
+    "commit_id": "90e38b7f1a85da3470b69f52ffa391e710fd3283",
+    "original_commit_id": "90e38b7f1a85da3470b69f52ffa391e710fd3283",
+    "user": {
+      "login": "hmellor",
+      "id": 19981378,
+      "node_id": "MDQ6VXNlcjE5OTgxMzc4",
+      "avatar_url": "https://avatars.githubusercontent.com/u/19981378?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/hmellor",
+      "html_url": "https://github.com/hmellor",
+      "followers_url": "https://api.github.com/users/hmellor/followers",
+      "following_url": "https://api.github.com/users/hmellor/following{/other_user}",
+      "gists_url": "https://api.github.com/users/hmellor/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/hmellor/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/hmellor/subscriptions",
+      "organizations_url": "https://api.github.com/users/hmellor/orgs",
+      "repos_url": "https://api.github.com/users/hmellor/repos",
+      "events_url": "https://api.github.com/users/hmellor/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/hmellor/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "What is the default value? ",
+    "created_at": "2026-09-21T13:40:03Z",
+    "updated_at": "2026-09-21T13:41:56Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57910#discussion_r4062665320",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57910",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4062665320"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57910#discussion_r4062665320"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57910"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4062665320/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 84,
+    "side": "RIGHT",
+    "author_association": "MEMBER",
+    "original_position": 84,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4062665983",
+    "pull_request_review_id": 5267205626,
+    "id": 4062665983,
+    "node_id": "PRRC_kwDOI7xefs7yJ1z_",
+    "diff_hunk": "@@ -0,0 +1,145 @@\n+# Engram: conditional memory via n-gram lookups\n+\n+Engram is a *conditional memory* module attached to specific layers of a\n+transformer backbone. At each position, the preceding few tokens are hashed\n+into large static embedding tables, and the retrieved rows are fused into the\n+hidden state, gated by how well they match it. Where Mixture-of-Experts scales\n+capacity through conditional computation, Engram scales it through conditional\n+memory: parameters that are never computed over, only looked up, so capacity\n+grows at O(1) per-token cost. The mechanism and its design rationale are\n+described in [Conditional Memory via Scalable Lookup: A New Axis of Sparsity\n+for Large Language Models](https://arxiv.org/abs/2601.07372).\n+\n+vLLM enables Engram automatically whenever the checkpoint declares Engram\n+layers, so basic serving needs no extra flags. This page explains what Engram\n+does and how to control its memory footprint and multi-GPU topology.\n+\n+## Supported models\n+\n+Engram layers are declared by the checkpoint, not chosen at serve time:\n+\n+| Architecture | HF config field | Notes |\n+| --- | --- | --- |\n+| `DeepseekV41ForCausalLM` | `engram_layer_ids` | e.g. `deepseek-ai/DeepSeek-V4.1-Flash` |\n+| `Qwen4ExpForCausalLM` / `Qwen4ExpForConditionalGeneration` | `ple_layer_ids` | same mechanism, called PLE |\n+\n+Passing `--engram-config` for a model without n-gram embedding layers fails at\n+startup, as does running on a non-CUDA-alike platform.\n+\n+## How it works\n+\n+Engram processes each position in two phases: *retrieval* and *fusion*.\n+\n+**Retrieval** maps the local token context to static table rows:\n+\n+1. **Tokenizer compression.** At startup, vLLM builds a surjective map from\n+   the tokenizer that collapses tokens which normalize alike (NFKC, accent\n+   stripping, lowercasing, whitespace collapsing), so `\" The\"`, `\"the\"` and\n+   `\"THE\"` hash identically. This concentrates semantic density into a much\n+   smaller id space; its size must match `engram_compressed_vocab_size` from\n+   the checkpoint, or startup fails — every hash multiplier derives from it.\n+2. **Multi-head hashing.** For each n-gram order `n` (up to\n+   `engram_max_ngram_size - 1`), several hash heads each apply an independent\n+   multiplicative-XOR hash over the compressed suffix n-gram. Every (n-gram\n+   order, head) pair indexes its own prime-sized bucket range in the layer's\n+   table — disjoint across pairs, so collisions cannot collide twice — and\n+   the retrieved rows are concatenated into one memory vector per position.\n+\n+**Fusion** turns the retrieved rows into a context-aware contribution to the\n+hidden state. The rows are context-independent priors and may be noisy (hash\n+collisions, polysemy), so they are gated: a `wkv` projection produces one key\n+per hyper-connection branch plus a shared value, and each branch computes a\n+sigmoid gate over the normalized dot product between its hidden state —\n+which has already aggregated global context through preceding attention —\n+and its key. If the retrieved memory contradicts the current context, the\n+gate tends toward zero and suppresses it. The gated value is added\n+residually into the branch's stream (`hidden + gate * value`); positions that\n+take no part in an n-gram (e.g. image spans) are masked so they pass through\n+untouched.\n+\n+Engram sits only on the layers listed in the checkpoint. Placement is a\n+deliberate hardware-algorithm trade-off: early enough that the backbone is\n+relieved from reconstructing static patterns in its first layers, deep enough\n+that vLLM can hide table lookups behind the compute of the preceding layers\n+(see below).\n+\n+In vLLM, hashing, lookup, and gating run as fused Triton kernels over FP8\n+rows with ue8m0 block scales. The layer layout — table sizes, n-gram size,\n+head count — is fixed by the checkpoint and is not user-configurable. Only the\n+storage and sharding described below are configurable, via\n+`--engram-config` (a JSON object, see the [CLI reference](../cli/README.md)).\n+\n+## CPU offload\n+\n+Engram tables dwarf typical embedding weights: [DeepSeek-V4.1-Flash](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash)\n+carries two Engram layers of roughly 384M table rows each, with 256-byte FP8\n+entries plus their ue8m0 block scales — about 200 GB of table weights alone.\n+Because lookups are deterministic — the indices are known from the token ids\n+alone, before the forward pass — the tables need not sit in GPU memory at\n+all. By default vLLM stores them in **pinned host memory** and serves lookups\n+directly from the Triton kernel through unified virtual addressing (UVA),\n+prefetching on a side CUDA stream so transfers overlap with the compute of\n+preceding layers. The freed GPU memory goes to the KV cache.\n+\n+`cpu_offload` defaults to the `VLLM_PLE_CPU_OFFLOAD` environment variable,",
+    "path": "docs/features/engram.md",
+    "commit_id": "90e38b7f1a85da3470b69f52ffa391e710fd3283",
+    "original_commit_id": "90e38b7f1a85da3470b69f52ffa391e710fd3283",
+    "user": {
+      "login": "hmellor",
+      "id": 19981378,
+      "node_id": "MDQ6VXNlcjE5OTgxMzc4",
+      "avatar_url": "https://avatars.githubusercontent.com/u/19981378?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/hmellor",
+      "html_url": "https://github.com/hmellor",
+      "followers_url": "https://api.github.com/users/hmellor/followers",
+      "following_url": "https://api.github.com/users/hmellor/following{/other_user}",
+      "gists_url": "https://api.github.com/users/hmellor/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/hmellor/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/hmellor/subscriptions",
+      "organizations_url": "https://api.github.com/users/hmellor/orgs",
+      "repos_url": "https://api.github.com/users/hmellor/repos",
+      "events_url": "https://api.github.com/users/hmellor/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/hmellor/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "What is the default value? ",
+    "created_at": "2026-09-21T13:40:07Z",
+    "updated_at": "2026-09-21T13:41:56Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57910#discussion_r4062665983",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57910",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4062665983"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57910#discussion_r4062665983"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57910"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4062665983/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 84,
+    "side": "RIGHT",
+    "author_association": "MEMBER",
+    "original_position": 84,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4064366039",
+    "pull_request_review_id": 5269365211,
+    "id": 4064366039,
+    "node_id": "PRRC_kwDOI7xefs7yQU3X",
+    "diff_hunk": "@@ -0,0 +1,145 @@\n+# Engram: conditional memory via n-gram lookups\n+\n+Engram is a *conditional memory* module attached to specific layers of a\n+transformer backbone. At each position, the preceding few tokens are hashed\n+into large static embedding tables, and the retrieved rows are fused into the\n+hidden state, gated by how well they match it. Where Mixture-of-Experts scales\n+capacity through conditional computation, Engram scales it through conditional\n+memory: parameters that are never computed over, only looked up, so capacity\n+grows at O(1) per-token cost. The mechanism and its design rationale are\n+described in [Conditional Memory via Scalable Lookup: A New Axis of Sparsity\n+for Large Language Models](https://arxiv.org/abs/2601.07372).\n+\n+vLLM enables Engram automatically whenever the checkpoint declares Engram\n+layers, so basic serving needs no extra flags. This page explains what Engram\n+does and how to control its memory footprint and multi-GPU topology.\n+\n+## Supported models\n+\n+Engram layers are declared by the checkpoint, not chosen at serve time:\n+\n+| Architecture | HF config field | Notes |\n+| --- | --- | --- |\n+| `DeepseekV41ForCausalLM` | `engram_layer_ids` | e.g. `deepseek-ai/DeepSeek-V4.1-Flash` |\n+| `Qwen4ExpForCausalLM` / `Qwen4ExpForConditionalGeneration` | `ple_layer_ids` | same mechanism, called PLE |\n+\n+Passing `--engram-config` for a model without n-gram embedding layers fails at\n+startup, as does running on a non-CUDA-alike platform.\n+\n+## How it works\n+\n+Engram processes each position in two phases: *retrieval* and *fusion*.\n+\n+**Retrieval** maps the local token context to static table rows:\n+\n+1. **Tokenizer compression.** At startup, vLLM builds a surjective map from",
+    "path": "docs/features/engram.md",
+    "commit_id": "90e38b7f1a85da3470b69f52ffa391e710fd3283",
+    "original_commit_id": "90e38b7f1a85da3470b69f52ffa391e710fd3283",
+    "user": {
+      "login": "NickLucche",
+      "id": 10706289,
+      "node_id": "MDQ6VXNlcjEwNzA2Mjg5",
+      "avatar_url": "https://avatars.githubusercontent.com/u/10706289?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/NickLucche",
+      "html_url": "https://github.com/NickLucche",
+      "followers_url": "https://api.github.com/users/NickLucche/followers",
+      "following_url": "https://api.github.com/users/NickLucche/following{/other_user}",
+      "gists_url": "https://api.github.com/users/NickLucche/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/NickLucche/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/NickLucche/subscriptions",
+      "organizations_url": "https://api.github.com/users/NickLucche/orgs",
+      "repos_url": "https://api.github.com/users/NickLucche/repos",
+      "events_url": "https://api.github.com/users/NickLucche/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/NickLucche/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Applied the intent rather than the literal suggestion: `subjective` is not the term here — the Engram paper specifies a *surjective* map P: V -> V' (every vocabulary id maps onto a canonical id, many tokens collapsing onto one). To avoid the jargon entirely, reworded as a plain \"many-to-one map\".",
+    "created_at": "2026-09-21T16:48:49Z",
+    "updated_at": "2026-09-21T16:48:50Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57910#discussion_r4064366039",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57910",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4064366039"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57910#discussion_r4064366039"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57910"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4064366039/reactions",
+      "total_count": 1,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 1,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 35,
+    "side": "RIGHT",
+    "in_reply_to_id": 4062591038,
+    "author_association": "MEMBER",
+    "original_position": 35,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4064367509",
+    "pull_request_review_id": 5269366738,
+    "id": 4064367509,
+    "node_id": "PRRC_kwDOI7xefs7yQVOV",
+    "diff_hunk": "@@ -0,0 +1,145 @@\n+# Engram: conditional memory via n-gram lookups\n+\n+Engram is a *conditional memory* module attached to specific layers of a\n+transformer backbone. At each position, the preceding few tokens are hashed\n+into large static embedding tables, and the retrieved rows are fused into the\n+hidden state, gated by how well they match it. Where Mixture-of-Experts scales\n+capacity through conditional computation, Engram scales it through conditional\n+memory: parameters that are never computed over, only looked up, so capacity\n+grows at O(1) per-token cost. The mechanism and its design rationale are\n+described in [Conditional Memory via Scalable Lookup: A New Axis of Sparsity\n+for Large Language Models](https://arxiv.org/abs/2601.07372).\n+\n+vLLM enables Engram automatically whenever the checkpoint declares Engram\n+layers, so basic serving needs no extra flags. This page explains what Engram\n+does and how to control its memory footprint and multi-GPU topology.\n+\n+## Supported models\n+\n+Engram layers are declared by the checkpoint, not chosen at serve time:\n+\n+| Architecture | HF config field | Notes |\n+| --- | --- | --- |\n+| `DeepseekV41ForCausalLM` | `engram_layer_ids` | e.g. `deepseek-ai/DeepSeek-V4.1-Flash` |\n+| `Qwen4ExpForCausalLM` / `Qwen4ExpForConditionalGeneration` | `ple_layer_ids` | same mechanism, called PLE |\n+\n+Passing `--engram-config` for a model without n-gram embedding layers fails at\n+startup, as does running on a non-CUDA-alike platform.\n+\n+## How it works\n+\n+Engram processes each position in two phases: *retrieval* and *fusion*.\n+\n+**Retrieval** maps the local token context to static table rows:\n+\n+1. **Tokenizer compression.** At startup, vLLM builds a surjective map from\n+   the tokenizer that collapses tokens which normalize alike (NFKC, accent\n+   stripping, lowercasing, whitespace collapsing), so `\" The\"`, `\"the\"` and\n+   `\"THE\"` hash identically. This concentrates semantic density into a much\n+   smaller id space; its size must match `engram_compressed_vocab_size` from\n+   the checkpoint, or startup fails — every hash multiplier derives from it.\n+2. **Multi-head hashing.** For each n-gram order `n` (up to\n+   `engram_max_ngram_size - 1`), several hash heads each apply an independent\n+   multiplicative-XOR hash over the compressed suffix n-gram. Every (n-gram\n+   order, head) pair indexes its own prime-sized bucket range in the layer's\n+   table — disjoint across pairs, so collisions cannot collide twice — and\n+   the retrieved rows are concatenated into one memory vector per position.\n+\n+**Fusion** turns the retrieved rows into a context-aware contribution to the\n+hidden state. The rows are context-independent priors and may be noisy (hash\n+collisions, polysemy), so they are gated: a `wkv` projection produces one key\n+per hyper-connection branch plus a shared value, and each branch computes a\n+sigmoid gate over the normalized dot product between its hidden state —\n+which has already aggregated global context through preceding attention —\n+and its key. If the retrieved memory contradicts the current context, the\n+gate tends toward zero and suppresses it. The gated value is added\n+residually into the branch's stream (`hidden + gate * value`); positions that\n+take no part in an n-gram (e.g. image spans) are masked so they pass through\n+untouched.\n+\n+Engram sits only on the layers listed in the checkpoint. Placement is a\n+deliberate hardware-algorithm trade-off: early enough that the backbone is\n+relieved from reconstructing static patterns in its first layers, deep enough\n+that vLLM can hide table lookups behind the compute of the preceding layers\n+(see below).\n+\n+In vLLM, hashing, lookup, and gating run as fused Triton kernels over FP8\n+rows with ue8m0 block scales. The layer layout — table sizes, n-gram size,\n+head count — is fixed by the checkpoint and is not user-configurable. Only the\n+storage and sharding described below are configurable, via\n+`--engram-config` (a JSON object, see the [CLI reference](../cli/README.md)).",
+    "path": "docs/features/engram.md",
+    "commit_id": "90e38b7f1a85da3470b69f52ffa391e710fd3283",
+    "original_commit_id": "90e38b7f1a85da3470b69f52ffa391e710fd3283",
+    "user": {
+      "login": "NickLucche",
+      "id": 10706289,
+      "node_id": "MDQ6VXNlcjEwNzA2Mjg5",
+      "avatar_url": "https://avatars.githubusercontent.com/u/10706289?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/NickLucche",
+      "html_url": "https://github.com/NickLucche",
+      "followers_url": "https://api.github.com/users/NickLucche/followers",
+      "following_url": "https://api.github.com/users/NickLucche/following{/other_user}",
+      "gists_url": "https://api.github.com/users/NickLucche/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/NickLucche/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/NickLucche/subscriptions",
+      "organizations_url": "https://api.github.com/users/NickLucche/orgs",
+      "repos_url": "https://api.github.com/users/NickLucche/repos",
+      "events_url": "https://api.github.com/users/NickLucche/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/NickLucche/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Done - it now links to the exact argument (`../cli/serve.md#-engram-config`) and mentions the per-field `--engram-config.<field>` form.",
+    "created_at": "2026-09-21T16:49:00Z",
+    "updated_at": "2026-09-21T16:49:00Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57910#discussion_r4064367509",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57910",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4064367509"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57910#discussion_r4064367509"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57910"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4064367509/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 70,
+    "side": "RIGHT",
+    "in_reply_to_id": 4062631047,
+    "author_association": "MEMBER",
+    "original_position": 70,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4064367604",
+    "pull_request_review_id": 5269366874,
+    "id": 4064367604,
+    "node_id": "PRRC_kwDOI7xefs7yQVP0",
+    "diff_hunk": "@@ -0,0 +1,145 @@\n+# Engram: conditional memory via n-gram lookups\n+\n+Engram is a *conditional memory* module attached to specific layers of a\n+transformer backbone. At each position, the preceding few tokens are hashed\n+into large static embedding tables, and the retrieved rows are fused into the\n+hidden state, gated by how well they match it. Where Mixture-of-Experts scales\n+capacity through conditional computation, Engram scales it through conditional\n+memory: parameters that are never computed over, only looked up, so capacity\n+grows at O(1) per-token cost. The mechanism and its design rationale are\n+described in [Conditional Memory via Scalable Lookup: A New Axis of Sparsity\n+for Large Language Models](https://arxiv.org/abs/2601.07372).\n+\n+vLLM enables Engram automatically whenever the checkpoint declares Engram\n+layers, so basic serving needs no extra flags. This page explains what Engram\n+does and how to control its memory footprint and multi-GPU topology.\n+\n+## Supported models\n+\n+Engram layers are declared by the checkpoint, not chosen at serve time:\n+\n+| Architecture | HF config field | Notes |\n+| --- | --- | --- |\n+| `DeepseekV41ForCausalLM` | `engram_layer_ids` | e.g. `deepseek-ai/DeepSeek-V4.1-Flash` |\n+| `Qwen4ExpForCausalLM` / `Qwen4ExpForConditionalGeneration` | `ple_layer_ids` | same mechanism, called PLE |\n+\n+Passing `--engram-config` for a model without n-gram embedding layers fails at\n+startup, as does running on a non-CUDA-alike platform.\n+\n+## How it works\n+\n+Engram processes each position in two phases: *retrieval* and *fusion*.\n+\n+**Retrieval** maps the local token context to static table rows:\n+\n+1. **Tokenizer compression.** At startup, vLLM builds a surjective map from\n+   the tokenizer that collapses tokens which normalize alike (NFKC, accent\n+   stripping, lowercasing, whitespace collapsing), so `\" The\"`, `\"the\"` and\n+   `\"THE\"` hash identically. This concentrates semantic density into a much\n+   smaller id space; its size must match `engram_compressed_vocab_size` from\n+   the checkpoint, or startup fails — every hash multiplier derives from it.\n+2. **Multi-head hashing.** For each n-gram order `n` (up to\n+   `engram_max_ngram_size - 1`), several hash heads each apply an independent\n+   multiplicative-XOR hash over the compressed suffix n-gram. Every (n-gram\n+   order, head) pair indexes its own prime-sized bucket range in the layer's\n+   table — disjoint across pairs, so collisions cannot collide twice — and\n+   the retrieved rows are concatenated into one memory vector per position.\n+\n+**Fusion** turns the retrieved rows into a context-aware contribution to the\n+hidden state. The rows are context-independent priors and may be noisy (hash\n+collisions, polysemy), so they are gated: a `wkv` projection produces one key\n+per hyper-connection branch plus a shared value, and each branch computes a\n+sigmoid gate over the normalized dot product between its hidden state —\n+which has already aggregated global context through preceding attention —\n+and its key. If the retrieved memory contradicts the current context, the\n+gate tends toward zero and suppresses it. The gated value is added\n+residually into the branch's stream (`hidden + gate * value`); positions that\n+take no part in an n-gram (e.g. image spans) are masked so they pass through\n+untouched.\n+\n+Engram sits only on the layers listed in the checkpoint. Placement is a\n+deliberate hardware-algorithm trade-off: early enough that the backbone is\n+relieved from reconstructing static patterns in its first layers, deep enough\n+that vLLM can hide table lookups behind the compute of the preceding layers\n+(see below).\n+\n+In vLLM, hashing, lookup, and gating run as fused Triton kernels over FP8\n+rows with ue8m0 block scales. The layer layout — table sizes, n-gram size,\n+head count — is fixed by the checkpoint and is not user-configurable. Only the\n+storage and sharding described below are configurable, via\n+`--engram-config` (a JSON object, see the [CLI reference](../cli/README.md)).\n+\n+## CPU offload\n+\n+Engram tables dwarf typical embedding weights: [DeepSeek-V4.1-Flash](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash)\n+carries two Engram layers of roughly 384M table rows each, with 256-byte FP8\n+entries plus their ue8m0 block scales — about 200 GB of table weights alone.\n+Because lookups are deterministic — the indices are known from the token ids\n+alone, before the forward pass — the tables need not sit in GPU memory at\n+all. By default vLLM stores them in **pinned host memory** and serves lookups\n+directly from the Triton kernel through unified virtual addressing (UVA),\n+prefetching on a side CUDA stream so transfers overlap with the compute of\n+preceding layers. The freed GPU memory goes to the KV cache.\n+\n+`cpu_offload` defaults to the `VLLM_PLE_CPU_OFFLOAD` environment variable,\n+which is enabled by default. An explicit `--engram-config` value takes\n+precedence over the environment variable.\n+\n+To keep the tables resident on GPU instead (e.g. when host memory is\n+scarce):\n+\n+```bash\n+vllm serve deepseek-ai/DeepSeek-V4.1-Flash \\\n+  --engram-config '{\"cpu_offload\": false}'",
+    "path": "docs/features/engram.md",
+    "commit_id": "90e38b7f1a85da3470b69f52ffa391e710fd3283",
+    "original_commit_id": "90e38b7f1a85da3470b69f52ffa391e710fd3283",
+    "user": {
+      "login": "NickLucche",
+      "id": 10706289,
+      "node_id": "MDQ6VXNlcjEwNzA2Mjg5",
+      "avatar_url": "https://avatars.githubusercontent.com/u/10706289?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/NickLucche",
+      "html_url": "https://github.com/NickLucche",
+      "followers_url": "https://api.github.com/users/NickLucche/followers",
+      "following_url": "https://api.github.com/users/NickLucche/following{/other_user}",
+      "gists_url": "https://api.github.com/users/NickLucche/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/NickLucche/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/NickLucche/subscriptions",
+      "organizations_url": "https://api.github.com/users/NickLucche/orgs",
+      "repos_url": "https://api.github.com/users/NickLucche/repos",
+      "events_url": "https://api.github.com/users/NickLucche/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/NickLucche/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Done - applied the suggestion (verified `FlexibleArgumentParser` rewrites dotted config args into the JSON form, same as the documented `--attention-config.backend` usage).",
+    "created_at": "2026-09-21T16:49:01Z",
+    "updated_at": "2026-09-21T16:49:01Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57910#discussion_r4064367604",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57910",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4064367604"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57910#discussion_r4064367604"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57910"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4064367604/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 93,
+    "side": "RIGHT",
+    "in_reply_to_id": 4062658446,
+    "author_association": "MEMBER",
+    "original_position": 93,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4064367702",
+    "pull_request_review_id": 5269367004,
+    "id": 4064367702,
+    "node_id": "PRRC_kwDOI7xefs7yQVRW",
+    "diff_hunk": "@@ -0,0 +1,145 @@\n+# Engram: conditional memory via n-gram lookups\n+\n+Engram is a *conditional memory* module attached to specific layers of a\n+transformer backbone. At each position, the preceding few tokens are hashed\n+into large static embedding tables, and the retrieved rows are fused into the\n+hidden state, gated by how well they match it. Where Mixture-of-Experts scales\n+capacity through conditional computation, Engram scales it through conditional\n+memory: parameters that are never computed over, only looked up, so capacity\n+grows at O(1) per-token cost. The mechanism and its design rationale are\n+described in [Conditional Memory via Scalable Lookup: A New Axis of Sparsity\n+for Large Language Models](https://arxiv.org/abs/2601.07372).\n+\n+vLLM enables Engram automatically whenever the checkpoint declares Engram\n+layers, so basic serving needs no extra flags. This page explains what Engram\n+does and how to control its memory footprint and multi-GPU topology.\n+\n+## Supported models\n+\n+Engram layers are declared by the checkpoint, not chosen at serve time:\n+\n+| Architecture | HF config field | Notes |\n+| --- | --- | --- |\n+| `DeepseekV41ForCausalLM` | `engram_layer_ids` | e.g. `deepseek-ai/DeepSeek-V4.1-Flash` |\n+| `Qwen4ExpForCausalLM` / `Qwen4ExpForConditionalGeneration` | `ple_layer_ids` | same mechanism, called PLE |\n+\n+Passing `--engram-config` for a model without n-gram embedding layers fails at\n+startup, as does running on a non-CUDA-alike platform.\n+\n+## How it works\n+\n+Engram processes each position in two phases: *retrieval* and *fusion*.\n+\n+**Retrieval** maps the local token context to static table rows:\n+\n+1. **Tokenizer compression.** At startup, vLLM builds a surjective map from\n+   the tokenizer that collapses tokens which normalize alike (NFKC, accent\n+   stripping, lowercasing, whitespace collapsing), so `\" The\"`, `\"the\"` and\n+   `\"THE\"` hash identically. This concentrates semantic density into a much\n+   smaller id space; its size must match `engram_compressed_vocab_size` from\n+   the checkpoint, or startup fails — every hash multiplier derives from it.\n+2. **Multi-head hashing.** For each n-gram order `n` (up to\n+   `engram_max_ngram_size - 1`), several hash heads each apply an independent\n+   multiplicative-XOR hash over the compressed suffix n-gram. Every (n-gram\n+   order, head) pair indexes its own prime-sized bucket range in the layer's\n+   table — disjoint across pairs, so collisions cannot collide twice — and\n+   the retrieved rows are concatenated into one memory vector per position.\n+\n+**Fusion** turns the retrieved rows into a context-aware contribution to the\n+hidden state. The rows are context-independent priors and may be noisy (hash\n+collisions, polysemy), so they are gated: a `wkv` projection produces one key\n+per hyper-connection branch plus a shared value, and each branch computes a\n+sigmoid gate over the normalized dot product between its hidden state —\n+which has already aggregated global context through preceding attention —\n+and its key. If the retrieved memory contradicts the current context, the\n+gate tends toward zero and suppresses it. The gated value is added\n+residually into the branch's stream (`hidden + gate * value`); positions that\n+take no part in an n-gram (e.g. image spans) are masked so they pass through\n+untouched.\n+\n+Engram sits only on the layers listed in the checkpoint. Placement is a\n+deliberate hardware-algorithm trade-off: early enough that the backbone is\n+relieved from reconstructing static patterns in its first layers, deep enough\n+that vLLM can hide table lookups behind the compute of the preceding layers\n+(see below).\n+\n+In vLLM, hashing, lookup, and gating run as fused Triton kernels over FP8\n+rows with ue8m0 block scales. The layer layout — table sizes, n-gram size,\n+head count — is fixed by the checkpoint and is not user-configurable. Only the\n+storage and sharding described below are configurable, via\n+`--engram-config` (a JSON object, see the [CLI reference](../cli/README.md)).\n+\n+## CPU offload\n+\n+Engram tables dwarf typical embedding weights: [DeepSeek-V4.1-Flash](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash)\n+carries two Engram layers of roughly 384M table rows each, with 256-byte FP8\n+entries plus their ue8m0 block scales — about 200 GB of table weights alone.\n+Because lookups are deterministic — the indices are known from the token ids\n+alone, before the forward pass — the tables need not sit in GPU memory at\n+all. By default vLLM stores them in **pinned host memory** and serves lookups\n+directly from the Triton kernel through unified virtual addressing (UVA),\n+prefetching on a side CUDA stream so transfers overlap with the compute of\n+preceding layers. The freed GPU memory goes to the KV cache.\n+\n+`cpu_offload` defaults to the `VLLM_PLE_CPU_OFFLOAD` environment variable,",
+    "path": "docs/features/engram.md",
+    "commit_id": "90e38b7f1a85da3470b69f52ffa391e710fd3283",
+    "original_commit_id": "90e38b7f1a85da3470b69f52ffa391e710fd3283",
+    "user": {
+      "login": "NickLucche",
+      "id": 10706289,
+      "node_id": "MDQ6VXNlcjEwNzA2Mjg5",
+      "avatar_url": "https://avatars.githubusercontent.com/u/10706289?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/NickLucche",
+      "html_url": "https://github.com/NickLucche",
+      "followers_url": "https://api.github.com/users/NickLucche/followers",
+      "following_url": "https://api.github.com/users/NickLucche/following{/other_user}",
+      "gists_url": "https://api.github.com/users/NickLucche/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/NickLucche/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/NickLucche/subscriptions",
+      "organizations_url": "https://api.github.com/users/NickLucche/orgs",
+      "repos_url": "https://api.github.com/users/NickLucche/repos",
+      "events_url": "https://api.github.com/users/NickLucche/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/NickLucche/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "It defaults to `true` (on): the field follows `VLLM_PLE_CPU_OFFLOAD`, which itself defaults to `true`. The paragraph now states this explicitly.",
+    "created_at": "2026-09-21T16:49:02Z",
+    "updated_at": "2026-09-21T16:49:02Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57910#discussion_r4064367702",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57910",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4064367702"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57910#discussion_r4064367702"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57910"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4064367702/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 84,
+    "side": "RIGHT",
+    "in_reply_to_id": 4062665320,
+    "author_association": "MEMBER",
+    "original_position": 84,
+    "position": 1,
+    "subject_type": "line"
+  },
+  {
+    "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4064367827",
+    "pull_request_review_id": 5269367158,
+    "id": 4064367827,
+    "node_id": "PRRC_kwDOI7xefs7yQVTT",
+    "diff_hunk": "@@ -0,0 +1,145 @@\n+# Engram: conditional memory via n-gram lookups\n+\n+Engram is a *conditional memory* module attached to specific layers of a\n+transformer backbone. At each position, the preceding few tokens are hashed\n+into large static embedding tables, and the retrieved rows are fused into the\n+hidden state, gated by how well they match it. Where Mixture-of-Experts scales\n+capacity through conditional computation, Engram scales it through conditional\n+memory: parameters that are never computed over, only looked up, so capacity\n+grows at O(1) per-token cost. The mechanism and its design rationale are\n+described in [Conditional Memory via Scalable Lookup: A New Axis of Sparsity\n+for Large Language Models](https://arxiv.org/abs/2601.07372).\n+\n+vLLM enables Engram automatically whenever the checkpoint declares Engram\n+layers, so basic serving needs no extra flags. This page explains what Engram\n+does and how to control its memory footprint and multi-GPU topology.\n+\n+## Supported models\n+\n+Engram layers are declared by the checkpoint, not chosen at serve time:\n+\n+| Architecture | HF config field | Notes |\n+| --- | --- | --- |\n+| `DeepseekV41ForCausalLM` | `engram_layer_ids` | e.g. `deepseek-ai/DeepSeek-V4.1-Flash` |\n+| `Qwen4ExpForCausalLM` / `Qwen4ExpForConditionalGeneration` | `ple_layer_ids` | same mechanism, called PLE |\n+\n+Passing `--engram-config` for a model without n-gram embedding layers fails at\n+startup, as does running on a non-CUDA-alike platform.\n+\n+## How it works\n+\n+Engram processes each position in two phases: *retrieval* and *fusion*.\n+\n+**Retrieval** maps the local token context to static table rows:\n+\n+1. **Tokenizer compression.** At startup, vLLM builds a surjective map from\n+   the tokenizer that collapses tokens which normalize alike (NFKC, accent\n+   stripping, lowercasing, whitespace collapsing), so `\" The\"`, `\"the\"` and\n+   `\"THE\"` hash identically. This concentrates semantic density into a much\n+   smaller id space; its size must match `engram_compressed_vocab_size` from\n+   the checkpoint, or startup fails — every hash multiplier derives from it.\n+2. **Multi-head hashing.** For each n-gram order `n` (up to\n+   `engram_max_ngram_size - 1`), several hash heads each apply an independent\n+   multiplicative-XOR hash over the compressed suffix n-gram. Every (n-gram\n+   order, head) pair indexes its own prime-sized bucket range in the layer's\n+   table — disjoint across pairs, so collisions cannot collide twice — and\n+   the retrieved rows are concatenated into one memory vector per position.\n+\n+**Fusion** turns the retrieved rows into a context-aware contribution to the\n+hidden state. The rows are context-independent priors and may be noisy (hash\n+collisions, polysemy), so they are gated: a `wkv` projection produces one key\n+per hyper-connection branch plus a shared value, and each branch computes a\n+sigmoid gate over the normalized dot product between its hidden state —\n+which has already aggregated global context through preceding attention —\n+and its key. If the retrieved memory contradicts the current context, the\n+gate tends toward zero and suppresses it. The gated value is added\n+residually into the branch's stream (`hidden + gate * value`); positions that\n+take no part in an n-gram (e.g. image spans) are masked so they pass through\n+untouched.\n+\n+Engram sits only on the layers listed in the checkpoint. Placement is a\n+deliberate hardware-algorithm trade-off: early enough that the backbone is\n+relieved from reconstructing static patterns in its first layers, deep enough\n+that vLLM can hide table lookups behind the compute of the preceding layers\n+(see below).\n+\n+In vLLM, hashing, lookup, and gating run as fused Triton kernels over FP8\n+rows with ue8m0 block scales. The layer layout — table sizes, n-gram size,\n+head count — is fixed by the checkpoint and is not user-configurable. Only the\n+storage and sharding described below are configurable, via\n+`--engram-config` (a JSON object, see the [CLI reference](../cli/README.md)).\n+\n+## CPU offload\n+\n+Engram tables dwarf typical embedding weights: [DeepSeek-V4.1-Flash](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash)\n+carries two Engram layers of roughly 384M table rows each, with 256-byte FP8\n+entries plus their ue8m0 block scales — about 200 GB of table weights alone.\n+Because lookups are deterministic — the indices are known from the token ids\n+alone, before the forward pass — the tables need not sit in GPU memory at\n+all. By default vLLM stores them in **pinned host memory** and serves lookups\n+directly from the Triton kernel through unified virtual addressing (UVA),\n+prefetching on a side CUDA stream so transfers overlap with the compute of\n+preceding layers. The freed GPU memory goes to the KV cache.\n+\n+`cpu_offload` defaults to the `VLLM_PLE_CPU_OFFLOAD` environment variable,",
+    "path": "docs/features/engram.md",
+    "commit_id": "90e38b7f1a85da3470b69f52ffa391e710fd3283",
+    "original_commit_id": "90e38b7f1a85da3470b69f52ffa391e710fd3283",
+    "user": {
+      "login": "NickLucche",
+      "id": 10706289,
+      "node_id": "MDQ6VXNlcjEwNzA2Mjg5",
+      "avatar_url": "https://avatars.githubusercontent.com/u/10706289?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/NickLucche",
+      "html_url": "https://github.com/NickLucche",
+      "followers_url": "https://api.github.com/users/NickLucche/followers",
+      "following_url": "https://api.github.com/users/NickLucche/following{/other_user}",
+      "gists_url": "https://api.github.com/users/NickLucche/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/NickLucche/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/NickLucche/subscriptions",
+      "organizations_url": "https://api.github.com/users/NickLucche/orgs",
+      "repos_url": "https://api.github.com/users/NickLucche/repos",
+      "events_url": "https://api.github.com/users/NickLucche/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/NickLucche/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "It defaults to `true` (on): the field follows `VLLM_PLE_CPU_OFFLOAD`, which itself defaults to `true`. The paragraph now states this explicitly.",
+    "created_at": "2026-09-21T16:49:03Z",
+    "updated_at": "2026-09-21T16:49:03Z",
+    "html_url": "https://github.com/vllm-project/vllm/pull/57910#discussion_r4064367827",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/57910",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4064367827"
+      },
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/57910#discussion_r4064367827"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/57910"
+      }
+    },
+    "reactions": {
+      "url": "https://api.github.com/repos/vllm-project/vllm/pulls/comments/4064367827/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "start_line": null,
+    "original_start_line": null,
+    "start_side": null,
+    "line": null,
+    "original_line": 84,
+    "side": "RIGHT",
+    "in_reply_to_id": 4062665983,
+    "author_association": "MEMBER",
+    "original_position": 84,
+    "position": 1,
+    "subject_type": "line"
+  }
+]

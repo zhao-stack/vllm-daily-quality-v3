@@ -1,0 +1,121 @@
+{
+  "schema_version": 2,
+  "generated_from": {
+    "generator": "manual exact patch-binding verification",
+    "generated_at": "2026-07-22T00:00:00Z",
+    "source_sha": {
+      "vllm": "fe784ff22e630a31fd798f392b01e0a75c18f047",
+      "vllm_ascend": "69d1d6fe0cb15b07854bf058098a49d4165cc558"
+    },
+    "historical_evidence": {
+      "pr": 11709,
+      "vllm_range": "1f486d96a17303ce8db8e02be39545b2be338446..e5588e49bc2642670116664a7fc4096e27adb179",
+      "ascend_range": "accfe253e3b4ac39b80c94e6ddb4b192cb13eaa9..8092d3f66599ce07cd0aca2bcc99d14b8a9192f8"
+    }
+  },
+  "summary": {
+    "total": 3,
+    "verification_status": "verified"
+  },
+  "mappings": [
+    {
+      "relation": "monkey_patch",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/v1/core/kv_cache_coordinator.py",
+        "module": "vllm.v1.core.kv_cache_coordinator",
+        "class": null,
+        "method": "get_kv_cache_coordinator"
+      },
+      "ascend": {
+        "file": "vllm_ascend/patch/platform/patch_kv_cache_coordinator.py",
+        "class": null,
+        "method": "get_kv_cache_coordinator"
+      },
+      "patch_expression": "vllm.v1.core.kv_cache_coordinator.get_kv_cache_coordinator = get_kv_cache_coordinator",
+      "binding": {
+        "kind": "module_attribute_assignment",
+        "target": "vllm.v1.core.kv_cache_coordinator.get_kv_cache_coordinator",
+        "replacement": "vllm_ascend.patch.platform.patch_kv_cache_coordinator.get_kv_cache_coordinator",
+        "scope": "module_import",
+        "guard": null
+      },
+      "relationship_verified": true,
+      "verification_status": "verified",
+      "verification": {
+        "status": "verified",
+        "reason": "The pinned Ascend source assigns this exact local function to the upstream module attribute."
+      },
+      "action": "review",
+      "confidence": "high"
+    },
+    {
+      "relation": "override",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/v1/core/kv_cache_coordinator.py",
+        "module": "vllm.v1.core.kv_cache_coordinator",
+        "class": "HybridKVCacheCoordinator",
+        "method": "__init__"
+      },
+      "ascend": {
+        "file": "vllm_ascend/patch/platform/patch_kv_cache_coordinator.py",
+        "class": "AscendHybridKVCacheCoordinator",
+        "method": "__init__"
+      },
+      "base_expression": "HybridKVCacheCoordinator",
+      "binding": {
+        "kind": "patch_constructor_binding",
+        "construction_binding_verified": true,
+        "root_target": "vllm.v1.core.kv_cache_coordinator.get_kv_cache_coordinator",
+        "patch_file": "vllm_ascend/patch/platform/patch_kv_cache_coordinator.py",
+        "call_path": [
+          "get_kv_cache_coordinator",
+          "AscendHybridKVCacheCoordinator.__init__"
+        ]
+      },
+      "relationship_verified": true,
+      "verification_status": "verified",
+      "verification": {
+        "status": "verified",
+        "reason": "The exact patched replacement function directly constructs this local subclass at the pinned Ascend SHA."
+      },
+      "action": "review",
+      "confidence": "high"
+    },
+    {
+      "relation": "patch_call_closure",
+      "risk": "critical",
+      "upstream": {
+        "file": "vllm/v1/core/single_type_kv_cache_manager.py",
+        "module": "vllm.v1.core.single_type_kv_cache_manager",
+        "class": null,
+        "method": "get_manager_for_kv_cache_spec"
+      },
+      "ascend": {
+        "file": "vllm_ascend/core/single_type_kv_cache_manager.py",
+        "class": null,
+        "method": "get_manager_for_kv_cache_spec"
+      },
+      "binding": {
+        "kind": "verified_patch_call_closure",
+        "root_target": "vllm.v1.core.kv_cache_coordinator.get_kv_cache_coordinator",
+        "patch_file": "vllm_ascend/patch/platform/patch_kv_cache_coordinator.py",
+        "call_path": [
+          "get_kv_cache_coordinator",
+          "AscendHybridKVCacheCoordinator.__init__",
+          "get_manager_for_kv_cache_spec"
+        ],
+        "downstream_module": "vllm_ascend.core.single_type_kv_cache_manager"
+      },
+      "relationship_verified": true,
+      "verification_status": "verified",
+      "verification": {
+        "status": "verified",
+        "reason": "The pinned patch function constructs the local coordinator whose constructor directly calls this imported Ascend helper."
+      },
+      "action": "review",
+      "confidence": "high"
+    }
+  ]
+}

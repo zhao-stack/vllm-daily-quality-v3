@@ -1,0 +1,87 @@
+diff --git a/tests/engine/test_arg_utils.py b/tests/engine/test_arg_utils.py
+index bded621fad6cf64af741670ceeb2d402481d6e53..480c4f1b8a0d9672bbcf37acd53d027140d6c1d2 100644
+--- a/tests/engine/test_arg_utils.py
++++ b/tests/engine/test_arg_utils.py
+@@ -9,7 +9,13 @@ from typing import Annotated, Literal
+ import pytest
+ from pydantic import Field
+ 
+-from vllm.config import AttentionConfig, CompilationConfig, ModelConfig, config
++from vllm.config import (
++    AttentionConfig,
++    CacheConfig,
++    CompilationConfig,
++    ModelConfig,
++    config,
++)
+ from vllm.engine.arg_utils import (
+     EngineArgs,
+     _expand_json_human_readable_numbers,
+@@ -86,6 +92,26 @@ def test_watermark_config_cli():
+     assert config.deduplicate_contexts_max_history == 32
+ 
+ 
++@pytest.mark.parametrize(
++    "option",
++    ["--gpu-memory-utilization", "--device-memory-utilization"],
++)
++def test_memory_utilization_cli_aliases(option):
++    parser = EngineArgs.add_cli_args(FlexibleArgumentParser())
++    args = EngineArgs.from_cli_args(parser.parse_args([option, "0.8"]))
++
++    assert args.gpu_memory_utilization == 0.8
++
++
++def test_device_memory_utilization_property():
++    config = CacheConfig(gpu_memory_utilization=0.8)
++
++    assert config.device_memory_utilization == 0.8
++
++    config.device_memory_utilization = 0.7
++    assert config.gpu_memory_utilization == 0.7
++
++
+ @pytest.mark.parametrize(
+     "options",
+     [
+diff --git a/vllm/config/cache.py b/vllm/config/cache.py
+index 6315a1e317630c146f8a404da395428570026686..3121f49532b888cf8044643f14dd9fa42ad03e4e 100644
+--- a/vllm/config/cache.py
++++ b/vllm/config/cache.py
+@@ -107,7 +107,19 @@ class CacheConfig:
+     per-instance limit, and only applies to the current vLLM instance. It does
+     not matter if you have another vLLM instance running on the same GPU. For
+     example, if you have two vLLM instances running on the same GPU, you can
+-    set the GPU memory utilization to 0.5 for each instance."""
++    set the GPU memory utilization to 0.5 for each instance. On non-GPU
++    installs, this value controls the corresponding device memory utilization.
++    """
++
++    @property
++    def device_memory_utilization(self) -> float:
++        """Device-neutral alias for ``gpu_memory_utilization``."""
++        return self.gpu_memory_utilization
++
++    @device_memory_utilization.setter
++    def device_memory_utilization(self, value: float) -> None:
++        self.gpu_memory_utilization = value
++
+     cache_dtype: CacheDType = "auto"
+     """Data type for kv cache storage. If "auto", will use model data type.
+     CUDA 11.8+ supports fp8 (=fp8_e4m3) and fp8_e5m2. ROCm (AMD GPU) supports
+diff --git a/vllm/engine/arg_utils.py b/vllm/engine/arg_utils.py
+index a6df0d7230626882d342b3ab8b8d2251d243859b..0a5472bce7f52d83e9d76a18682cc82fbd846486 100644
+--- a/vllm/engine/arg_utils.py
++++ b/vllm/engine/arg_utils.py
+@@ -1298,7 +1298,10 @@ class EngineArgs:
+         )
+         cache_group.add_argument("--block-size", **cache_kwargs["block_size"])
+         cache_group.add_argument(
+-            "--gpu-memory-utilization", **cache_kwargs["gpu_memory_utilization"]
++            "--gpu-memory-utilization",
++            "--device-memory-utilization",
++            dest="gpu_memory_utilization",
++            **cache_kwargs["gpu_memory_utilization"],
+         )
+         cache_group.add_argument(
+             "--kv-cache-memory-bytes", **cache_kwargs["kv_cache_memory_bytes"]

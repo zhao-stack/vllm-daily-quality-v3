@@ -1,0 +1,62 @@
+diff --git a/.buildkite/intel_jobs/lm_eval_intel.yaml b/.buildkite/intel_jobs/lm_eval_intel.yaml
+index 1ef00a47945a..e1f649ad91c7 100644
+--- a/.buildkite/intel_jobs/lm_eval_intel.yaml
++++ b/.buildkite/intel_jobs/lm_eval_intel.yaml
+@@ -26,3 +26,27 @@ steps:
+       'uv pip install "gpt-oss[eval]==0.0.5" &&
+       cd tests &&
+       pytest -s -v evals/gpt_oss/test_gpqa_correctness.py --config-list-file=configs/models-xpu.txt'
++- label: LM Eval Large Models(2 GPUs)
++  key: lm-eval-large-models-2-gpus
++  timeout_in_minutes: 45
++  device: intel_gpu
++  agent_tags:
++    label: production
++    gpu: 2+
++    mem: 24+
++  no_plugin: true
++  optional: true
++  working_dir: "."
++  env:
++    REGISTRY: "public.ecr.aws/q9t5s3a7"
++    REPO: "vllm-ci-test-repo"
++    VLLM_TEST_DEVICE: "xpu"
++  source_file_dependencies:
++    - vllm/
++    - .buildkite/lm-eval-harness/
++  commands:
++    - >-
++      bash .buildkite/scripts/hardware_ci/run-intel-test.sh
++      'cd .buildkite/lm-eval-harness &&
++       export VLLM_USE_DEEP_GEMM=0 &&
++      pytest -s -v test_lm_eval_correctness.py --config-list-file=configs/models-large-xpu-fp8.txt --tp-size=2'
+diff --git a/.buildkite/lm-eval-harness/configs/NVIDIA-Nemotron-3-Nano-30B-A3B-FP8-xpu.yaml b/.buildkite/lm-eval-harness/configs/NVIDIA-Nemotron-3-Nano-30B-A3B-FP8-xpu.yaml
+new file mode 100644
+index 000000000000..72ba8611953c
+--- /dev/null
++++ b/.buildkite/lm-eval-harness/configs/NVIDIA-Nemotron-3-Nano-30B-A3B-FP8-xpu.yaml
+@@ -0,0 +1,16 @@
++model_name: "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-FP8"
++tasks:
++- name: "gsm8k"
++  metrics:
++  - name: "exact_match,strict-match"
++    value: 0.7142
++  - name: "exact_match,flexible-extract"
++    value: 0.4579
++limit: 256
++num_fewshot: 5
++max_model_len: 262144
++kv_cache_dtype: fp8
++enforce_eager: true
++apply_chat_template: true
++fewshot_as_multiturn: true
++trust_remote_code: true
+diff --git a/.buildkite/lm-eval-harness/configs/models-large-xpu-fp8.txt b/.buildkite/lm-eval-harness/configs/models-large-xpu-fp8.txt
+new file mode 100644
+index 000000000000..73b28f062c3e
+--- /dev/null
++++ b/.buildkite/lm-eval-harness/configs/models-large-xpu-fp8.txt
+@@ -0,0 +1 @@
++NVIDIA-Nemotron-3-Nano-30B-A3B-FP8-xpu.yaml
+\ No newline at end of file

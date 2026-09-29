@@ -1,0 +1,289 @@
+diff --git a/examples/generate/multimodal/vision_language_offline.py b/examples/generate/multimodal/vision_language_offline.py
+index 7cd471d266d0..95e21090a9a0 100644
+--- a/examples/generate/multimodal/vision_language_offline.py
++++ b/examples/generate/multimodal/vision_language_offline.py
+@@ -2252,6 +2252,7 @@ def run_step_vl(questions: list[str], modality: str) -> ModelRequestData:
+     "glm4_5v",
+     "glm4_5v_fp8",
+     "molmo2",
++    "qwen2_5_vl",
+     "qwen3_vl",
+     "qwen3_vl_moe",
+     "qwen3_5",
+diff --git a/tests/models/multimodal/generation/test_common.py b/tests/models/multimodal/generation/test_common.py
+index 4f68887d1d15..269dad05f403 100644
+--- a/tests/models/multimodal/generation/test_common.py
++++ b/tests/models/multimodal/generation/test_common.py
+@@ -151,10 +151,12 @@ def _granite4_vision_vllm_to_hf_output(vllm_output, model):
+         img_idx_to_prompt=lambda idx: "<|vision_start|><|image_pad|><|vision_end|>",
+         video_idx_to_prompt=lambda idx: "<|vision_start|><|video_pad|><|vision_end|>",
+         enforce_eager=False,
++        needs_video_metadata=True,
+         max_model_len=4096,
+         max_num_seqs=2,
+         auto_cls=AutoModelForImageTextToText,
+         vllm_output_post_proc=model_utils.qwen2_vllm_to_hf_output,
++        patch_hf_runner=model_utils.qwen3_vl_patch_hf_runner,
+         image_size_factors=[(0.25,), (0.25, 0.25, 0.25), (0.25, 0.2, 0.15)],
+         marks=[pytest.mark.core_model, pytest.mark.cpu_model],
+     ),
+diff --git a/tests/models/multimodal/generation/test_qwen2_5_vl.py b/tests/models/multimodal/generation/test_qwen2_5_vl.py
+index 05a9b0299839..975a8b339d85 100644
+--- a/tests/models/multimodal/generation/test_qwen2_5_vl.py
++++ b/tests/models/multimodal/generation/test_qwen2_5_vl.py
+@@ -4,10 +4,10 @@
+ import pytest
+ 
+ from vllm.assets.image import ImageAsset
+-from vllm.multimodal.video import sample_frames_from_video
+ from vllm.platforms import current_platform
+ 
+ from ....conftest import VIDEO_ASSETS
++from .vlm_utils.builders import sample_frames_with_video_metadata
+ 
+ models = ["Qwen/Qwen2.5-VL-3B-Instruct"]
+ target_dtype = "bfloat16"
+@@ -81,7 +81,9 @@ def test_qwen2_5_vl_evs_functionality(
+ 
+     # Sample frames from video assets
+     sampled_vids = [
+-        sample_frames_from_video(asset.np_ndarrays, num_frames)
++        sample_frames_with_video_metadata(
++            (asset.np_ndarrays, asset.metadata), num_frames
++        )
+         for asset in video_assets
+     ]
+ 
+@@ -145,7 +147,9 @@ def test_qwen2_5_vl_evs_batched_videos(
+     monkeypatch.setenv("VLLM_USE_BYTECODE_HOOK", "1" if use_bytecode_hook else "0")
+     # Sample frames from video assets
+     sampled_vids = [
+-        sample_frames_from_video(asset.np_ndarrays, num_frames)
++        sample_frames_with_video_metadata(
++            (asset.np_ndarrays, asset.metadata), num_frames
++        )
+         for asset in video_assets
+     ]
+ 
+diff --git a/tests/models/multimodal/generation/test_vit_cudagraph.py b/tests/models/multimodal/generation/test_vit_cudagraph.py
+index 544623319f52..da472a164dab 100644
+--- a/tests/models/multimodal/generation/test_vit_cudagraph.py
++++ b/tests/models/multimodal/generation/test_vit_cudagraph.py
+@@ -144,7 +144,7 @@ def minicpmv_chat_template(content: str) -> str:
+             "<|vision_start|><|video_pad|><|vision_end|>"
+             "Describe this video in one sentence."
+         ),
+-        needs_video_metadata=False,
++        needs_video_metadata=True,
+         marks=[pytest.mark.core_model],
+     ),
+     "kimi_vl": VitCudagraphTestConfig(
+diff --git a/tests/models/multimodal/processing/test_qwen2_vl.py b/tests/models/multimodal/processing/test_qwen2_vl.py
+index 963b5959ca9d..51f65188d7b7 100644
+--- a/tests/models/multimodal/processing/test_qwen2_vl.py
++++ b/tests/models/multimodal/processing/test_qwen2_vl.py
+@@ -1,6 +1,9 @@
+ # SPDX-License-Identifier: Apache-2.0
+ # SPDX-FileCopyrightText: Copyright contributors to the vLLM project
+ 
++from typing import Any
++
++import numpy as np
+ import pytest
+ import torch
+ from PIL import Image
+@@ -208,6 +211,35 @@ def test_get_image_size_with_most_features(
+         assert tokens < max_tokens
+ 
+ 
++def _build_qwen2_5_vl_video_mm_data(num_frames: int, fps: float) -> dict[str, Any]:
++    video = np.zeros((num_frames, 56, 56, 3), dtype=np.uint8)
++    metadata = {
++        "fps": fps,
++        "duration": num_frames / fps,
++        "total_num_frames": num_frames,
++        "frames_indices": list(range(num_frames)),
++        "video_backend": "opencv",
++        "do_sample_frames": False,
++    }
++    return {"video": [(video, metadata)]}
++
++
++@pytest.mark.parametrize("model_id", ["Qwen/Qwen2.5-VL-3B-Instruct"])
++def test_qwen2_5_vl_video_fps_to_second_per_grid_ts(model_id: str) -> None:
++    ctx = build_model_context(model_id, limit_mm_per_prompt={"image": 0, "video": 1})
++    processor = MULTIMODAL_REGISTRY.create_processor(ctx.model_config)
++    temporal_patch_size = (
++        processor.info.get_hf_processor().video_processor.temporal_patch_size
++    )
++
++    prompt = "<|vision_start|><|video_pad|><|vision_end|>"
++    for fps in (1.0, 30.0):
++        mm_data = _build_qwen2_5_vl_video_mm_data(num_frames=32, fps=fps)
++        processed = processor(prompt, mm_items=processor.info.parse_mm_data(mm_data))
++        spg = processed["mm_kwargs"]["video"][0].get_data()["second_per_grid_ts"]
++        assert float(spg) == pytest.approx(temporal_patch_size / fps, rel=2e-2)
++
++
+ @pytest.mark.parametrize(
+     "model_id", ["Qwen/Qwen2-VL-2B-Instruct", "Qwen/Qwen2.5-VL-3B-Instruct"]
+ )
+diff --git a/tests/renderers/test_process_multi_modal_uuids.py b/tests/renderers/test_process_multi_modal_uuids.py
+index 8987782d71bc..a9eb0396b241 100644
+--- a/tests/renderers/test_process_multi_modal_uuids.py
++++ b/tests/renderers/test_process_multi_modal_uuids.py
+@@ -15,7 +15,11 @@
+ 
+ cherry_pil_image = ImageAsset("cherry_blossom").pil_image
+ stop_pil_image = ImageAsset("stop_sign").pil_image
+-baby_reading_np_ndarrays = VideoAsset("baby_reading").np_ndarrays
++baby_reading_video_asset = VideoAsset("baby_reading")
++baby_reading_video = (
++    baby_reading_video_asset.np_ndarrays,
++    baby_reading_video_asset.metadata,
++)
+ 
+ 
+ def _build_renderer(
+@@ -127,7 +131,7 @@ def test_multi_modal_uuids_accepts_none_and_passes_through(
+ 
+     mm_data = {
+         "image": [cherry_pil_image, stop_pil_image],
+-        "video": baby_reading_np_ndarrays,
++        "video": baby_reading_video,
+     }
+ 
+     # Use a consistent two-image scenario across all configurations
+@@ -207,7 +211,7 @@ def test_multi_modal_uuids_preserved_when_caching_disabled(mm_uuids, expected):
+     request_id = "req-42"
+     mm_data = {
+         "image": [cherry_pil_image, stop_pil_image],
+-        "video": baby_reading_np_ndarrays,
++        "video": baby_reading_video,
+     }
+ 
+     mm_processor = renderer.get_mm_processor()
+diff --git a/vllm/model_executor/models/qwen2_5_vl.py b/vllm/model_executor/models/qwen2_5_vl.py
+index 67f72dfd4796..381ffb03c3d3 100644
+--- a/vllm/model_executor/models/qwen2_5_vl.py
++++ b/vllm/model_executor/models/qwen2_5_vl.py
+@@ -41,12 +41,14 @@
+     Qwen2_5_VLConfig,
+     Qwen2_5_VLVisionConfig,
+ )
++from transformers.video_utils import VideoMetadata
+ 
+ from vllm.compilation.decorators import (
+     should_torch_compile_mm_encoder,
+     support_torch_compile,
+ )
+ from vllm.config import VllmConfig
++from vllm.config.multimodal import VideoDummyOptions
+ from vllm.distributed import parallel_state
+ from vllm.distributed import utils as dist_utils
+ from vllm.logger import init_logger
+@@ -72,9 +74,11 @@
+     MultiModalFieldConfig,
+     MultiModalKwargsItem,
+     MultiModalKwargsItems,
++    VideoItem,
+ )
+ from vllm.multimodal.parse import MultiModalDataItems
+ from vllm.multimodal.processing import PromptReplacement, PromptUpdate
++from vllm.multimodal.processing.processor import HFMultiModalInputs
+ from vllm.multimodal.video_prune.evs import (
+     compute_mrope_for_media,
+     compute_retained_tokens_count,
+@@ -102,8 +106,9 @@
+     SupportsPP,
+     SupportsQuant,
+ )
+-from .qwen2_vl import Qwen2VLDummyInputsBuilder as Qwen2_5_VLDummyInputsBuilder
+ from .qwen2_vl import (
++    Qwen2VLDummyInputsBuilder,
++    Qwen2VLMultiModalDataParser,
+     Qwen2VLMultiModalProcessor,
+     Qwen2VLProcessingInfo,
+ )
+@@ -1137,6 +1142,40 @@ def load_weights(self, weights: Iterable[tuple[str, torch.Tensor]]) -> set[str]:
+         return loader.load_weights(weights, mapper=self.hf_to_vllm_mapper)
+ 
+ 
++class Qwen2_5_VLDummyInputsBuilder(Qwen2VLDummyInputsBuilder):
++    def _get_dummy_videos(
++        self,
++        *,
++        width: int,
++        height: int,
++        num_frames: int,
++        num_videos: int,
++        overrides: VideoDummyOptions | None = None,
++    ) -> list[VideoItem]:
++        videos = super()._get_dummy_videos(
++            width=width,
++            height=height,
++            num_frames=num_frames,
++            num_videos=num_videos,
++            overrides=overrides,
++        )
++        videos = [v.copy() for v in videos]
++
++        video_items = []
++        for video in videos:
++            video_num_frames = video.shape[0]
++            video_metadata = {
++                "fps": 2.0,
++                "duration": video_num_frames / 2.0,
++                "total_num_frames": video_num_frames,
++                "frames_indices": list(range(video_num_frames)),
++                "video_backend": "opencv",
++                "do_sample_frames": False,
++            }
++            video_items.append((video, video_metadata))
++        return video_items
++
++
+ class Qwen2_5_VLProcessingInfo(Qwen2VLProcessingInfo):
+     def get_hf_config(self):
+         return self.ctx.get_hf_config(Qwen2_5_VLConfig)
+@@ -1148,6 +1187,14 @@ def get_hf_processor(self, **kwargs: object) -> Qwen2_5_VLProcessor:
+             **kwargs,
+         )
+ 
++    def get_data_parser(self):
++        return Qwen2VLMultiModalDataParser(
++            self.get_hf_config().vision_config.spatial_merge_size,
++            video_needs_metadata=True,
++            expected_hidden_size=self._get_expected_hidden_size(),
++            allow_missing_mm_embeddings=self.allow_missing_mm_embeddings,
++        )
++
+ 
+ class Qwen2_5_VLMultiModalProcessor(Qwen2VLMultiModalProcessor):
+     def _get_mm_fields_config(
+@@ -1160,6 +1207,25 @@ def _get_mm_fields_config(
+             second_per_grid_ts=MultiModalFieldConfig.batched("video", keep_on_cpu=True),
+         )
+ 
++    def _get_hf_mm_inputs(
++        self,
++        mm_items: MultiModalDataItems,
++        hf_kwargs: Mapping[str, object],
++    ) -> HFMultiModalInputs:
++        hf_inputs = super()._get_hf_mm_inputs(mm_items, hf_kwargs)
++        hf_data = hf_inputs.hf_data
++
++        if videos := hf_data.get("videos"):
++            # HF expects video metadata as a separate argument.
++            hf_data["videos"] = [video for video, _ in videos]
++            hf_data["video_metadata"] = [
++                VideoMetadata(
++                    **{k: metadata[k] for k in metadata if k != "do_sample_frames"}
++                )
++                for _, metadata in videos
++            ]
++        return hf_inputs
++
+     def _get_prompt_updates(
+         self,
+         mm_items: MultiModalDataItems,

@@ -1,0 +1,24 @@
+{
+  "valid": true,
+  "engine": "artifact-tool",
+  "native_excel_not_run": true,
+  "before": {
+    "p1": 2,
+    "p2": 16,
+    "direct": 2,
+    "borrow": 9
+  },
+  "changed": {
+    "p1": 3,
+    "p2": 15,
+    "direct": 3,
+    "borrow": 8
+  },
+  "restored": {
+    "p1": 2,
+    "p2": 16,
+    "direct": 2,
+    "borrow": 9
+  },
+  "exported": false
+}

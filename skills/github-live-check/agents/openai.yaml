@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitHub Live Check"
+  short_description: "核验 GitHub 远端最新状态、分支 HEAD 与上游适配点"
+  default_prompt: "Use $github-live-check to verify the latest remote GitHub state and upstream commit without relying on local code."

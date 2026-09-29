@@ -1,0 +1,18 @@
+{
+  "start": "2026-09-22 01:00:58.960",
+  "end": "2026-09-23 01:01:54.707",
+  "startIso": "2026-09-22T01:00:58.960+08:00",
+  "endIso": "2026-09-23T01:01:54.707+08:00",
+  "timezone": "Asia/Hong_Kong",
+  "runStartedAt": "2026-09-23T01:01:54.707+08:00",
+  "vllmOld": "986e217158a9ed54eca8307c6bb9abac7c5b2278",
+  "vllmNew": "74370a0e3044c16b6ba58f9c144b02ab733cd73a",
+  "ascend": "a71b766ce6fc0a9669a412e15a5cf53f7f827093",
+  "verified": "84030bbe3d74d99bad477a3d2e37a973ccd8865c",
+  "mainLys": "2c815be15c4e094447c38d67f666e590492f4c28",
+  "skillBlob": "c544793f707dc8ee9e3158c685710e975b03f854",
+  "promptBlob": "b01765081d2a9aa6f2b1260b027c309894acf3b2",
+  "schemaBlob": "3e8f82c5013831f997452d32f8ff6c3725f201af",
+  "totalPrs": 52,
+  "outputName": "vLLM上游质量与优化分析_main-lys_V3_20260922_010058-20260923_010154.xlsx"
+}

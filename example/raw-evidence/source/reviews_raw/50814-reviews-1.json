@@ -1,0 +1,202 @@
+[
+  {
+    "id": 4840888707,
+    "node_id": "PRR_kwDOI7xefs8AAAABIIoZgw",
+    "user": {
+      "login": "claude[bot]",
+      "id": 209825114,
+      "node_id": "BOT_kgDODIGtWg",
+      "avatar_url": "https://avatars.githubusercontent.com/in/1236702?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/claude%5Bbot%5D",
+      "html_url": "https://github.com/apps/claude",
+      "followers_url": "https://api.github.com/users/claude%5Bbot%5D/followers",
+      "following_url": "https://api.github.com/users/claude%5Bbot%5D/following{/other_user}",
+      "gists_url": "https://api.github.com/users/claude%5Bbot%5D/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/claude%5Bbot%5D/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/claude%5Bbot%5D/subscriptions",
+      "organizations_url": "https://api.github.com/users/claude%5Bbot%5D/orgs",
+      "repos_url": "https://api.github.com/users/claude%5Bbot%5D/repos",
+      "events_url": "https://api.github.com/users/claude%5Bbot%5D/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/claude%5Bbot%5D/received_events",
+      "type": "Bot",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "## Claude Code Review\n\nThis pull request is from a fork — automated review is disabled. A repository maintainer can comment `@claude review` to run a one-time review.",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/50814#pullrequestreview-4840888707",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/50814",
+    "author_association": "NONE",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/50814#pullrequestreview-4840888707"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/50814"
+      }
+    },
+    "submitted_at": "2026-08-03T04:57:43Z",
+    "commit_id": null
+  },
+  {
+    "id": 4949726569,
+    "node_id": "PRR_kwDOI7xefs8AAAABJwbVaQ",
+    "user": {
+      "login": "fxmarty-amd",
+      "id": 180171742,
+      "node_id": "U_kgDOCr0z3g",
+      "avatar_url": "https://avatars.githubusercontent.com/u/180171742?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/fxmarty-amd",
+      "html_url": "https://github.com/fxmarty-amd",
+      "followers_url": "https://api.github.com/users/fxmarty-amd/followers",
+      "following_url": "https://api.github.com/users/fxmarty-amd/following{/other_user}",
+      "gists_url": "https://api.github.com/users/fxmarty-amd/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/fxmarty-amd/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/fxmarty-amd/subscriptions",
+      "organizations_url": "https://api.github.com/users/fxmarty-amd/orgs",
+      "repos_url": "https://api.github.com/users/fxmarty-amd/repos",
+      "events_url": "https://api.github.com/users/fxmarty-amd/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/fxmarty-amd/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/50814#pullrequestreview-4949726569",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/50814",
+    "author_association": "CONTRIBUTOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/50814#pullrequestreview-4949726569"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/50814"
+      }
+    },
+    "submitted_at": "2026-08-17T08:31:42Z",
+    "commit_id": "5c48da4571019c12702988ab1b082cc40fa1f15e"
+  },
+  {
+    "id": 4950075879,
+    "node_id": "PRR_kwDOI7xefs8AAAABJwwp5w",
+    "user": {
+      "login": "fxmarty-amd",
+      "id": 180171742,
+      "node_id": "U_kgDOCr0z3g",
+      "avatar_url": "https://avatars.githubusercontent.com/u/180171742?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/fxmarty-amd",
+      "html_url": "https://github.com/fxmarty-amd",
+      "followers_url": "https://api.github.com/users/fxmarty-amd/followers",
+      "following_url": "https://api.github.com/users/fxmarty-amd/following{/other_user}",
+      "gists_url": "https://api.github.com/users/fxmarty-amd/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/fxmarty-amd/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/fxmarty-amd/subscriptions",
+      "organizations_url": "https://api.github.com/users/fxmarty-amd/orgs",
+      "repos_url": "https://api.github.com/users/fxmarty-amd/repos",
+      "events_url": "https://api.github.com/users/fxmarty-amd/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/fxmarty-amd/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "LGTM.\n\nPlease clarify the use case (example model + device) in the PR description & motivation in line with mxfp8 emulation",
+    "state": "APPROVED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/50814#pullrequestreview-4950075879",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/50814",
+    "author_association": "CONTRIBUTOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/50814#pullrequestreview-4950075879"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/50814"
+      }
+    },
+    "submitted_at": "2026-08-17T09:11:14Z",
+    "commit_id": "91634e3739cf754c99915b425b91d87c8a4d5b52"
+  },
+  {
+    "id": 5273655503,
+    "node_id": "PRR_kwDOI7xefs8AAAABOlWYzw",
+    "user": {
+      "login": "claude[bot]",
+      "id": 209825114,
+      "node_id": "BOT_kgDODIGtWg",
+      "avatar_url": "https://avatars.githubusercontent.com/in/1236702?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/claude%5Bbot%5D",
+      "html_url": "https://github.com/apps/claude",
+      "followers_url": "https://api.github.com/users/claude%5Bbot%5D/followers",
+      "following_url": "https://api.github.com/users/claude%5Bbot%5D/following{/other_user}",
+      "gists_url": "https://api.github.com/users/claude%5Bbot%5D/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/claude%5Bbot%5D/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/claude%5Bbot%5D/subscriptions",
+      "organizations_url": "https://api.github.com/users/claude%5Bbot%5D/orgs",
+      "repos_url": "https://api.github.com/users/claude%5Bbot%5D/repos",
+      "events_url": "https://api.github.com/users/claude%5Bbot%5D/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/claude%5Bbot%5D/received_events",
+      "type": "Bot",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "## Claude Code Review\n\nThis pull request is from a fork — automated review is disabled. A repository maintainer can comment `@claude review` to run a one-time review.",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/50814#pullrequestreview-5273655503",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/50814",
+    "author_association": "NONE",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/50814#pullrequestreview-5273655503"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/50814"
+      }
+    },
+    "submitted_at": "2026-09-22T02:33:03Z",
+    "commit_id": "31c6d83b8bcf9fb40b35d91e8cd655b80e3259ba"
+  },
+  {
+    "id": 5273675831,
+    "node_id": "PRR_kwDOI7xefs8AAAABOlXoNw",
+    "user": {
+      "login": "shen-shanshan",
+      "id": 87969357,
+      "node_id": "MDQ6VXNlcjg3OTY5MzU3",
+      "avatar_url": "https://avatars.githubusercontent.com/u/87969357?u=6d0bc902a2e26b24c0ea15f3c4a6070babe971e6&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/shen-shanshan",
+      "html_url": "https://github.com/shen-shanshan",
+      "followers_url": "https://api.github.com/users/shen-shanshan/followers",
+      "following_url": "https://api.github.com/users/shen-shanshan/following{/other_user}",
+      "gists_url": "https://api.github.com/users/shen-shanshan/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/shen-shanshan/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/shen-shanshan/subscriptions",
+      "organizations_url": "https://api.github.com/users/shen-shanshan/orgs",
+      "repos_url": "https://api.github.com/users/shen-shanshan/repos",
+      "events_url": "https://api.github.com/users/shen-shanshan/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/shen-shanshan/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Reviewed by @fxmarty-amd ",
+    "state": "APPROVED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/50814#pullrequestreview-5273675831",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/50814",
+    "author_association": "COLLABORATOR",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/50814#pullrequestreview-5273675831"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/50814"
+      }
+    },
+    "submitted_at": "2026-09-22T02:37:54Z",
+    "commit_id": "91634e3739cf754c99915b425b91d87c8a4d5b52"
+  }
+]

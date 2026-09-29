@@ -1,0 +1,66 @@
+{
+  "reviewer": "Codex (this handover task)",
+  "reviewed_on": "2026-09-29",
+  "report_sha256": "e49f34c969700e9843ec4c57c092638f1066db22891c834fe87278e13a53e6e6",
+  "all_11_sheet_renders_viewed": true,
+  "scope": "Offline sample replay",
+  "sheets": [
+    {
+      "name": "优化点总表",
+      "checked_range": "A1:P22",
+      "observation": "Header/body/tail retained; no obvious clipping or stale records in inspected render"
+    },
+    {
+      "name": "行动清单(P0-P1)",
+      "checked_range": "A1:K6",
+      "observation": "Header/body/tail retained; no obvious clipping or stale records in inspected render"
+    },
+    {
+      "name": "跳过清单",
+      "checked_range": "A1:H5",
+      "observation": "Header/body/tail retained; no obvious clipping or stale records in inspected render"
+    },
+    {
+      "name": "精确代码复核",
+      "checked_range": "A1:I22",
+      "observation": "Header/body/tail retained; no obvious clipping or stale records in inspected render"
+    },
+    {
+      "name": "测试与收益",
+      "checked_range": "A1:F22",
+      "observation": "Header/body/tail retained; no obvious clipping or stale records in inspected render"
+    },
+    {
+      "name": "Review证据",
+      "checked_range": "A1:G22",
+      "observation": "Header/body/tail retained; no obvious clipping or stale records in inspected render"
+    },
+    {
+      "name": "流水线与版本",
+      "checked_range": "A1:C31",
+      "observation": "Header/body/tail retained; no obvious clipping or stale records in inspected render"
+    },
+    {
+      "name": "统计看板",
+      "checked_range": "A1:F19",
+      "observation": "Header/body/tail retained; no obvious clipping or stale records in inspected render"
+    },
+    {
+      "name": "上游Bugfix",
+      "checked_range": "A1:U36",
+      "observation": "Header/body/tail retained; no obvious clipping or stale records in inspected render"
+    },
+    {
+      "name": "上游功能接口",
+      "checked_range": "A1:P20",
+      "observation": "Header/body/tail retained; no obvious clipping or stale records in inspected render"
+    },
+    {
+      "name": "全部PR分析",
+      "checked_range": "A1:J56",
+      "observation": "Header/body/tail retained; no obvious clipping or stale records in inspected render"
+    }
+  ],
+  "native_excel_tested": false,
+  "target_machine_visual_check_required": true
+}

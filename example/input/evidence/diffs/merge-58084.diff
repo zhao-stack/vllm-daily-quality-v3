@@ -1,0 +1,410 @@
+diff --git a/rust/src/bench/src/mm_processor.rs b/rust/src/bench/src/mm_processor.rs
+index babcbf8080a0d63b74b4c077ed969f91e6853d01..5b26181f16158bbfc00c05dd45c08bb6572373ff 100644
+--- a/rust/src/bench/src/mm_processor.rs
++++ b/rust/src/bench/src/mm_processor.rs
+@@ -16,13 +16,14 @@ use tokio::sync::Semaphore;
+ 
+ use vllm_chat::{
+     ChatContent, ChatContentPart, ChatLlm, ChatMessage, ChatRequest, LoadModelBackendsOptions,
+-    MultiModalTimingStats, load_model_backends,
++    load_model_backends,
+ };
+ use vllm_engine_core_client::{EngineCoreClient, EngineCoreClientConfig, TransportMode};
+ use vllm_llm::Llm;
+ use vllm_managed_engine::cli::ManagedEngineArgs;
+ use vllm_managed_engine::{ManagedEngineConfig, ManagedEngineHandle};
+ use vllm_text::TextLlm;
++use vllm_tracing::timing::RequestTimingStats;
+ 
+ use crate::config::RangeRatio;
+ use crate::datasets::SampleRequest;
+@@ -133,7 +134,7 @@ pub struct MmProcessorArgs {
+ }
+ 
+ /// Entry point for `vllm-bench mm-processor`.
+-pub async fn run_mm_processor(args: MmProcessorArgs, timing: MultiModalTimingStats) -> Result<()> {
++pub async fn run_mm_processor(args: MmProcessorArgs, timing: RequestTimingStats) -> Result<()> {
+     if args.engine.data_parallel_size_local == Some(0) {
+         anyhow::bail!(
+             "`--data-parallel-size-local 0` is not supported; the benchmark requires \
+@@ -179,7 +180,7 @@ pub async fn run_mm_processor(args: MmProcessorArgs, timing: MultiModalTimingSta
+ async fn run_mm_processor_with_engine(
+     args: MmProcessorArgs,
+     handshake_port: u16,
+-    timing: &MultiModalTimingStats,
++    timing: &RequestTimingStats,
+ ) -> Result<()> {
+     let range_ratio =
+         RangeRatio::parse(&args.random_range_ratio).context("invalid --random-range-ratio")?;
+diff --git a/rust/src/chat/src/lib.rs b/rust/src/chat/src/lib.rs
+index e746cb5ba12287472449b2512208f737f1f2bbcd..8f41d720047da5511a37028a829544a2d2215c99 100644
+--- a/rust/src/chat/src/lib.rs
++++ b/rust/src/chat/src/lib.rs
+@@ -22,6 +22,7 @@ pub use event::{
+ };
+ use futures::{StreamExt, TryStreamExt as _};
+ pub use llm_multimodal::MediaContentPart;
++pub use multimodal::{mm_request_span, mm_timing_layer};
+ use output::apply_output_grammar;
+ pub use output::{
+     ChatOutputProcessor, DefaultChatOutputProcessor, DynChatOutputProcessor,
+@@ -47,9 +48,6 @@ pub use stream::{ChatEventStream, ChatEventStreamTrait, CollectedAssistantMessag
+ pub use vllm_engine_core_client::protocol::multimodal::MmFeatures;
+ pub use vllm_llm::FinishReason;
+ pub use vllm_text::GenerationConfigMode;
+-pub use vllm_tracing::timing::{
+-    RequestTimingStats as MultiModalTimingStats, mm_request_span, mm_timing_layer,
+-};
+ 
+ mod backend;
+ mod error;
+diff --git a/rust/src/chat/src/multimodal.rs b/rust/src/chat/src/multimodal.rs
+index 362db4b7b72a4859dc65ec923bdd978010843c97..9b6cebeb443fbb4d76869c8beb12f1add9f4bd6d 100644
+--- a/rust/src/chat/src/multimodal.rs
++++ b/rust/src/chat/src/multimodal.rs
+@@ -43,11 +43,13 @@ mod input;
+ mod item;
+ mod preprocessed;
+ mod tensor;
++mod timing;
+ mod video;
+ 
+ use self::expand::expand_prompt_token_ids;
+ pub use self::input::MultimodalInput;
+-use vllm_tracing::timing::{mm_request_span, mm_stage_span};
++use self::timing::MM_STAGE_TARGET;
++pub use self::timing::{mm_request_span, mm_timing_layer};
+ 
+ /// Resolved multimodal support for one loaded model.
+ #[derive(Clone)]
+@@ -760,13 +762,17 @@ impl MultimodalModelInfo {
+         if media_parts.is_empty() {
+             return Ok(Vec::new());
+         }
+-        self.prepare_multimodal_timed(media_parts, prompt_token_ids, model_dtype)
+-            .instrument(mm_stage_span("preprocessor_total"))
+-            .await
++        self.prepare_multimodal_timed(media_parts, prompt_token_ids, model_dtype).await
+     }
+ 
+     /// Timed body of [`Self::prepare_multimodal`]; each stage is a `tracing`
+     /// span aggregated per request by the `vllm-tracing` timing layer.
++    #[tracing::instrument(
++        name = "mm_stage",
++        target = MM_STAGE_TARGET,
++        skip_all,
++        fields(stage = "preprocessor_total")
++    )]
+     async fn prepare_multimodal_timed(
+         &self,
+         media_parts: Vec<MediaContentPart>,
+@@ -775,34 +781,22 @@ impl MultimodalModelInfo {
+     ) -> Result<MmFeatures> {
+         let media_parts_len = media_parts.len();
+         self.validate_mm_limits(&media_parts)?;
+-        let fetched =
+-            self.fetch_media(media_parts).instrument(mm_stage_span("media_fetch")).await?;
++        let fetched = self.fetch_media(media_parts).await?;
+ 
+         let mut prepared = Vec::new();
+         if !fetched.images.is_empty() {
+-            prepared.push(
+-                self.prepare_images(fetched.images, fetched.image_uuids, model_dtype)
+-                    .instrument(mm_stage_span("preprocess_image"))
+-                    .await?,
+-            );
++            prepared
++                .push(self.prepare_images(fetched.images, fetched.image_uuids, model_dtype).await?);
+         }
+         if !fetched.videos.is_empty() {
+-            prepared.push(
+-                self.prepare_videos(fetched.videos, fetched.video_uuids, model_dtype)
+-                    .instrument(mm_stage_span("preprocess_video"))
+-                    .await?,
+-            );
++            prepared
++                .push(self.prepare_videos(fetched.videos, fetched.video_uuids, model_dtype).await?);
+         }
+         if !fetched.audios.is_empty() {
+-            prepared.push(
+-                self.prepare_audios(fetched.audios, fetched.audio_uuids)
+-                    .instrument(mm_stage_span("preprocess_audio"))
+-                    .await?,
+-            );
++            prepared.push(self.prepare_audios(fetched.audios, fetched.audio_uuids).await?);
+         }
+ 
+-        let mut ranges = mm_stage_span("prompt_expansion")
+-            .in_scope(|| expand_prompt_token_ids(prompt_token_ids, &prepared))?;
++        let mut ranges = expand_prompt_token_ids(prompt_token_ids, &prepared)?;
+ 
+         let mut features = Vec::with_capacity(media_parts_len);
+         for media in prepared {
+@@ -845,6 +839,12 @@ impl MultimodalModelInfo {
+ 
+     /// Fetch all connector-backed media parts and split them per modality,
+     /// preserving their request-order UUID metadata.
++    #[tracing::instrument(
++        name = "mm_stage",
++        target = MM_STAGE_TARGET,
++        skip_all,
++        fields(stage = "media_fetch")
++    )]
+     async fn fetch_media(&self, media_parts: Vec<MediaContentPart>) -> Result<FetchedMedia> {
+         let mut tracker = AsyncMultiModalTracker::new(Arc::clone(&self.media_connector));
+         for part in media_parts {
+diff --git a/rust/src/chat/src/multimodal/audio.rs b/rust/src/chat/src/multimodal/audio.rs
+index 897f7aa4927c9d37cf4063f3889b919ec4bd8709..c230752f94a656fd795839d918362e0cec2d032e 100644
+--- a/rust/src/chat/src/multimodal/audio.rs
++++ b/rust/src/chat/src/multimodal/audio.rs
+@@ -8,6 +8,7 @@ use std::sync::Arc;
+ use llm_multimodal::{AudioClip, Modality, PreprocessedEncoderInputs};
+ use vllm_engine_core_client::protocol::dtype::ModelDtype;
+ 
++use super::timing::MM_STAGE_TARGET;
+ use super::{AudioModalitySupport, MultimodalModelInfo, PreparedMedia, item};
+ use crate::error::{Error, Result, bail_multimodal, multimodal};
+ 
+@@ -16,6 +17,12 @@ pub(super) const AUDIO_PRIMARY_KEY: &str = "input_audio_features";
+ 
+ impl MultimodalModelInfo {
+     /// Preprocess fetched audio clips as one batch and build per-item features.
++    #[tracing::instrument(
++        name = "mm_stage",
++        target = MM_STAGE_TARGET,
++        skip_all,
++        fields(stage = "preprocess_audio")
++    )]
+     pub(super) async fn prepare_audios(
+         &self,
+         clips: Vec<Arc<AudioClip>>,
+@@ -236,6 +243,45 @@ mod tests {
+         ));
+     }
+ 
++    #[tokio::test]
++    async fn audio_pipeline_attributes_stage_timings_to_request() {
++        use tracing::Instrument as _;
++        use tracing::instrument::WithSubscriber as _;
++        use tracing_subscriber::layer::SubscriberExt as _;
++
++        use crate::{mm_request_span, mm_timing_layer};
++
++        let info = qwen3_asr_info();
++        let (layer, timings) = mm_timing_layer();
++        let parts = vec![MediaContentPart::AudioData {
++            data: wav_i16_mono(16_000, &[0; 1_600]),
++            mime_type: Some("audio/wav".to_string()),
++            uuid: Some("audio-1".to_string()),
++        }];
++        async {
++            info.prepare_multimodal(parts, &mut vec![AUDIO_PAD_ID], ModelDtype::Float32)
++                .instrument(mm_request_span("request-1"))
++                .await
++                .unwrap();
++        }
++        .with_subscriber(tracing_subscriber::registry().with(layer))
++        .await;
++
++        let records = timings.stat();
++        assert_eq!(records.len(), 1);
++        let mut stages = records["request-1"].keys().collect::<Vec<_>>();
++        stages.sort();
++        expect_test::expect![[r#"
++            [
++                "media_fetch_secs",
++                "preprocess_audio_secs",
++                "preprocessor_total_secs",
++                "prompt_expansion_secs",
++            ]
++        "#]]
++        .assert_debug_eq(&stages);
++    }
++
+     #[tokio::test]
+     async fn tracker_processor_and_lowering_preserve_audio_contract() {
+         let info = qwen3_asr_info();
+diff --git a/rust/src/chat/src/multimodal/expand.rs b/rust/src/chat/src/multimodal/expand.rs
+index 1172d0ccc0853a395e8047be97ebdddbaf89cea9..e23c16b45543e695e81a4068129e36726d7ce52e 100644
+--- a/rust/src/chat/src/multimodal/expand.rs
++++ b/rust/src/chat/src/multimodal/expand.rs
+@@ -10,6 +10,7 @@ use vllm_engine_core_client::protocol::multimodal::PlaceholderRange;
+ use vllm_engine_core_client::protocol::tensor::WireTensor;
+ 
+ use super::PreparedMedia;
++use super::timing::MM_STAGE_TARGET;
+ use crate::error::{Error, Result, bail_multimodal};
+ 
+ /// One modality's queue of pending placeholder replacements for prompt
+@@ -55,6 +56,12 @@ impl<'a> ExpansionLane<'a> {
+ ///
+ /// The returned ranges point into the already-expanded prompt, grouped per
+ /// modality in item order.
++#[tracing::instrument(
++    name = "mm_stage",
++    target = MM_STAGE_TARGET,
++    skip_all,
++    fields(stage = "prompt_expansion")
++)]
+ pub(super) fn expand_prompt_token_ids(
+     prompt_token_ids: &mut Vec<u32>,
+     prepared: &[PreparedMedia],
+diff --git a/rust/src/chat/src/multimodal/image.rs b/rust/src/chat/src/multimodal/image.rs
+index 5063ae8d2fa74ef88c102414d15fecdb0af2ec69..3627d6c30efdaedffb8615f9b2e5193889580149 100644
+--- a/rust/src/chat/src/multimodal/image.rs
++++ b/rust/src/chat/src/multimodal/image.rs
+@@ -9,6 +9,7 @@ use std::sync::Arc;
+ use llm_multimodal::{ImageFrame, Modality, PreprocessedEncoderInputs};
+ use vllm_engine_core_client::protocol::dtype::ModelDtype;
+ 
++use super::timing::MM_STAGE_TARGET;
+ use super::{ModalitySupport, MultimodalModelInfo, PreparedMedia, item};
+ use crate::error::{Error, Result, bail_multimodal, multimodal};
+ 
+@@ -18,6 +19,12 @@ pub(super) const IMAGE_PRIMARY_KEY: &str = "pixel_values";
+ impl MultimodalModelInfo {
+     /// Preprocess all fetched image frames as one batch and build per-item
+     /// features.
++    #[tracing::instrument(
++        name = "mm_stage",
++        target = MM_STAGE_TARGET,
++        skip_all,
++        fields(stage = "preprocess_image")
++    )]
+     pub(super) async fn prepare_images(
+         &self,
+         frames: Vec<Arc<ImageFrame>>,
+diff --git a/rust/src/chat/src/multimodal/timing.rs b/rust/src/chat/src/multimodal/timing.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..5bdf2073969daf011154b5279311515df1ba0180
+--- /dev/null
++++ b/rust/src/chat/src/multimodal/timing.rs
+@@ -0,0 +1,22 @@
++// SPDX-License-Identifier: Apache-2.0
++// SPDX-FileCopyrightText: Copyright contributors to the vLLM project
++
++//! Multimodal preprocessing spans and their timing collector configuration.
++
++use tracing::{Span, info_span};
++use vllm_tracing::timing::{RequestTimingLayer, RequestTimingStats};
++
++/// Target of the multimodal preprocessing stage spans.
++pub(super) const MM_STAGE_TARGET: &str = "mm_processor_timing";
++
++/// Create the timing layer and its stats handle for multimodal preprocessing
++/// stage spans (`vllm-bench mm-processor`), mirroring the Python
++/// `TimingContext` / `MultiModalTimingRegistry`.
++pub fn mm_timing_layer() -> (RequestTimingLayer, RequestTimingStats) {
++    RequestTimingLayer::new(MM_STAGE_TARGET)
++}
++
++/// Span carrying the `request_id` used to attribute multimodal stage timings.
++pub fn mm_request_span(request_id: &str) -> Span {
++    info_span!("mm_request", request_id)
++}
+diff --git a/rust/src/chat/src/multimodal/video.rs b/rust/src/chat/src/multimodal/video.rs
+index c2a25b27bd5978fdac5b90ac57bd7c76011f9d4c..67273970ad8322022e04dcdd32e9a3a0ce15c3b7 100644
+--- a/rust/src/chat/src/multimodal/video.rs
++++ b/rust/src/chat/src/multimodal/video.rs
+@@ -16,6 +16,7 @@ use vllm_engine_core_client::protocol::multimodal::{
+     SliceSpec,
+ };
+ 
++use super::timing::MM_STAGE_TARGET;
+ use super::{ModalitySupport, MultimodalModelInfo, PreparedItem, PreparedMedia, tensor};
+ use crate::error::{Error, Result, bail_multimodal, multimodal};
+ 
+@@ -32,6 +33,12 @@ impl MultimodalModelInfo {
+     /// Unlike images, each clip runs through the preprocessor independently
+     /// (a batch of one), so its tensors are complete per item and need no
+     /// cross-item slicing.
++    #[tracing::instrument(
++        name = "mm_stage",
++        target = MM_STAGE_TARGET,
++        skip_all,
++        fields(stage = "preprocess_video")
++    )]
+     pub(super) async fn prepare_videos(
+         &self,
+         clips: Vec<Arc<VideoClip>>,
+diff --git a/rust/src/tracing/src/timing.rs b/rust/src/tracing/src/timing.rs
+index b0b68e533fd483512d8d66bb88c295ef20a76bcd..f9a50719fbb89fa66dab23e86196becc68be7fbc 100644
+--- a/rust/src/tracing/src/timing.rs
++++ b/rust/src/tracing/src/timing.rs
+@@ -16,8 +16,8 @@ use std::sync::{Arc, Mutex};
+ use std::time::Instant;
+ 
+ use tracing::field::{Field, Visit};
+-use tracing::span::{Attributes, Span};
+-use tracing::{Id, Subscriber, info_span};
++use tracing::span::Attributes;
++use tracing::{Id, Subscriber};
+ use tracing_subscriber::layer::{Context, Layer};
+ use tracing_subscriber::registry::LookupSpan;
+ 
+@@ -60,6 +60,26 @@ impl Visit for SpanFields {
+ 
+ /// `tracing` layer that aggregates stage-span timings per request, keyed by
+ /// the nearest ancestor span with a `request_id` field.
++///
++/// # Span contract
++///
++/// Timed spans must have the configured target and a `stage` field. The
++/// `request_id` is taken from the timed span itself or its nearest ancestor
++/// carrying that field, regardless of the ancestor's target. Spans without
++/// a request ID are ignored. Span names are unrestricted.
++///
++/// Both fields are read at span creation; subsequent [`tracing::Span::record`]
++/// calls are ignored. String values are used verbatim; other values use their
++/// debug representation. Prefer string fields for stable keys.
++///
++/// # Timing semantics
++///
++/// Each sample measures wall-clock time from span creation to final close,
++/// including async waits and any time the span remains alive through cloned
++/// handles. Nested and concurrent spans are measured independently, so their
++/// durations can overlap. Repeated stages accumulate under `"{stage}_secs"`
++/// for each request. Closing spans are recorded regardless of the operation's
++/// success, failure, or cancellation; callers select the samples to report.
+ pub struct RequestTimingLayer {
+     target: &'static str,
+     stats: Arc<Mutex<HashMap<String, StageStats>>>,
+@@ -87,6 +107,10 @@ impl RequestTimingLayer {
+ 
+ impl RequestTimingStats {
+     /// Drain and return `{request_id: {stage_secs}}` records.
++    ///
++    /// Returns accumulated timings since the previous drain. Spans still open
++    /// contribute to a later drain; finish the measured work before calling
++    /// this method to collect complete request timings.
+     pub fn stat(&self) -> HashMap<String, StageStats> {
+         std::mem::take(&mut *self.stats.lock().unwrap())
+     }
+@@ -139,27 +163,6 @@ where
+     }
+ }
+ 
+-/// Target of the multimodal preprocessing stage spans.
+-const MM_STAGE_TARGET: &str = "mm_processor_timing";
+-
+-/// Create the timing layer and its stats handle for multimodal preprocessing
+-/// stage spans (`vllm-bench mm-processor`), mirroring the Python
+-/// `TimingContext` / `MultiModalTimingRegistry`.
+-pub fn mm_timing_layer() -> (RequestTimingLayer, RequestTimingStats) {
+-    RequestTimingLayer::new(MM_STAGE_TARGET)
+-}
+-
+-/// Span carrying the `request_id` used to attribute multimodal stage timings.
+-pub fn mm_request_span(request_id: &str) -> Span {
+-    info_span!("mm_request", request_id)
+-}
+-
+-/// Span for one multimodal preprocessing stage; the elapsed time is recorded
+-/// on close.
+-pub fn mm_stage_span(stage: &'static str) -> Span {
+-    info_span!(target: MM_STAGE_TARGET, "mm_stage", stage)
+-}
+-
+ #[cfg(test)]
+ mod tests {
+     use super::*;

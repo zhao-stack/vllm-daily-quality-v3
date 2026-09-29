@@ -1,0 +1,77 @@
+{
+  "metadata": {
+    "gate": "已知接口/功能缺口已直接源码闭环，未触发完整接口分析器。NPU运行及性能收益尚待验证，不代表全仓零风险。",
+    "scenario": "direct-source-review",
+    "profile": "pinned-static-no-npu",
+    "full_analyzer_executed": false
+  },
+  "summary": {},
+  "source_heads": {
+    "vllm": {
+      "head": "74370a0e3044c16b6ba58f9c144b02ab733cd73a",
+      "tree": "6775893c0fb5a83984c657393366d358d0cfe35f",
+      "clean": true
+    },
+    "ascend": {
+      "head": "a71b766ce6fc0a9669a412e15a5cf53f7f827093",
+      "tree": "495ed5a65e513932cdbdbd3fe0f6b5a84d1f5369",
+      "clean": true
+    }
+  },
+  "static_checks": {
+    "57737_shared_shutdown_inherited": true,
+    "55390_live_npu_old_keyword_target_signature_rejects": true,
+    "57891_npu_sleep_buffers_only_new_parameter_retention_missing": true,
+    "57951_npu_copied_schedulers_keep_unconditional_cap": true,
+    "51565_npu_non_spec_prefill_already_not_shape_only": true,
+    "58061_npu_dense_mlp_sp_already_passed": true,
+    "56448_npu_dummy_super_consumes_cap": true,
+    "50592_npu_attention_already_returns_tensor": true,
+    "47842_npu_own_gdn_reshape_needs_profile": true,
+    "47450_wrapper_calls_original_55931_57731_57006_shared": true,
+    "56250_shared_v1_restriction_not_filtered_58065_npu_default_v1": true,
+    "57312_cuda_ipc_gate_not_npu": true,
+    "57914_npu_explicit_shared_storage_not_nvidia_auto_probe": true
+  },
+  "direct_findings": [
+    {
+      "pr": 55390,
+      "scope": "runtime",
+      "kind": "renamed_keyword",
+      "path": "vllm_ascend/patch/platform/patch_kv_cache_utils.py",
+      "line": 393,
+      "conclusion": "NPU packed KV分组仍传use_deepseek_v4_fallback，目标函数仅接受use_trailing_layer_fallback，调用会失败。",
+      "pr_number": 55390,
+      "detail": "NPU packed KV分组仍传use_deepseek_v4_fallback，目标函数仅接受use_trailing_layer_fallback，调用会失败。"
+    },
+    {
+      "pr": 57891,
+      "scope": "runtime",
+      "kind": "missing_sleep_parameter_retention",
+      "path": "vllm_ascend/worker/worker.py",
+      "line": 241,
+      "conclusion": "NPU自有sleep/wake仅保存buffers，未实现冻结参数glob备份恢复。",
+      "pr_number": 57891,
+      "detail": "NPU自有sleep/wake仅保存buffers，未实现冻结参数glob备份恢复。"
+    },
+    {
+      "pr": 57951,
+      "scope": "performance",
+      "kind": "scheduler_override_missing_relaxation",
+      "path": "vllm_ascend/core/dyntra_lb_scheduler.py",
+      "line": 507,
+      "conclusion": "NPU多个自有schedule仍无条件限制单请求prefill，需同步上游单请求放宽门禁。",
+      "pr_number": 57951,
+      "detail": "NPU多个自有schedule仍无条件限制单请求prefill，需同步上游单请求放宽门禁。"
+    },
+    {
+      "pr": 58150,
+      "scope": "configuration",
+      "kind": "custom_pd_aux_capability_gate",
+      "path": "vllm_ascend/distributed/kv_transfer",
+      "conclusion": "上游已知PD名单未包含NPU自有PD名称；须明确AuxOutput能力，不能将放行当联合恢复已验证。",
+      "pr_number": 58150,
+      "detail": "上游已知PD名单未包含NPU自有PD名称；须明确AuxOutput能力，不能将放行当联合恢复已验证。"
+    }
+  ]
+}

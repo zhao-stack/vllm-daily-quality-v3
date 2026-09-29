@@ -1,0 +1,202 @@
+[
+  {
+    "id": 4830334959,
+    "node_id": "PRR_kwDOI7xefs8AAAABH-kP7w",
+    "user": {
+      "login": "claude[bot]",
+      "id": 209825114,
+      "node_id": "BOT_kgDODIGtWg",
+      "avatar_url": "https://avatars.githubusercontent.com/in/1236702?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/claude%5Bbot%5D",
+      "html_url": "https://github.com/apps/claude",
+      "followers_url": "https://api.github.com/users/claude%5Bbot%5D/followers",
+      "following_url": "https://api.github.com/users/claude%5Bbot%5D/following{/other_user}",
+      "gists_url": "https://api.github.com/users/claude%5Bbot%5D/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/claude%5Bbot%5D/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/claude%5Bbot%5D/subscriptions",
+      "organizations_url": "https://api.github.com/users/claude%5Bbot%5D/orgs",
+      "repos_url": "https://api.github.com/users/claude%5Bbot%5D/repos",
+      "events_url": "https://api.github.com/users/claude%5Bbot%5D/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/claude%5Bbot%5D/received_events",
+      "type": "Bot",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "## Claude Code Review\n\nThis pull request is from a fork — automated review is disabled. A repository maintainer can comment `@claude review` to run a one-time review.",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/50592#pullrequestreview-4830334959",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/50592",
+    "author_association": "NONE",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/50592#pullrequestreview-4830334959"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/50592"
+      }
+    },
+    "submitted_at": "2026-07-31T16:26:54Z",
+    "commit_id": null
+  },
+  {
+    "id": 4942819376,
+    "node_id": "PRR_kwDOI7xefs8AAAABJp1wMA",
+    "user": {
+      "login": "AndreasKaratzas",
+      "id": 42451412,
+      "node_id": "MDQ6VXNlcjQyNDUxNDEy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/42451412?u=b016698d88ed2cd5b7bfbabc9d2ebaa0b98cdc0d&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/AndreasKaratzas",
+      "html_url": "https://github.com/AndreasKaratzas",
+      "followers_url": "https://api.github.com/users/AndreasKaratzas/followers",
+      "following_url": "https://api.github.com/users/AndreasKaratzas/following{/other_user}",
+      "gists_url": "https://api.github.com/users/AndreasKaratzas/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/AndreasKaratzas/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/AndreasKaratzas/subscriptions",
+      "organizations_url": "https://api.github.com/users/AndreasKaratzas/orgs",
+      "repos_url": "https://api.github.com/users/AndreasKaratzas/repos",
+      "events_url": "https://api.github.com/users/AndreasKaratzas/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/AndreasKaratzas/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "APPROVED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/50592#pullrequestreview-4942819376",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/50592",
+    "author_association": "MEMBER",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/50592#pullrequestreview-4942819376"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/50592"
+      }
+    },
+    "submitted_at": "2026-08-15T04:27:25Z",
+    "commit_id": null
+  },
+  {
+    "id": 4948264687,
+    "node_id": "PRR_kwDOI7xefs8AAAABJvCG7w",
+    "user": {
+      "login": "AndreasKaratzas",
+      "id": 42451412,
+      "node_id": "MDQ6VXNlcjQyNDUxNDEy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/42451412?u=b016698d88ed2cd5b7bfbabc9d2ebaa0b98cdc0d&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/AndreasKaratzas",
+      "html_url": "https://github.com/AndreasKaratzas",
+      "followers_url": "https://api.github.com/users/AndreasKaratzas/followers",
+      "following_url": "https://api.github.com/users/AndreasKaratzas/following{/other_user}",
+      "gists_url": "https://api.github.com/users/AndreasKaratzas/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/AndreasKaratzas/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/AndreasKaratzas/subscriptions",
+      "organizations_url": "https://api.github.com/users/AndreasKaratzas/orgs",
+      "repos_url": "https://api.github.com/users/AndreasKaratzas/repos",
+      "events_url": "https://api.github.com/users/AndreasKaratzas/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/AndreasKaratzas/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "This also affects NVIDIA’s low-rank Kimi-Linear path. `vllm/models/kimi_k3/nvidia/model.py` imports this shared class when `use_full_rank_gate=False`, but still sets `_self_attn_writes_output = True` and calls it with `output=output`. Since this `forward()` no longer accepts `output`, that path will fail with an unexpected-keyword `TypeError`.\n\nCould you update the NVIDIA caller to the new return-value contract too? The clean fix would be to make `_run_self_attn()` always return `self.self_attn(...)`, since all three NVIDIA attention implementations now return tensors. `vllm/models/kimi_k3/nvidia/kda.py` itself does not need changing.",
+    "state": "DISMISSED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/50592#pullrequestreview-4948264687",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/50592",
+    "author_association": "MEMBER",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/50592#pullrequestreview-4948264687"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/50592"
+      }
+    },
+    "submitted_at": "2026-08-17T03:48:37Z",
+    "commit_id": null
+  },
+  {
+    "id": 5270951755,
+    "node_id": "PRR_kwDOI7xefs8AAAABOixXSw",
+    "user": {
+      "login": "AndreasKaratzas",
+      "id": 42451412,
+      "node_id": "MDQ6VXNlcjQyNDUxNDEy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/42451412?u=b016698d88ed2cd5b7bfbabc9d2ebaa0b98cdc0d&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/AndreasKaratzas",
+      "html_url": "https://github.com/AndreasKaratzas",
+      "followers_url": "https://api.github.com/users/AndreasKaratzas/followers",
+      "following_url": "https://api.github.com/users/AndreasKaratzas/following{/other_user}",
+      "gists_url": "https://api.github.com/users/AndreasKaratzas/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/AndreasKaratzas/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/AndreasKaratzas/subscriptions",
+      "organizations_url": "https://api.github.com/users/AndreasKaratzas/orgs",
+      "repos_url": "https://api.github.com/users/AndreasKaratzas/repos",
+      "events_url": "https://api.github.com/users/AndreasKaratzas/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/AndreasKaratzas/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "Before merging, please:\n1. Ensure that the tests are running and point me to the test group that I should find them.\n2. Ensure that there is a global pytest file level skip in each of the new 3 test files so that they do not run on platforms that they are not supposed to run on.\n3. I think generally, it's better putting the amd tests under an amd directory so that we can actually remove the amd substr from the filename, and same for NV test file. Generally I think that test files should share directory tree naming conventions with source.",
+    "state": "CHANGES_REQUESTED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/50592#pullrequestreview-5270951755",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/50592",
+    "author_association": "MEMBER",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/50592#pullrequestreview-5270951755"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/50592"
+      }
+    },
+    "submitted_at": "2026-09-21T19:32:19Z",
+    "commit_id": "3feae50ed412292ca18fc6e232d9c6f97bf95560"
+  },
+  {
+    "id": 5271667271,
+    "node_id": "PRR_kwDOI7xefs8AAAABOjdCRw",
+    "user": {
+      "login": "AndreasKaratzas",
+      "id": 42451412,
+      "node_id": "MDQ6VXNlcjQyNDUxNDEy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/42451412?u=b016698d88ed2cd5b7bfbabc9d2ebaa0b98cdc0d&v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/AndreasKaratzas",
+      "html_url": "https://github.com/AndreasKaratzas",
+      "followers_url": "https://api.github.com/users/AndreasKaratzas/followers",
+      "following_url": "https://api.github.com/users/AndreasKaratzas/following{/other_user}",
+      "gists_url": "https://api.github.com/users/AndreasKaratzas/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/AndreasKaratzas/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/AndreasKaratzas/subscriptions",
+      "organizations_url": "https://api.github.com/users/AndreasKaratzas/orgs",
+      "repos_url": "https://api.github.com/users/AndreasKaratzas/repos",
+      "events_url": "https://api.github.com/users/AndreasKaratzas/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/AndreasKaratzas/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "APPROVED",
+    "html_url": "https://github.com/vllm-project/vllm/pull/50592#pullrequestreview-5271667271",
+    "pull_request_url": "https://api.github.com/repos/vllm-project/vllm/pulls/50592",
+    "author_association": "MEMBER",
+    "_links": {
+      "html": {
+        "href": "https://github.com/vllm-project/vllm/pull/50592#pullrequestreview-5271667271"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/vllm-project/vllm/pulls/50592"
+      }
+    },
+    "submitted_at": "2026-09-21T20:44:30Z",
+    "commit_id": "3feae50ed412292ca18fc6e232d9c6f97bf95560"
+  }
+]

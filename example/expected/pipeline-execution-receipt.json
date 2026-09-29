@@ -1,0 +1,12 @@
+{
+  "executed": true,
+  "program": "scripts/deep_analyze.py",
+  "source_sha": "2c815be15c4e094447c38d67f666e590492f4c28",
+  "execution_mode": "unmodified original script; pinned GitHub Contents byte-equivalence verified",
+  "ai_semantic_sha256": "15e136453bafb0345fdb9fdcae1c0962a691c85cfa68bf5c53537c8511e06750",
+  "program_output_sha256": "2b88c146ad6281497b8a24b57898a6eec2b63e9c89b3970830092697d9c632ab",
+  "program_output_mtime": 1790135864.5804884,
+  "commit_count": 52,
+  "external_llm_executed": false,
+  "daily_refresh_executed": false
+}
