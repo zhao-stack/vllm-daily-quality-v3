@@ -3514,8 +3514,13 @@
     },
     {
       "path": "skills/vllm-ascend-main2main-pr/SKILL.md",
-      "sha256": "f5e39141334dc3ce22bf68291a4e6eaad5eb0129309eb2d8becb6cb58778b4fd",
-      "bytes": 5460
+      "sha256": "75e9aff8b490034d91a4f5ccc6af92ce177571553195cfe350d763f9006d12ee",
+      "bytes": 11224
+    },
+    {
+      "path": "skills/vllm-ascend-main2main-pr/references/ci-cycle.md",
+      "sha256": "c56e2fb32408e96427f1655b78668b4fb055e9ea45443fa24488968ae2cf72b5",
+      "bytes": 5508
     }
   ]
 }

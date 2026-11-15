@@ -1,83 +1,114 @@
 ---
 name: vllm-ascend-main2main-pr
-description: Implement or review a vllm-ascend main2main upgrade PR when its PR-wide diff changes `.github/vllm-main-verified.commit` or `.github/vllm-release-tag.commit`. Enforce upgrade-only scope, upstream-cause traceability, main/release lane separation, version-gated adaptation, and per-change PR evidence; do not use for ordinary PRs.
+description: Implement, continue, or review only vllm-ascend main2main upgrade PRs that change the upstream commit or release-tag value in .github/vllm-main-verified.commit or .github/vllm-release-tag.commit. Classify the upgrade first, then follow its specific workflow with upstream-cause evidence and dual-version validation. Do not activate for ordinary PRs, generic CI failures, or interface inquiries.
 ---
 
-# vLLM Ascend Main2Main PR
+# vLLM Ascend Main2Main 升级 PR
 
-Use this workflow for every implementation, continuation, review, and PR-description update on a main2main upgrade PR. It governs adaptation work; it does not replace the separate interface-contract analyzer.
+先识别升级类型，再按对应流程执行。所有流程遵守第 6 节共同修改规则；实施任务进入 [统一 CI 闭环](references/ci-cycle.md)。仅要求 review、解释或描述草稿时，只完成请求的只读工作，不因此提交、推送、评论、修改标签或触发 CI。
 
-## Identify the PR from its full diff
+## 1. 入口：只有 main2main 升级 PR 才进入
 
-At the start of each turn, compare the PR branch with its intended base or merge base. Do not classify the PR from only the current working-tree edit.
+检查 vllm-ascend PR 相对于目标分支/merge base 的**整个 PR diff**，读取两个标记文件的前后值。不能只检查最近一次 commit、工作区修改、PR 标题或标签。
 
-A PR is a main2main upgrade PR when its PR-wide diff changes either of these files:
+| 实际版本值变化 | 类型 | 执行流程 |
+|---|---|---|
+| 仅 .github/vllm-main-verified.commit | commit-only | 直接升级 A；接续升级 B |
+| 仅 .github/vllm-release-tag.commit | tag-only | C |
+| 两个标记均变化 | commit + tag | D；存在接续关系时同时遵守 B |
+| 两个标记都没有版本升级 | 非 main2main 升级 PR | 退出本 Skill，按普通任务处理 |
 
-- `.github/vllm-main-verified.commit` - main-commit upgrade lane;
-- `.github/vllm-release-tag.commit` - release-tag upgrade lane.
+- 仅有 main2main 标签、标题关键词、普通接口适配、CI 失败或标记文件的空白/注释变化，均不能通过入口。回滚或非升级性质的标记编辑不能自动视作升级。
+- 准备尚未创建的升级 PR 时，只有用户已明确要求创建 main2main 升级 PR，并能确定拟修改的标记及 old/new 目标，才按相应流程准备。这允许在首次修改标记之前先扫描；不能从普通 PR 或一般接口问题推断升级意图。
+- 后续修复继续依据整个 PR 的升级类型，不因当前 commit 未修改标记而退出。若整个 PR 已撤销升级，重新分类并退出。
+- 记录仓库、目标分支、base/head SHA、旧/新 commit 或 tag、下游基线及接续关系。信息不足先读取源文件核实，不猜测目标或版本。
 
-If both files change, treat both lanes explicitly. Continue using this skill for later edits in the same PR even when the current edit does not touch either marker.
+## 2. 流程 A：仅升级 commit id，直接升级
 
-## Scope gate
+**范围：仅处理本次上游 old → new 区间引入、下游尚未适配的问题。**
 
-Modify only problems introduced by the exact main2main upgrade represented by the marker change. Do not include preexisting defects, unrelated cleanup, opportunistic refactors, forward backports, or behavior changes without a demonstrated causal link to that upgrade.
+1. 固定区间与基线：从 PR 基线标记读取 old，明确拟升级的 new；验证上游提交关系。下游基线为本次适配前、对应 old 的干净代码快照，记录确切 SHA。
+2. 首次修改 main 标记前，调用配套 vllm-ascend-main2main Skill 执行接口检测与区间分析。已存在 PR 若缺少扫描，重建适配前基线后补扫，不用修复后的代码作为原始基线。
+3. 逐项结合上下游源码确认依赖关系、契约变化、版本线路和已有兼容处理。记录“需要适配 / 已兼容无需修改 / 误报 / 未确认”；工具只是提示，不能直接按清单改代码。
+4. 按第 6 节先证明根因，再做必要适配。每个独立适配点一个 Signed-off-by commit；版本标记单独清晰提交。避免历史问题、无关重构和超区间前瞻适配。
+5. 按第 7 节编写逐项对应的 PR 描述，提交 PR。
+6. 执行 [统一 CI 闭环](references/ci-cycle.md)，CI 新发现的问题仍须证明属于本次区间。
 
-Before changing code, identify the exact upstream change that caused the need for adaptation. Trace it to the upstream symbol or behavior and the affected vllm-ascend use. If the cause is unknown or only suspected, do not modify code; record it as unresolved and investigate further.
+扫描只在 exact old/new、下游基线、引擎版本/源码指纹及外部源码 SHA 全部一致时复用。后续普通修复、提交或描述更新不自动重扫；输入变化、结果缺失/无效或用户要求时重扫。
 
-## Interface scan rule
+## 3. 流程 B：仅升级 commit id，接续前序升级 PR
 
-Before first changing `.github/vllm-main-verified.commit`, invoke `vllm-ascend-main2main` for the exact old-to-new range. Use the marker's PR-base value as `old`, the proposed value as `new`, and the vllm-ascend PR parent as the baseline.
+假设旧 PR 负责 A → B，新 PR 负责 B → C。**旧区间由旧 PR 解决，新 PR 新增适配只负责 B → C。**
 
-Reuse a valid completed scan during subsequent work on the same PR. Do not invoke the analyzer again merely because later edits modify adaptation code, tests, commits, or the PR description. Rerun only when the verified-main target, old/new range, baseline, engine or external-source inputs change; when the recorded result is missing or invalid; or when the user explicitly requests it.
+1. 固定旧 PR 地址、采用的 head SHA、A/B/C 和目标分支。区分整个 PR 的 A → C diff 与本次负责的 B → C 区间。
+2. 在新分支将旧 PR 的继承修改合成一个 Signed-off-by commit，记录来源 PR/SHA。不重写旧 PR 历史，不把新适配混入继承提交。
+3. 固定下游扫描基线：包含所采用的旧 PR 适配、尚未进行 B → C 适配的干净快照。上游 old=B、new=C；不能机械使用最终目标分支的 A 作为此次扫描 old。
+4. 调用 vllm-ascend-main2main 扫描 B → C，按 A 的源码复核及共同修改规则，仅修复新增区间问题。新增适配分别签署提交。
+5. 如果失败由 A → B 引入，记录为前序 PR 依赖，等待旧 PR 修复后同步；不在新 PR 中另做旧区间补丁。
+6. 同步旧 PR 或 rebase 后，保持继承内容与新增内容可区分，更新来源 SHA。前序仍未合入时维护单一继承提交；如果旧 PR 已合入目标分支，以新目标基线重新计算 diff，避免重复继承。检查扫描指纹并补充受影响的验证。
+7. PR 描述分别列出继承修改与 B → C 新增适配，执行 [统一 CI 闭环](references/ci-cycle.md)。前序问题未解决时明确依赖，不宣称完成。
 
-A release-tag-only marker change does not automatically invoke the interface analyzer. Use it there only for a genuinely unresolved interface-contract question covered by that skill's own invocation gate.
+## 4. 流程 C：仅升级 tag，不升级 commit id
 
-## Main and release adaptation
+**默认业务修改范围：release tag 更新所需的 vllm_version_is 旧版本替换或旧分支删除。其他修改先人工确认。**
 
-Before editing a release-tag upgrade, determine and document how the release lane's required adaptation differs from the main lane. Do not assume the same upstream behavior exists in both.
+1. 确定旧 tag、新 tag 和仍需支持的 main/release 两条线路。
+2. 全量搜索仓库中的旧版本号，包括代码、测试、构建、依赖配置和文档。逐项判断替换、删除或保留，不机械全局替换；历史记录和仍受支持版本可以保留。
+3. 对照新旧 tag 源码，确认新版本实际接口/行为和旧分支是否仍必要。vllm_version_is 是版本匹配，不能当作大小比较。出现包版本异常时核实 checkout SHA、tag、安装包版本和实际分支。
+4. 更新 release 标记，修改确认需要调整的版本判断。其他业务逻辑、测试、配置或文档修改，先提供证据和具体方案，经人工确认再实施。批准的公共临时 CI 诊断按 CI 闭环执行。
+5. 不自动调用 commit 区间扫描 Skill；通过源码分析处理本类型问题。确实需要超出本类型的扫描或修改时先明确任务范围，不能借通用接口问题绕过入口。
+6. 按第 7 节提交 PR，执行 [统一 CI 闭环](references/ci-cycle.md)。CI 失败不自动授权扩大 tag-only 修改范围。
 
-If main and release need different implementations, branch explicitly with `vllm_version_is`. Do not use `hasattr` or similar runtime capability probing as a substitute for version selection. If both lanes use the same implementation, avoid an unnecessary version branch.
+## 5. 流程 D：同时升级 tag 和 commit id
 
-## Upstream evidence
+**范围：本次 commit 区间引入的必要适配，以及 tag 升级所需的版本判断调整。**
 
-For every adaptation point:
+1. 先固定 old/new commit、old/new tag 和适配前下游基线。存在前序 PR 时，先按 B 建立继承提交、划分新增区间。
+2. 先按 C 搜索旧版本号，分析并处理允许范围内的版本判断。
+3. 再调用 vllm-ascend-main2main 扫描本次 commit 区间。即使步骤 2 已开始修改，也必须使用步骤 1 固定的独立基线快照，避免新适配掩盖原始问题。
+4. 按 A 完成源码复核和必要适配。每个修改点注明属于 commit 区间、tag 调整或两者共同需要，区分 main/release 行为。
+5. 超出 commit 区间且不属于允许 tag 调整的修改，提供具体证据和方案后人工确认。按第 7 节提交 PR，执行 [统一 CI 闭环](references/ci-cycle.md)。
 
-1. identify the changed vllm-ascend file and symbol;
-2. state why the upgrade requires the change;
-3. identify the exact upstream change that caused it;
-4. for a main-commit upgrade, provide a direct link to the corresponding change in the upstream PR, preferably the relevant file or diff anchor rather than only the PR landing page;
-5. state whether the adaptation applies to main, release, or both;
-6. state how the change was verified.
+## 6. 所有分支共同遵守的修改规则
 
-Do not implement an adaptation point that lacks this evidence.
+### 根因证据在修改之前
 
-## Coding constraints
+每个适配点必须先定位：上游 PR、具体 diff/文件/符号、确切提交及所属区间、下游依赖路径、契约或行为变化，以及为何需要所选修改。CI 失败还需记录失败用例及首个有效错误，证明该变化如何导致失败。仅有时间相关性或“改完能过”不构成根因。
 
-- Keep each adaptation minimal and attributable to the exact upgrade range.
-- Preserve existing vllm-ascend behavior outside the affected version lane.
-- Do not delete or skip tests, weaken assertions, or add silent fallbacks to make the upgrade pass.
-- Do not mix process-documentation or infrastructure cleanup into the upgrade PR.
-- Add or update tests that exercise the introduced incompatibility when practical; otherwise explain the concrete validation used.
+扫描发现的静态不兼容可凭确切上下游源码证据先适配，不要求先制造一次 CI 失败；不能把工具命中本身当作证据。证据不足则调查并记录 unresolved，不提交猜测补丁。
 
-Follow the repository's general architecture, testing, formatting, commit sign-off, and PR-title rules in addition to this skill.
+版本标记、继承提交和临时 CI 诊断属于流程性修改，说明用途和来源，不伪造上游故障 PR。普通业务适配不得借此豁免根因要求。
 
-## PR description contract
+### 最小、明确的修改
 
-The PR description must explain every adaptation point individually. Use a table or equivalent structure containing at least:
+- 需要区分上游双版本时使用 vllm_version_is；不用参数存在性/值、函数签名、hasattr、getattr 或捕获异常推断版本。普通业务条件不受此限制。两条线路相同时不添加无用版本分支。
+- 不吞异常、不静默返回默认值、不假装成功，不用兜底规避错误；不兼容应正常暴露。
+- 不删除/跳过测试、弱化断言、降低阈值或测试负载来通过 CI。保持非目标线路行为，按根因决定修实现还是测试，采用能验证受影响行为的测试或具体验证证据。
+- 不夹带历史缺陷、流程文档、无关基础设施整理、重构或超区间 backport。公共 CI 的临时诊断及撤销是明确的流程例外，不能保留在最终有效 diff 中。
+- 对扫描误报、漏报、已兼容和未确认项保留证据；不在升级 PR 中夹带修复扫描引擎。
 
-| vllm-ascend change | Why it is required | Upstream cause and direct link | Lane | Verification |
+### 提交与签署
+
+- 每个独立根因/适配点一个 git commit -s，使用实际项目身份添加 Signed-off-by；这里不默认要求 GPG/SSH -S。
+- 同一根因所需的最小代码与测试可跨文件置于一个提交，不同根因分开。
+- 标记更新、继承 squash、临时诊断及其撤销保持独立清晰；修复无效时撤销该方案，重新定位后提交，不层层叠加猜测。
+- 遵守目标仓库的格式、标题及测试规则。任务授权持续有效；tag-only 额外修改等明确要求人工确认的项目，在具体方案可审阅后再请求确认。
+
+## 7. PR 描述与完成条件
+
+参考 [PR #11709](https://github.com/vllm-project/vllm-ascend/pull/11709) 的逐项对应格式，不继承其历史问题或超区间修改例外。
+
+说明升级类型、old/new commit/tag、目标 base/head、下游基线、扫描引擎及指纹、扫描结果、误报/漏报/未确认项。接续时注明旧 PR/SHA、继承内容和新增责任区间；tag 升级说明 main/release 差异。
+
+| 下游修改点（文件/符号及 diff） | 上游 PR / 具体 diff 与提交 | 为什么必须修改 | main/release/both | 验证 SHA、用例与结果 |
 |---|---|---|---|---|
 
-Also record the relevant main old/new SHAs or release-tag transition, the vllm-ascend baseline, the interface-scan result when required, and all unresolved items. For release-tag upgrades, include a separate summary of how release handling differs from main handling.
+每个适配点独立一行，优先使用直达具体上游修改的链接。撤销方案、同步旧 PR、rebase 或 head 变化后更新描述。流程性修改另列用途，记录临时诊断已撤销、未执行覆盖及阻塞项。
 
-## Completion checks
+完成前重新检查整个 PR diff：
 
-Before declaring the PR ready:
-
-- recompute the PR-wide diff and confirm it is still correctly classified;
-- map every non-test code change to an upgrade-introduced cause and PR-description entry;
-- confirm every main-commit adaptation entry has a direct upstream PR change link;
-- confirm release/main differences use `vllm_version_is` rather than capability probing;
-- confirm no unrelated changes or unresolved speculative fixes remain;
-- confirm the required interface scan is present and still matches its input fingerprint;
-- report any unmet rule as a blocker instead of silently relaxing it.
+1. 类型和责任区间正确，所有适配都有明确原因、必要性和逐项描述，无猜测性或无关修改。
+2. 版本区分、代码行为及原有测试标准满足第 6 节；独立修改点均已 Signed-off-by。
+3. 临时继续执行修改已撤销，扫描仍匹配固定输入，必要的重新分析完成。
+4. 修复对应的定向验证通过；最终 PR head SHA 在正常策略下的双版本必要 CI 全部通过，预期测试实际执行完成。
+5. 没有未解决的前序依赖或环境阻塞。旧 SHA 成功、部分任务成功、意外跳过和仅外层 workflow 绿色都不等于完成；如仍阻塞，如实报告状态和恢复条件。
