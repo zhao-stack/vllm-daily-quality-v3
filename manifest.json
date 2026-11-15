@@ -3511,6 +3511,11 @@
       "path": "vendor/main-lys/templates/SKILL.md",
       "sha256": "b601a9f1aad5bc3818fc08ac4f37ea069f567881e6623e9a61d7d9abc009a68a",
       "bytes": 4894
+    },
+    {
+      "path": "skills/vllm-ascend-main2main-pr/SKILL.md",
+      "sha256": "f5e39141334dc3ce22bf68291a4e6eaad5eb0129309eb2d8becb6cb58778b4fd",
+      "bytes": 5460
     }
   ]
 }
