@@ -127,10 +127,10 @@ def test_engine_identity_contains_version_schema_and_hash() -> None:
     identity = adapter._engine_identity(_engine_root())
     assert identity["generator_version"] != "unknown"
     assert identity["range_analyzer_version"] != "unknown"
-    assert identity["range_analyzer_version"] == "2.34.0"
-    assert identity["range_schema_version"] == 48
+    assert identity["range_analyzer_version"] == "2.34.1"
+    assert identity["range_schema_version"] == 49
     assert identity["analysis_plan_version"] == 4
-    assert identity["commit_sha"] == "0b2d7f1adb822977ac8e8466e3a101e928bd86ba"
+    assert identity["commit_sha"] == "9398ca5f084659fd78a0f71c07813733980d2b88"
     assert len(str(identity["package_sha256"])) == 64
 
 

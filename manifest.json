@@ -3274,8 +3274,8 @@
     },
     {
       "path": "skills/vllm-ascend-main2main/main2main_risk_analyzer.py",
-      "sha256": "cac653484501c9b793b0d8c8e8fcdcb515822333847c646d597b6c92c04a7af7",
-      "bytes": 19400
+      "sha256": "55e1537bb22cd6964fe4e4cd92ffe20efc455c1db9cb2a0e335d49d6d4499c81",
+      "bytes": 19415
     },
     {
       "path": "skills/vllm-ascend-main2main/raw/main2main_call_protocol_mapping.json",
@@ -3304,8 +3304,8 @@
     },
     {
       "path": "skills/vllm-ascend-main2main/references/cli-and-output.md",
-      "sha256": "82890ad7f18364c65557b4020ab9aa540219ec511f8f0e83604da3ec4f96b0bc",
-      "bytes": 5064
+      "sha256": "8e401baa454abb595c5e5b7e563479f3e2f7993699c10a5b29d54cf3bff0e98b",
+      "bytes": 5099
     },
     {
       "path": "skills/vllm-ascend-main2main/scripts/optimize_mappings.py",
@@ -3319,17 +3319,17 @@
     },
     {
       "path": "skills/vllm-ascend-main2main/SKILL.md",
-      "sha256": "6c21186465184861431e68984e4e1875751c805a7dcc270d0ca764c661f803de",
-      "bytes": 9027
+      "sha256": "a3d5f0182164c56b6313f338b0d4178b5ee34dd6ead3bba3ef67914e249a923e",
+      "bytes": 9181
     },
     {
       "path": "skills/vllm-ascend-main2main/skill_usage.md",
-      "sha256": "946c185ec1a768b42e21a94ea49ab3470acc2a94a0a060688d7f5044195cafcc",
+      "sha256": "c1e6264f726bac158db7a0542ac40ffb7185bffeb2b4b079c805a1c40bc33ab7",
       "bytes": 9193
     },
     {
       "path": "skills/vllm-ascend-main2main/tests/test_engine_adapter.py",
-      "sha256": "862935d5cdbaa70ae38a4b345a9fd16fac80f4393da96c7198ef48159b07a91f",
+      "sha256": "aa5497808d67e8d05dd687aaa7b680cd0c97556a3e662c415eb9f99a2f7f9761",
       "bytes": 5742
     },
     {
@@ -3524,8 +3524,8 @@
     },
     {
       "path": "skills/vllm-ascend-main2main/engine-lock.json",
-      "sha256": "b399bfd1929961d74b9f19437b064a1420e59504acaadc0e5901d4302f9b0dfd",
-      "bytes": 3420
+      "sha256": "364836d85c849e8bb1cd49c4d05c683dd10130f38d0c6f6101f88a930219cf76",
+      "bytes": 3486
     },
     {
       "path": "skills/vllm-ascend-main2main/tests/test_engine_pin.py",

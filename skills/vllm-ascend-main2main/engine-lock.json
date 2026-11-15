@@ -1,9 +1,9 @@
 {
-  "repository": "https://github.com/zhao-stack/vllm-ascend.git",
-  "commit": "0b2d7f1adb822977ac8e8466e3a101e928bd86ba",
-  "package": "tools/vllm_interface_contracts",
-  "range_analyzer_version": "2.34.0",
-  "range_schema_version": 48,
+  "repository": "https://github.com/zhao-stack/main2main_flow.git",
+  "commit": "9398ca5f084659fd78a0f71c07813733980d2b88",
+  "package": "main2main_flow/interface_contracts",
+  "range_analyzer_version": "2.34.1",
+  "range_schema_version": 49,
   "analysis_plan_version": 4,
   "files": [
     {
@@ -56,7 +56,7 @@
     },
     {
       "file": "generator.py",
-      "sha256": "d91c84e5f7911b98dfc3929ece5691dd86a81376fc719ee919a321d4ecf10c54"
+      "sha256": "7388bd34b2c88cfb8509578c4ee7aedcbf1e165bab0a5b89c3c913771609ef21"
     },
     {
       "file": "helper_effects.py",
@@ -68,11 +68,11 @@
     },
     {
       "file": "models.py",
-      "sha256": "22dde1bd3580318aa1179b697df944e65d6b130acc1a1653b61b79aac5a9f519"
+      "sha256": "0b1ce152d043026fd099e0af0cf3a67de149802ebdfadb3b92351f5fd58f155c"
     },
     {
       "file": "module_attributes.py",
-      "sha256": "e444254ad6e2093eed55e18917034cde5a928a0d7f35787ea10c5f4cb3fa1941"
+      "sha256": "45ecc4aa61e6a7b43b870dd943027c207a6eb68d263a4daa9729823199db2d08"
     },
     {
       "file": "patch_consumers.py",
@@ -80,7 +80,7 @@
     },
     {
       "file": "range_analysis.py",
-      "sha256": "a1c9a1b8094cac4455220c7682aef6eb50cf07f71da2805c0dc2b8e2b983d325"
+      "sha256": "e2fad14a8e418e79e54420e5a12c63a72d2f07de7929edc26db2658538efdb94"
     },
     {
       "file": "receiver_constraints.py",
@@ -99,5 +99,5 @@
       "sha256": "0067883f088f914d60bcb00ca1df4cb345e4ed1791656835501068a337decac0"
     }
   ],
-  "file_hash_basis": "Exact Git blob bytes at commit; original GRAY_MANIFEST.json hashes were verified against these bytes with source CRLF normalization."
+  "file_hash_basis": "Exact Git blob bytes at pinned main2main_flow commit; checkout with core.autocrlf=false."
 }

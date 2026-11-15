@@ -2,8 +2,8 @@
 """Thin orchestration adapter for the vllm-ascend interface engine.
 
 The installed skill owns workflow, caching, and report presentation.  Static
-source analysis lives only in ``tools.vllm_interface_contracts`` inside a
-vllm-ascend checkout.  The previous analyzer remains available through
+source analysis lives only in ``main2main_flow.interface_contracts`` inside a
+main2main_flow checkout.  The previous analyzer remains available through
 ``--engine-mode legacy`` during the migration window.
 """
 
@@ -22,7 +22,7 @@ from typing import Any
 
 SKILL_ROOT = Path(__file__).resolve().parent
 LEGACY_ANALYZER = SKILL_ROOT / "legacy" / "main2main_risk_analyzer.py"
-ENGINE_PACKAGE = Path("tools/vllm_interface_contracts")
+ENGINE_PACKAGE = Path("main2main_flow/interface_contracts")
 DEFAULT_PROFILE = "exact-contracts"
 DEFAULT_SCENARIO = "main2main"
 ENGINE_LOCK = SKILL_ROOT / "engine-lock.json"
@@ -203,7 +203,7 @@ def _cache_entry(
 
 
 def _engine_command(engine_root: Path, *values: str) -> list[str]:
-    return [sys.executable, "-m", "tools.vllm_interface_contracts", *values]
+    return [sys.executable, "-m", "main2main_flow.interface_contracts", *values]
 
 
 def _source_options(args: argparse.Namespace) -> list[str]:

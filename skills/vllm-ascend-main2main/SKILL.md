@@ -26,9 +26,9 @@ Run validate/predict and review findings before first changing the main marker. 
 
 ## Analysis workflow
 
-Use only the gray engine pinned by [engine-lock.json](engine-lock.json): zhao-stack/vllm-ascend at 0b2d7f1adb822977ac8e8466e3a101e928bd86ba (v2.34.0). Keep this skill as a thin workflow, cache, and report layer. Never recreate AST, MRO, patch-flow, or signature logic inside the skill.
+Use only the gray engine pinned by [engine-lock.json](engine-lock.json): zhao-stack/main2main_flow at 9398ca5f084659fd78a0f71c07813733980d2b88 (v2.34.1). Keep this skill as a thin workflow, cache, and report layer. Never recreate AST, MRO, patch-flow, or signature logic inside the skill.
 
-The default independent checkout is $CODEX_HOME/cache/main2main-engines/<locked-sha>, or ~/.codex/cache/main2main-engines/<locked-sha> when CODEX_HOME is unset. Pass --engine-root to use another independent checkout of exactly the same repository and SHA. Before execution the adapter verifies origin, HEAD, clean tracked files, and all 23 Python files against canonical Git-byte hashes. Missing/wrong engines fail explicitly; never fall back to --ascend-root. Read the engine preparation instructions in references/cli-and-output.md before the first run. Updating the pin requires an intentional lock update and validation, not moving with the gray branch tip.
+The default independent checkout is $CODEX_HOME/cache/main2main-engines/<locked-sha>, or ~/.codex/cache/main2main-engines/<locked-sha> when CODEX_HOME is unset. Pass --engine-root to use another independent checkout of exactly the same repository and SHA. Before execution the adapter verifies origin, HEAD, clean tracked files, and all 23 Python files against canonical Git-byte hashes. Missing/wrong engines fail explicitly; never fall back to --ascend-root. Read the engine preparation instructions in references/cli-and-output.md before the first run. Updating the pin requires an intentional lock update and validation, not moving with a branch tip. This invokes only the packaged interface_contracts engine; workflow kickoff, adapter/QA model calls, and hardware CI are outside this analysis command.
 
 After the invocation gate passes, invoke the shared engine's fixed `main2main` scenario, which runs the full exact-contract plan. The separate `vllm-interface` upstream-PR scenario analyzes direct imports, overrides, and exact downstream calls while excluding monkey patches; it is an engine/CI entry point, not a reduced main2main skill mode.
 
@@ -60,13 +60,13 @@ Read [references/cli-and-output.md](references/cli-and-output.md) for commands, 
 
 ```powershell
 python .\main2main_risk_analyzer.py validate `
-  --engine-root <engine_vllm_ascend_repo> `
+  --engine-root <engine_main2main_flow_repo> `
   --vllm-root <vllm_repo> `
   --ascend-root <baseline_vllm_ascend_repo> `
   --expect-ascend-sha <ascend_sha>
 
 python .\main2main_risk_analyzer.py predict `
-  --engine-root <engine_vllm_ascend_repo> `
+  --engine-root <engine_main2main_flow_repo> `
   --vllm-root <vllm_repo_at_new> `
   --ascend-root <baseline_vllm_ascend_repo> `
   --expect-ascend-sha <ascend_sha> `
