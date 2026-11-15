@@ -7,9 +7,15 @@
 - Exact-contract rules
 - Expanded review
 
+## Upgrade scope and source confirmation
+
+This contract applies only after SKILL.md admits a main2main PR that upgrades the main commit marker. It does not open an alternative entry for ordinary PRs or tag-only upgrades. Use the assigned new interval and the pre-adaptation baseline; a stacked upgrade uses B -> C against the pinned predecessor-adapted snapshot.
+
+Tool classifications and four true gates are necessary evidence, not automatic permission to change code. Independently inspect old/new upstream code and downstream consumers, existing compatibility guards, and the actual version lane. For each proposed repair, cite the exact upstream PR/commit/diff and explain the necessary downstream change. Record confirmed-needed, already-compatible, false-positive, and unresolved dispositions; record missed findings discovered later. Do not promote historical or predecessor-range problems into the new upgrade repair list.
+
 ## Classification
 
-- `introduced_break`: the dependency is compatible at `old` and incompatible at `new`, or it did not exist at `old` but a newly added upstream contract conflicts with a verified downstream patch/override. This is the only default repair-list class.
+- `introduced_break`: the dependency is compatible at `old` and incompatible at `new`, or it did not exist at `old` but a newly added upstream contract conflicts with a verified downstream patch/override. This is the only default candidate class for the repair list; source confirmation is still required.
 - `compatibility_warning`: the exact contract changed but the downstream endpoint still accepts it. Review for feature gaps without claiming a break.
 - `preexisting`: both endpoints are incompatible. Report separately and do not attribute it to the selected range.
 - `fixed`: old is incompatible and new is compatible. Review whether compatibility code can be removed.
@@ -17,7 +23,7 @@
 
 ## Strict action gate
 
-Promote a candidate to `modify` only when all values are true:
+A candidate may be considered for `modify` only after independent source confirmation and when all values are true:
 
 ```text
 relationship_verified

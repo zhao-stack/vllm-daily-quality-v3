@@ -1,6 +1,6 @@
 # vLLM Ascend Main2Main Skill Usage
 
-This skill finds vllm-ascend review candidates for a concrete vLLM old-to-new range. It does not turn mapping hits directly into code changes.
+This skill finds review candidates only within a confirmed vllm-ascend main2main PR that upgrades the main commit marker (including combined tag/commit upgrades). Apply SKILL.md's entry gate first; ordinary PRs, tag-only upgrades, and generic interface inquiries are excluded. Mapping hits never directly authorize code changes.
 
 ## Files
 
@@ -27,10 +27,10 @@ vLLM old SHA
 vLLM new SHA
 vllm-ascend review baseline SHA
 version lane and lane anchor
-optional upstream PR parent and merge/head SHA
+predecessor PR/head and inherited commit, if this is a continuation
 ```
 
-Do not infer an unknown lane from dependency versions. For a PR analysis, the relevant change is its `parent -> merge/head` contract delta.
+Do not infer an unknown lane from dependency versions. Direct upgrades use the main marker old/new transition and pre-adaptation downstream snapshot. Continuations A -> B -> C scan B -> C against the pinned predecessor-adapted snapshot; combined tag/commit upgrades pin that snapshot before version edits. For an individual upstream cause, inspect its parent-to-merge/head delta without replacing the full assigned upgrade interval.
 
 ## 1. Validate mappings first
 
@@ -95,7 +95,7 @@ runtime_reachable
 version_lane_matches
 ```
 
-The only legal condition for `action=modify` is:
+Independent old/new upstream and downstream source review must first confirm the repair is necessary, belongs to the assigned new interval, and is not already covered by compatibility code. The following tool condition is necessary but not sufficient for implementing `action=modify`:
 
 ```text
 relationship_verified

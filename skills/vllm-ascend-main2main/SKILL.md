@@ -1,32 +1,28 @@
 ---
 name: vllm-ascend-main2main
-description: Scan exact vLLM old-to-new interface or field contract breaks against a pinned vllm-ascend baseline. Use before changing `.github/vllm-main-verified.commit`, or when unresolved compatibility requires source-derived dependency tracing; reuse a valid scan for later PR edits when its inputs are unchanged. Do not use for release-tag-only upgrades or ordinary code/PR analysis.
+description: Run exact upstream commit-range interface analysis only for a confirmed vllm-ascend main2main upgrade PR changing .github/vllm-main-verified.commit, including combined tag/commit and stacked upgrades. Verify candidates against both source trees and reuse matching scans. Do not use for ordinary PRs, tag-only upgrades, or generic unresolved compatibility inquiries.
 ---
 
 # vLLM Ascend Main2Main
 
-## Invocation gate
+## Invocation gate: main2main upgrade PRs only
 
-Loading this skill is not permission to run its analyzer. Run it only in one of these two modes.
+This analyzer supports the type-specific workflow in the companion vllm-ascend-main2main-pr skill. First classify the entire PR diff against its intended base/merge base and read the marker values.
 
-### Verified-main marker update
+- Run only for a confirmed main2main upgrade PR whose .github/vllm-main-verified.commit value advances: commit-only direct, commit-only continuation, or combined commit/tag upgrade.
+- Before a PR exists or its marker has been edited, preparation is allowed only for an explicitly requested main2main upgrade PR with a concrete marker transition and exact old/new targets. This permits scanning before the first marker edit; it does not admit generic interface work.
+- A label/title, ordinary adaptation, failing test, whitespace-only marker edit, or mention of this skill is insufficient. Ordinary PRs, tag-only upgrades, rollbacks, and generic unresolved contract inquiries do not pass this gate. Return to the requested ordinary analysis without running this workflow.
+- Loading or reviewing this skill does not itself authorize a scan. Respect read-only review scope and do not initiate an implementation/CI workflow just because a PR qualifies.
+- For later work on the same upgrade PR, classify the whole diff, not just the latest commit. If the upgrade was removed from the whole PR, leave this workflow.
 
-Run the exact-contract scan before the first change to `.github/vllm-main-verified.commit` in a PR. Derive `old` from the PR base version of that file and `new` from the proposed value; use the pre-upgrade vllm-ascend PR parent as the review baseline. Complete the scan and record its actionable and unresolved findings before changing the marker file.
+### Select the interval and pre-adaptation baseline
 
-A completed scan is reusable only when its fingerprint still matches the exact vLLM old/new SHAs, vllm-ascend baseline SHA, engine SHA or version, and every external source SHA. Do not rerun it for later code or PR-description edits in the same PR when that fingerprint and `.github/vllm-main-verified.commit` remain unchanged. Rerun only when one of those inputs changes, the prior result is missing or invalid, or the user explicitly requests a fresh scan.
+1. Direct upgrade: old is the PR baseline's main marker; new is the proposed target. Use the clean vllm-ascend snapshot before this upgrade's adaptations.
+2. Continuation A → B → C: the predecessor owns A → B. Scan only old=B to new=C against a clean snapshot containing the pinned predecessor adaptations but none of the new B → C adaptations. Record predecessor PR/head SHA and the inherited squash commit; do not accidentally scan A → C using the final target branch marker.
+3. Combined tag/commit: pin this same pre-adaptation snapshot before editing version guards. Scan the commit interval against that independent snapshot even if tag adjustments have already begun in the implementation checkout.
+4. Existing PR missing a scan: reconstruct the appropriate pre-adaptation snapshot. Do not treat already-fixed code as the original baseline.
 
-Changing only `.github/vllm-release-tag.commit` does not trigger this mode.
-
-### Unresolved contract inquiry
-
-Outside a verified-main marker update, run the analyzer only when all of these conditions are true:
-
-- the task concerns an exact vLLM old-to-new range against a pinned pre-upgrade vllm-ascend baseline;
-- the unresolved question is whether an upstream interface or field contract change breaks a downstream dependency;
-- direct inspection has not established compatibility, so the answer requires source-derived tracing of patches, overrides, inheritance, direct imports, exact calls, signatures, fields, or return protocols;
-- the requested output is an interface-break report, an unknown compatibility determination, or adaptation planning that depends on that determination.
-
-Do not run this workflow for ordinary code logic, behavior, algorithm, performance, test, PR-diff, implementation-content, or bug-cause analysis. Do not run it merely to review or modify code. If the concrete difference and affected downstream use are already clear, analyze, explain, or implement the known change directly. Mentioning this skill or `main2main` does not itself pass the gate. When uncertain whether full tracing will materially change the answer, prefer direct code analysis.
+Run validate/predict and review findings before first changing the main marker. Reuse a completed scan only if exact old/new SHAs, downstream baseline SHA, engine version/source fingerprint, and all external source SHAs still match. Do not rescan merely for later adaptation commits or description edits. Rerun if inputs change, results are absent/invalid, or the user requests a fresh scan within this eligible upgrade. Rebase or predecessor synchronization requires rechecking that fingerprint and responsibility interval.
 
 ## Analysis workflow
 
@@ -39,7 +35,7 @@ After the invocation gate passes, invoke the shared engine's fixed `main2main` s
 Resolve and record before analysis:
 
 - vLLM repository and exact old/new SHAs;
-- vllm-ascend repository and exact review baseline SHA, normally the upgrade PR parent;
+- vllm-ascend repository and exact pre-adaptation baseline SHA selected by the direct/continuation/combined rules above; predecessor PR/head and inherited commit when applicable;
 - a vllm-ascend checkout that contains `tools/vllm_interface_contracts`, supplied through `--engine-root` when different from the review baseline checkout;
 - exact SHAs for every external source root.
 
@@ -51,7 +47,7 @@ Require the vLLM working tree HEAD to equal `new` and the vllm-ascend working tr
 2. Run `validate --engine-mode new` to regenerate the live dependency graph. Treat unresolved bindings as review items, not guessed relationships.
 3. Run `predict` for the exact old/new range. Use the pre-upgrade vllm-ascend baseline so later adaptations cannot hide the original break.
 4. Read `main2main-introduced-breaks.csv` first. Keep `preexisting` and `analysis_unresolved` out of the upgrade repair list.
-5. Verify the four action gates before proposing any code change.
+5. Verify the four action gates and independently inspect both source trees before proposing any code change. A tool classification is a candidate, not authorization to patch.
 6. Use `evaluate` only when an actual vllm-ascend adaptation commit is available.
 7. Keep exact dynamic callsite and return-protocol checks in the default profile. Use `--profile expanded` only when the user explicitly asks for legacy static field/call-protocol, registration, or broad review tables.
 8. Confirm `metadata.scenario=main2main` and inspect `metadata.analysis_plan.capabilities` and `metadata.timings_seconds` when execution scope or runtime cost matters.
@@ -89,4 +85,10 @@ Do not publish run-scoped generated relations into the legacy production manifes
 
 ## Scope discipline
 
-Attribute every actionable item to the exact upstream range, upstream symbol, downstream dependency, and contract delta. Do not add unrelated cleanup, historical debt, defensive tests, or forward backports unless the user explicitly expands scope.
+Attribute every candidate to the exact upstream PR/commit and diff location, assigned interval, downstream symbol/dependency, and contract delta. Check existing adaptation and version guards in both lanes. Four true tool gates are necessary but do not replace source review of actual necessity.
+
+Record each finding as confirmed adaptation needed, already compatible/no change, false positive, or unresolved, with evidence and rationale. Record false negatives discovered by CI/source review as well. A statically proven break does not need a manufactured failing CI run before adaptation; do not invent runtime proof.
+
+Only confirmed new-interval problems enter the upgrade repair list. Keep predecessor-range issues with the predecessor PR; report historical issues separately. Do not repair the engine or add unrelated cleanup, defensive fallbacks, speculative fixes, historical debt, or forward backports in the upgrade PR.
+
+Pass confirmed findings to vllm-ascend-main2main-pr for implementation: exact upstream cause before edits, vllm_version_is for lane selection, minimal explicit fixes without silent fallbacks or weakened tests, and one Signed-off-by commit per independent adaptation. This analysis skill does not independently push changes, comment on PRs, or trigger CI.

@@ -3299,8 +3299,8 @@
     },
     {
       "path": "skills/vllm-ascend-main2main/references/analysis-contract.md",
-      "sha256": "c4f5ad89ed026dbb7f5a5a03f3785dba8c527c3bb0622e7a0cbc80d07341707e",
-      "bytes": 5923
+      "sha256": "2dec673707e3351eda74c43c5a88c1c536bc1534e7331ea61dc3504fdefb4221",
+      "bytes": 6965
     },
     {
       "path": "skills/vllm-ascend-main2main/references/cli-and-output.md",
@@ -3319,13 +3319,13 @@
     },
     {
       "path": "skills/vllm-ascend-main2main/SKILL.md",
-      "sha256": "512e336df0dfbbdb423949fd4cee3cba9e57c5a88b19b69c835177a97282b257",
-      "bytes": 6490
+      "sha256": "5dee2749d01a430406c27a1fd2cdea594f4bc2d9acb0ccc4ab152003eaf71925",
+      "bytes": 8265
     },
     {
       "path": "skills/vllm-ascend-main2main/skill_usage.md",
-      "sha256": "16631e8de96988b08059ad766892c12b37b4b3d54da1c0dc92a4995f49d90608",
-      "bytes": 8141
+      "sha256": "c0a2361bbd97cee73743dd8076932282ca03c1e653fcad1e815ffed9d753b619",
+      "bytes": 8877
     },
     {
       "path": "skills/vllm-ascend-main2main/tests/test_engine_adapter.py",
