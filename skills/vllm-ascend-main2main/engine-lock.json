@@ -1,0 +1,103 @@
+{
+  "repository": "https://github.com/zhao-stack/vllm-ascend.git",
+  "commit": "0b2d7f1adb822977ac8e8466e3a101e928bd86ba",
+  "package": "tools/vllm_interface_contracts",
+  "range_analyzer_version": "2.34.0",
+  "range_schema_version": 48,
+  "analysis_plan_version": 4,
+  "files": [
+    {
+      "file": "__init__.py",
+      "sha256": "297ced2fe0accd958f6ce59df0dd29476a4a8f1517b8f1c9bc1915797a0d7950"
+    },
+    {
+      "file": "__main__.py",
+      "sha256": "b3e7b01b7914aa0d85f61ec3bc47387c140b5282deb60b2f2d2549511d7a7dbd"
+    },
+    {
+      "file": "analysis_plans.py",
+      "sha256": "3e65536ff49b16872c04c82de31bf823400c53ac83ccc8b31f1e4f548d40bbf4"
+    },
+    {
+      "file": "annotation_names.py",
+      "sha256": "08f4124700a25c76c5a37e335cf14532907438f145f28e4943aefb24a7787357"
+    },
+    {
+      "file": "benchmark.py",
+      "sha256": "cbfe5076e43a5c04ef215b5369ffe57bddbdf79bfd3762137eda432f59f9ea81"
+    },
+    {
+      "file": "cache.py",
+      "sha256": "b180d30d3bc52c3e84069829dfeb7775e090cc8a91a36e438f77e894e293603f"
+    },
+    {
+      "file": "call_contracts.py",
+      "sha256": "7c6f0fa5d229a290b3e98bb9e8e00376b8f363670caac9ea3e4112595b2894c7"
+    },
+    {
+      "file": "cli.py",
+      "sha256": "52a40b56db7224b478c3d1ce2e2566c6c3f55f3087d36ad9b864708bcc85c052"
+    },
+    {
+      "file": "condition_contracts.py",
+      "sha256": "1da7267a7fbf5f658be65161aae9c75c2a0b156efbd77133e24e86da8a9830cb"
+    },
+    {
+      "file": "construction_effects.py",
+      "sha256": "c648cc5efc36095288163965bf2ffab2b560b8289a080bee58aba90713a019e5"
+    },
+    {
+      "file": "dataclass_contracts.py",
+      "sha256": "cf4a31d9785fa99cb7e2f2bb8e19393e74624ecea632cd2c302c15a367602ea2"
+    },
+    {
+      "file": "factory_returns.py",
+      "sha256": "410903a0e9202b6b51c8be05fe876a6165bae19088b96afd009db1792eca782c"
+    },
+    {
+      "file": "generator.py",
+      "sha256": "d91c84e5f7911b98dfc3929ece5691dd86a81376fc719ee919a321d4ecf10c54"
+    },
+    {
+      "file": "helper_effects.py",
+      "sha256": "986f7e766a32434819f4c5baada6ec1c9a55099d4342ebe92304bf3c7deedc97"
+    },
+    {
+      "file": "method_context.py",
+      "sha256": "d3e681a1d44d31d42211b26dbd4d1c1c266e94cbec2f1467c03b5bc6fa266ebb"
+    },
+    {
+      "file": "models.py",
+      "sha256": "22dde1bd3580318aa1179b697df944e65d6b130acc1a1653b61b79aac5a9f519"
+    },
+    {
+      "file": "module_attributes.py",
+      "sha256": "e444254ad6e2093eed55e18917034cde5a928a0d7f35787ea10c5f4cb3fa1941"
+    },
+    {
+      "file": "patch_consumers.py",
+      "sha256": "3cd31fdfb57b839470006183b5c5776db156ae733a940ed67a32a8643d0eda5b"
+    },
+    {
+      "file": "range_analysis.py",
+      "sha256": "a1c9a1b8094cac4455220c7682aef6eb50cf07f71da2805c0dc2b8e2b983d325"
+    },
+    {
+      "file": "receiver_constraints.py",
+      "sha256": "45a53d22e7b3c0d1977612166762e3d95b8a2014a03cceec029a0792d08f601a"
+    },
+    {
+      "file": "schema.py",
+      "sha256": "384ce7d794f47e68f3db01c795728ccc66fec7325005bb30dc541403bf5096bd"
+    },
+    {
+      "file": "source_facts.py",
+      "sha256": "24fa0a7c253d73fc58ce6b9869e87115b3e8ea02ac1bb32e1a69a604de356250"
+    },
+    {
+      "file": "type_flow.py",
+      "sha256": "0067883f088f914d60bcb00ca1df4cb345e4ed1791656835501068a337decac0"
+    }
+  ],
+  "file_hash_basis": "Exact Git blob bytes at commit; original GRAY_MANIFEST.json hashes were verified against these bytes with source CRLF normalization."
+}

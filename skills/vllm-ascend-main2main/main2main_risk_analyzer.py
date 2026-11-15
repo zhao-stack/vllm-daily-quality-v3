@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -24,6 +25,7 @@ LEGACY_ANALYZER = SKILL_ROOT / "legacy" / "main2main_risk_analyzer.py"
 ENGINE_PACKAGE = Path("tools/vllm_interface_contracts")
 DEFAULT_PROFILE = "exact-contracts"
 DEFAULT_SCENARIO = "main2main"
+ENGINE_LOCK = SKILL_ROOT / "engine-lock.json"
 
 
 def _git(root: Path, *args: str) -> str:
@@ -47,21 +49,52 @@ def _resolve(root: Path, revision: str) -> str:
 
 
 def _engine_root(args: argparse.Namespace) -> Path:
-    candidates = [
-        Path(args.engine_root).resolve() if args.engine_root else None,
-        Path(args.ascend_root).resolve(),
-    ]
-    for candidate in candidates:
+    lock = json.loads(ENGINE_LOCK.read_text(encoding="utf-8"))
+    codex_root = Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex")))
+    candidate = (
+        Path(args.engine_root)
+        if args.engine_root
+        else codex_root / "cache" / "main2main-engines" / lock["commit"]
+    ).resolve()
+    _verify_engine(candidate, lock)
+    return candidate
+
+
+def _verify_engine(root: Path, lock: dict[str, Any]) -> None:
+    """Reject the wrong checkout or modified package before executing its code."""
+    package = root / ENGINE_PACKAGE
+    if not (package / "__main__.py").is_file():
+        raise SystemExit(
+            f"固定灰度引擎不存在：{root}。请检出 {lock['repository']} "
+            f"的 {lock['commit']}，或用 --engine-root 指定该版本；不回退到下游基线。"
+        )
+    try:
+        actual = _head(root)
+        origin = (
+            _git(root, "remote", "get-url", "origin").removesuffix(".git").rstrip("/")
+        )
+        expected_origin = lock["repository"].removesuffix(".git").rstrip("/")
+        if origin.startswith("git@github.com:"):
+            origin = "https://github.com/" + origin.split(":", 1)[1]
+        if actual != lock["commit"] or origin != expected_origin:
+            raise SystemExit(
+                f"灰度引擎来源或 SHA 不匹配：{root}；要求 {lock['repository']} @ {lock['commit']}"
+            )
+        dirty = _git(root, "status", "--porcelain", "--untracked-files=no")
+        if dirty:
+            raise SystemExit(f"灰度引擎有已跟踪文件修改：{root}")
+    except subprocess.CalledProcessError as exc:
+        raise SystemExit(f"无法验证灰度引擎 Git 身份：{root}") from exc
+    expected = {item["file"]: item["sha256"] for item in lock["files"]}
+    actual_files = {p.relative_to(package).as_posix() for p in package.rglob("*.py")}
+    if actual_files != set(expected):
+        raise SystemExit("灰度引擎 Python 文件集合与 engine-lock.json 不一致")
+    for relative, expected_hash in expected.items():
         if (
-            candidate is not None
-            and (candidate / ENGINE_PACKAGE / "__main__.py").is_file()
+            hashlib.sha256((package / relative).read_bytes()).hexdigest()
+            != expected_hash
         ):
-            return candidate
-    checked = ", ".join(str(item) for item in candidates if item is not None)
-    raise SystemExit(
-        "找不到公共接口分析引擎。请通过 --engine-root 指向包含 "
-        f"{ENGINE_PACKAGE.as_posix()} 的 vllm-ascend 仓库。已检查：{checked}"
-    )
+            raise SystemExit(f"灰度引擎文件哈希不匹配：{relative}")
 
 
 def _engine_identity(engine_root: Path) -> dict[str, str | int]:
@@ -85,6 +118,7 @@ def _engine_identity(engine_root: Path) -> dict[str, str | int]:
         r"^ANALYSIS_PLAN_VERSION\s*=\s*(\d+)", plan_source, re.MULTILINE
     )
     return {
+        "commit_sha": _head(engine_root),
         "generator_version": constant(generator_source, "GENERATOR_VERSION", "unknown"),
         "range_analyzer_version": constant(
             range_source, "RANGE_ANALYZER_VERSION", "unknown"

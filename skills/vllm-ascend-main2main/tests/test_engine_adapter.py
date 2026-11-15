@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -126,8 +127,10 @@ def test_engine_identity_contains_version_schema_and_hash() -> None:
     identity = adapter._engine_identity(_engine_root())
     assert identity["generator_version"] != "unknown"
     assert identity["range_analyzer_version"] != "unknown"
-    assert identity["range_schema_version"] == 3
-    assert identity["analysis_plan_version"] == 2
+    assert identity["range_analyzer_version"] == "2.34.0"
+    assert identity["range_schema_version"] == 48
+    assert identity["analysis_plan_version"] == 4
+    assert identity["commit_sha"] == "0b2d7f1adb822977ac8e8466e3a101e928bd86ba"
     assert len(str(identity["package_sha256"])) == 64
 
 
@@ -163,7 +166,15 @@ def test_predict_uses_exact_input_cache(tmp_path: Path) -> None:
     first = tmp_path / "first.md"
     second = tmp_path / "second.md"
     assert adapter.main(_arguments(tmp_path, sources, first)) == 0
-    assert "本次升级引入" in first.read_text(encoding="utf-8")
+    report_path = next((tmp_path / "cache").rglob("main2main-range-report.json"))
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    assert report["summary"]["actionable_introduced_break"] == 1
+    finding = report["findings"][0]
+    assert finding["relation"] == "override"
+    assert finding["downstream"]["file"] == "vllm_ascend/child.py"
+    assert finding["downstream"]["name"] == "run"
+    assert finding["compatibility"]["old"]["compatible"] is True
+    assert finding["compatibility"]["new"]["compatible"] is False
     with mock.patch.object(
         adapter,
         "_run",

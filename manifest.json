@@ -3274,8 +3274,8 @@
     },
     {
       "path": "skills/vllm-ascend-main2main/main2main_risk_analyzer.py",
-      "sha256": "2cf115bc33367231a45bc34f0791b34130de72564539cad1133f4b66580566ae",
-      "bytes": 17658
+      "sha256": "cac653484501c9b793b0d8c8e8fcdcb515822333847c646d597b6c92c04a7af7",
+      "bytes": 19400
     },
     {
       "path": "skills/vllm-ascend-main2main/raw/main2main_call_protocol_mapping.json",
@@ -3304,8 +3304,8 @@
     },
     {
       "path": "skills/vllm-ascend-main2main/references/cli-and-output.md",
-      "sha256": "4a142bd99d3814c30cd6360d6b41c6202eeb3e5cbe938f7e402ff5b4bae40954",
-      "bytes": 4362
+      "sha256": "82890ad7f18364c65557b4020ab9aa540219ec511f8f0e83604da3ec4f96b0bc",
+      "bytes": 5064
     },
     {
       "path": "skills/vllm-ascend-main2main/scripts/optimize_mappings.py",
@@ -3319,18 +3319,18 @@
     },
     {
       "path": "skills/vllm-ascend-main2main/SKILL.md",
-      "sha256": "5dee2749d01a430406c27a1fd2cdea594f4bc2d9acb0ccc4ab152003eaf71925",
-      "bytes": 8265
+      "sha256": "6c21186465184861431e68984e4e1875751c805a7dcc270d0ca764c661f803de",
+      "bytes": 9027
     },
     {
       "path": "skills/vllm-ascend-main2main/skill_usage.md",
-      "sha256": "c0a2361bbd97cee73743dd8076932282ca03c1e653fcad1e815ffed9d753b619",
-      "bytes": 8877
+      "sha256": "946c185ec1a768b42e21a94ea49ab3470acc2a94a0a060688d7f5044195cafcc",
+      "bytes": 9193
     },
     {
       "path": "skills/vllm-ascend-main2main/tests/test_engine_adapter.py",
-      "sha256": "0a0dbb2737f5bb7bb345e851ff85cb841cac671f64895404ca7384b9cb4f1bc5",
-      "bytes": 5119
+      "sha256": "862935d5cdbaa70ae38a4b345a9fd16fac80f4393da96c7198ef48159b07a91f",
+      "bytes": 5742
     },
     {
       "path": "skills/vllm-ascend-main2main/tests/test_optimize_mappings.py",
@@ -3521,6 +3521,16 @@
       "path": "skills/vllm-ascend-main2main-pr/references/ci-cycle.md",
       "sha256": "c56e2fb32408e96427f1655b78668b4fb055e9ea45443fa24488968ae2cf72b5",
       "bytes": 5508
+    },
+    {
+      "path": "skills/vllm-ascend-main2main/engine-lock.json",
+      "sha256": "b399bfd1929961d74b9f19437b064a1420e59504acaadc0e5901d4302f9b0dfd",
+      "bytes": 3420
+    },
+    {
+      "path": "skills/vllm-ascend-main2main/tests/test_engine_pin.py",
+      "sha256": "83a75dea7b84cd09207051e8b99239bed215ff3eba2046636ba3c2151458cfd2",
+      "bytes": 3229
     }
   ]
 }

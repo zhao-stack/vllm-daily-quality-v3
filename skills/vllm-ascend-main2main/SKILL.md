@@ -26,7 +26,9 @@ Run validate/predict and review findings before first changing the main marker. 
 
 ## Analysis workflow
 
-Use the vllm-ascend repository engine as the only source-analysis implementation. Keep this skill as a thin workflow, cache, and report layer. Never recreate AST, MRO, patch-flow, or signature logic inside the skill.
+Use only the gray engine pinned by [engine-lock.json](engine-lock.json): zhao-stack/vllm-ascend at 0b2d7f1adb822977ac8e8466e3a101e928bd86ba (v2.34.0). Keep this skill as a thin workflow, cache, and report layer. Never recreate AST, MRO, patch-flow, or signature logic inside the skill.
+
+The default independent checkout is $CODEX_HOME/cache/main2main-engines/<locked-sha>, or ~/.codex/cache/main2main-engines/<locked-sha> when CODEX_HOME is unset. Pass --engine-root to use another independent checkout of exactly the same repository and SHA. Before execution the adapter verifies origin, HEAD, clean tracked files, and all 23 Python files against canonical Git-byte hashes. Missing/wrong engines fail explicitly; never fall back to --ascend-root. Read the engine preparation instructions in references/cli-and-output.md before the first run. Updating the pin requires an intentional lock update and validation, not moving with the gray branch tip.
 
 After the invocation gate passes, invoke the shared engine's fixed `main2main` scenario, which runs the full exact-contract plan. The separate `vllm-interface` upstream-PR scenario analyzes direct imports, overrides, and exact downstream calls while excluding monkey patches; it is an engine/CI entry point, not a reduced main2main skill mode.
 
@@ -36,7 +38,7 @@ Resolve and record before analysis:
 
 - vLLM repository and exact old/new SHAs;
 - vllm-ascend repository and exact pre-adaptation baseline SHA selected by the direct/continuation/combined rules above; predecessor PR/head and inherited commit when applicable;
-- a vllm-ascend checkout that contains `tools/vllm_interface_contracts`, supplied through `--engine-root` when different from the review baseline checkout;
+- an independent checkout of the locked gray engine, supplied through --engine-root or prepared at the documented default cache path; keep it separate from the review baseline checkout;
 - exact SHAs for every external source root.
 
 Require the vLLM working tree HEAD to equal `new` and the vllm-ascend working tree HEAD to equal `--expect-ascend-sha`. Do not guess a missing version or analyze a dirty, unintended checkout.

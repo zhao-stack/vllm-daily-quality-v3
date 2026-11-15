@@ -16,6 +16,8 @@ This skill finds review candidates only within a confirmed vllm-ascend main2main
 
 The shared repository engine, not these tables, owns dynamic exact downstream-call binding and return-protocol analysis. The legacy call-protocol JSON remains an expanded review asset.
 
+Normal new/compare analysis uses the gray engine fixed by engine-lock.json (v2.34.0, commit 0b2d7f1adb822977ac8e8466e3a101e928bd86ba). Prepare the independent checkout described in references/cli-and-output.md. The adapter verifies the exact source and refuses to fall back to an engine in the downstream baseline.
+
 Do not load mapping files by wildcard. PR-specific fixtures, archived tables and optimizer staging outputs are not production inputs unless the manifest explicitly selects them.
 
 ## Required anchors
