@@ -53,7 +53,7 @@ description: Implement, continue, or review only vllm-ascend main2main upgrade P
 **默认业务修改范围：release tag 更新所需的 vllm_version_is 旧版本替换或旧分支删除。其他修改先人工确认。**
 
 1. 确定旧 tag、新 tag 和仍需支持的 main/release 两条线路。
-2. 全量搜索仓库中的旧版本号，包括代码、测试、构建、依赖配置和文档。逐项判断替换、删除或保留，不机械全局替换；历史记录和仍受支持版本可以保留。
+2. 全量搜索仓库中的旧版本号，包括代码、测试、构建、依赖配置和文档。搜索至少覆盖 `vllm_version_is("<旧版本>")`、裸版本字符串和注释里的迁移说明，先记录命中数和涉及文件数，再逐处对照新旧 tag 源码判断替换、删除或保留。**tag 升级不得只改显眼的少量门控：每一处旧版本号都要完成适配或给出保留理由**——新 tag 仍需要旧行为的改判为新 tag，新 tag 已不需要的分支删除，历史记录和仍受支持版本可以保留，但不机械全局替换。完成后再次全量搜索，确认只剩历史记录和仍受支持版本，并在 PR 描述中记录扫描命令、命中数、文件数及逐项处置结论。
 3. 对照新旧 tag 源码，确认新版本实际接口/行为和旧分支是否仍必要。vllm_version_is 是版本匹配，不能当作大小比较。出现包版本异常时核实 checkout SHA、tag、安装包版本和实际分支。
 4. 更新 release 标记，修改确认需要调整的版本判断。其他业务逻辑、测试、配置或文档修改，先提供证据和具体方案，经人工确认再实施。批准的公共临时 CI 诊断按 CI 闭环执行。
 5. 不自动调用 commit 区间扫描 Skill；通过源码分析处理本类型问题。确实需要超出本类型的扫描或修改时先明确任务范围，不能借通用接口问题绕过入口。
@@ -64,7 +64,7 @@ description: Implement, continue, or review only vllm-ascend main2main upgrade P
 **范围：本次 commit 区间引入的必要适配，以及 tag 升级所需的版本判断调整。**
 
 1. 先固定 old/new commit、old/new tag 和适配前下游基线。存在前序 PR 时，先按 B 建立继承提交、划分新增区间。
-2. 先按 C 搜索旧版本号，分析并处理允许范围内的版本判断。
+2. 先按 C 第 2 步全量搜索旧版本号并逐处适配，不能只处理抽样或显眼门控；再处理 commit 区间。
 3. 再调用 vllm-ascend-main2main 扫描本次 commit 区间。即使步骤 2 已开始修改，也必须使用步骤 1 固定的独立基线快照，避免新适配掩盖原始问题。
 4. 按 A 完成源码复核和必要适配。每个修改点注明属于 commit 区间、tag 调整或两者共同需要，区分 main/release 行为。
 5. 超出 commit 区间且不属于允许 tag 调整的修改，提供具体证据和方案后人工确认。按第 7 节提交 PR，执行 [统一 CI 闭环](references/ci-cycle.md)。
@@ -98,7 +98,7 @@ description: Implement, continue, or review only vllm-ascend main2main upgrade P
 
 参考 [PR #11709](https://github.com/vllm-project/vllm-ascend/pull/11709) 的逐项对应格式，不继承其历史问题或超区间修改例外。
 
-说明升级类型、old/new commit/tag、目标 base/head、下游基线、扫描引擎及指纹、扫描结果、误报/漏报/未确认项。接续时注明旧 PR/SHA、继承内容和新增责任区间；tag 升级说明 main/release 差异。
+说明升级类型、old/new commit/tag、目标 base/head、下游基线、扫描引擎及指纹、扫描结果、误报/漏报/未确认项。接续时注明旧 PR/SHA、继承内容和新增责任区间；tag 升级说明 main/release 差异，并附旧版本号全量扫描记录（命令、命中数、文件数、逐项处置及最终复扫结果）。
 
 | 下游修改点（文件/符号及 diff） | 上游 PR / 具体 diff 与提交 | 为什么必须修改 | main/release/both | 验证 SHA、用例与结果 |
 |---|---|---|---|---|
@@ -112,3 +112,4 @@ description: Implement, continue, or review only vllm-ascend main2main upgrade P
 3. 临时继续执行修改已撤销，扫描仍匹配固定输入，必要的重新分析完成。
 4. 修复对应的定向验证通过；最终 PR head SHA 在正常策略下的双版本必要 CI 全部通过，预期测试实际执行完成。
 5. 没有未解决的前序依赖或环境阻塞。旧 SHA 成功、部分任务成功、意外跳过和仅外层 workflow 绿色都不等于完成；如仍阻塞，如实报告状态和恢复条件。
+6. tag 升级已完成旧版本号全量扫描与复扫：命中项逐处适配或有保留理由，复扫后只剩历史记录和仍受支持版本，扫描证据已写入 PR 描述。
